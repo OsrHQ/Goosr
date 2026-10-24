@@ -1,0 +1,1069 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="mizan-live" content="1">
+<meta name="description" content="حاسبة لايف لجولات Up or Down 5m على BTC وETH وBNB: احتمال كل جهة من سعر Binance، الربح والخسارة، وحدود الوقف.">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ميزان الجولة">
+<meta name="theme-color" content="#16202a">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>ميزان الجولة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@400;600;700&display=swap">
+<style>
+/* Layout: one narrow instrument column. Sticky bar (coin tabs, clock, verdict chip), live card, compare, trade, exit, session, study. */
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --sunk: #e3e8ed;
+  --line: #d3dae1;
+  --ink: #142029;
+  --muted: #5a6977;
+  --accent: #285f8f;
+  --accent-ink: #ffffff;
+  --seg-on: #ffffff;
+  --up: #157a43;
+  --up-soft: #dcf1e5;
+  --down: #c2362b;
+  --down-soft: #f8e0dd;
+  --warn: #9a5b00;
+  --warn-soft: #fbecd2;
+  --stop: #b3261e;
+  --stop-soft: #f9dcd9;
+  --good: #146c43;
+  --good-soft: #d9efe3;
+  --font-display: "Readex Pro", "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --font-body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, "Geeza Pro", sans-serif;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e151c; --surface: #16202a; --sunk: #1d2934; --line: #2a3845;
+    --ink: #e5ecf2; --muted: #93a4b4; --accent: #7fb1df; --accent-ink: #0e151c; --seg-on: #2c3d4e;
+    --up: #4fd18b; --up-soft: #173528; --down: #f27b70; --down-soft: #3a1f1d;
+    --warn: #f0b354; --warn-soft: #3a2c14; --stop: #ff8a80; --stop-soft: #43201e;
+    --good: #5fd39a; --good-soft: #163527;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e151c; --surface: #16202a; --sunk: #1d2934; --line: #2a3845;
+  --ink: #e5ecf2; --muted: #93a4b4; --accent: #7fb1df; --accent-ink: #0e151c; --seg-on: #2c3d4e;
+  --up: #4fd18b; --up-soft: #173528; --down: #f27b70; --down-soft: #3a1f1d;
+  --warn: #f0b354; --warn-soft: #3a2c14; --stop: #ff8a80; --stop-soft: #43201e;
+  --good: #5fd39a; --good-soft: #163527;
+  color-scheme: dark;
+}
+html { scroll-padding-top: 130px; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.6; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+* { box-sizing: border-box; }
+.app { max-width: 560px; margin: 0 auto; padding-block: 0 40px; display: flex; flex-direction: column; gap: 14px; }
+.pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.num { font-variant-numeric: tabular-nums; unicode-bidi: isolate; direction: ltr; display: inline-block; }
+
+/* sticky bar */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.bar-in { max-width: 560px; margin: 0 auto; padding-block: 8px 10px; display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.clock { display: flex; flex-direction: column; line-height: 1.2; }
+.clock small { color: var(--muted); font-size: 12px; }
+.clock b { font-family: var(--font-display); font-size: 28px; font-weight: 700; letter-spacing: .5px; align-self: flex-start; }
+.clock b.late { color: var(--down); }
+.chip { font-family: var(--font-display); font-weight: 600; font-size: 13.5px; padding: 6px 12px; border-radius: 999px; background: var(--sunk); color: var(--muted); text-align: center; max-width: 62%; }
+.chip.neutral { background: var(--sunk); color: var(--ink); }
+.chip.caution { background: var(--warn-soft); color: var(--warn); }
+.chip.critical { background: var(--stop-soft); color: var(--stop); }
+.chip.good { background: var(--good-soft); color: var(--good); }
+
+header.intro { padding-block: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: 26px; margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+.lede a { color: var(--accent); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.card h2 { font-family: var(--font-display); font-size: 17px; font-weight: 600; margin: 0; }
+.card .sub { margin: -8px 0 0; color: var(--muted); font-size: 13.5px; }
+.example { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 8px 12px; font-size: 13.5px; }
+
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field > label, .field > .lbl { font-size: 13.5px; font-weight: 500; }
+.hint { font-size: 12.5px; color: var(--muted); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+input[type="text"] {
+  font: inherit; font-size: 18px; font-variant-numeric: tabular-nums; direction: ltr; text-align: left;
+  width: 100%; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--sunk); color: var(--ink);
+}
+input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.inwrap { position: relative; }
+.inwrap input { padding-right: 32px; }
+.inwrap span { position: absolute; top: 50%; transform: translateY(-50%); right: 12px; color: var(--muted); pointer-events: none; font-size: 15px; }
+
+.seg { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; background: var(--sunk); padding: 4px; border-radius: 12px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { text-align: center; padding: 8px 6px; border-radius: 9px; cursor: pointer; font-weight: 500; font-size: 14px; color: var(--muted); line-height: 1.3; }
+.seg label small { display: block; font-size: 11.5px; font-weight: 400; }
+.seg input:checked + label { background: var(--seg-on); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12), inset 0 0 0 1px var(--line); }
+.seg input:checked + label.up { color: var(--up); }
+.seg input:checked + label.down { color: var(--down); }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); }
+.tabs label { font-family: var(--font-display); font-weight: 600; font-size: 15px; }
+.tabs label small { font-family: var(--font-body); font-weight: 500; }
+
+.quick { display: flex; gap: 6px; flex-wrap: wrap; }
+.quick button { font: inherit; font-size: 13.5px; padding: 5px 12px; min-height: 34px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.quick button:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.stamp { font-size: 12.5px; color: var(--muted); }
+.stamp.stale { color: var(--warn); font-weight: 500; }
+
+/* live card */
+.hero-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.conn { font-size: 12.5px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.conn i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.conn.on i { background: var(--up); box-shadow: 0 0 0 3px var(--up-soft); }
+.conn.off i { background: var(--down); }
+.odds { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.odd { border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 0; }
+.odd span { font-size: 13px; }
+.odd b { font-family: var(--font-display); font-size: 40px; font-weight: 700; line-height: 1.15; align-self: flex-start; }
+.odd.up { background: var(--up-soft); color: var(--up); }
+.odd.down { background: var(--down-soft); color: var(--down); }
+.split { height: 8px; border-radius: 4px; background: var(--down); overflow: hidden; position: relative; }
+.split-up { position: absolute; top: 0; bottom: 0; right: 0; background: var(--up); transition: width .15s linear; }
+.prices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.prices div { display: flex; flex-direction: column; min-width: 0; }
+.prices span { font-size: 11.5px; color: var(--muted); line-height: 1.35; }
+.prices b { font-family: var(--font-display); font-size: 15.5px; font-weight: 600; align-self: flex-start; white-space: nowrap; }
+.prices b.pos { color: var(--up); }
+.prices b.neg { color: var(--down); }
+#spark { width: 100%; height: 120px; display: block; border-radius: 10px; background: var(--sunk); }
+.hero-foot { display: flex; flex-direction: column; gap: 8px; }
+.waiting { font-size: 13.5px; color: var(--muted); }
+
+/* verdict */
+.verdict { border-radius: var(--r); padding: 16px; display: flex; flex-direction: column; gap: 6px; border: 1px solid transparent; }
+.verdict .tag { font-size: 12px; letter-spacing: .3px; opacity: .85; }
+.verdict h3 { margin: 0; font-family: var(--font-display); font-size: 21px; font-weight: 700; text-wrap: balance; }
+.verdict p { margin: 0; font-size: 14.5px; }
+.verdict.neutral { background: var(--sunk); border-color: var(--line); }
+.verdict.caution { background: var(--warn-soft); color: var(--ink); border-color: var(--warn); }
+.verdict.caution h3 { color: var(--warn); }
+.verdict.critical { background: var(--stop-soft); border-color: var(--stop); }
+.verdict.critical h3 { color: var(--stop); }
+.verdict.good { background: var(--good-soft); border-color: var(--good); }
+.verdict.good h3 { color: var(--good); }
+
+.probs { display: flex; flex-direction: column; gap: 12px; }
+.prow { display: flex; flex-direction: column; gap: 5px; }
+.prow .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; flex-wrap: wrap; }
+.prow .top b { font-family: var(--font-display); font-size: 18px; }
+.prow.up .top b { color: var(--up); }
+.prow.down .top b { color: var(--down); }
+.track { position: relative; height: 12px; border-radius: 6px; background: var(--sunk); }
+.fill { position: absolute; top: 0; bottom: 0; right: 0; border-radius: 6px; transition: width .2s ease; }
+.prow.up .fill { background: var(--up); }
+.prow.down .fill { background: var(--down); }
+.tick { position: absolute; top: -4px; bottom: -4px; width: 3px; margin-right: -1.5px; background: var(--ink); border-radius: 2px; box-shadow: 0 0 0 2px var(--surface); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.legend i { display: inline-block; width: 14px; height: 8px; border-radius: 3px; background: var(--muted); margin-left: 5px; vertical-align: middle; }
+.legend i.t { width: 3px; height: 14px; background: var(--ink); }
+.is-stale { opacity: .35; filter: grayscale(1); }
+
+/* outputs */
+.outs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.out { background: var(--sunk); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.out span { font-size: 12.5px; color: var(--muted); }
+.out b { font-family: var(--font-display); font-size: 19px; font-weight: 600; }
+.out b.num { align-self: flex-start; }
+.out b.pos { color: var(--up); }
+.out b.neg { color: var(--down); }
+.out em { font-style: normal; font-size: 12px; color: var(--muted); }
+.out.wide { grid-column: 1 / -1; }
+.note { font-size: 13.5px; padding: 10px 12px; border-radius: 10px; background: var(--sunk); }
+.note.warn { background: var(--warn-soft); color: var(--warn); font-weight: 500; }
+.note.stop { background: var(--stop-soft); color: var(--stop); font-weight: 500; }
+.note.good { background: var(--good-soft); color: var(--good); font-weight: 500; }
+
+/* session */
+.meter { position: relative; height: 14px; border-radius: 7px; background: linear-gradient(to left, var(--stop-soft), var(--sunk) 40%, var(--good-soft)); border: 1px solid var(--line); }
+.meter .dot { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 3px solid var(--surface); transform: translate(50%, -50%); transition: right .25s ease; }
+.meter-l { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { font: inherit; font-weight: 600; font-size: 14.5px; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--accent); }
+
+details.method summary, details.settings summary { cursor: pointer; font-family: var(--font-display); font-weight: 600; font-size: 16px; }
+.facts { margin: 12px 0 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 8px; }
+.facts li { max-width: 62ch; }
+.cal { overflow-x: auto; margin-top: 12px; }
+.cal table { border-collapse: collapse; font-size: 13.5px; width: 100%; }
+.cal th, .cal td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: center; font-variant-numeric: tabular-nums; }
+.cal td:first-child { direction: ltr; unicode-bidi: isolate; }
+.cal th { font-weight: 500; color: var(--muted); }
+.cal caption { caption-side: bottom; padding-top: 6px; font-size: 12.5px; color: var(--muted); text-align: start; }
+footer { color: var(--muted); font-size: 12.5px; text-align: center; }
+
+@media (max-width: 360px) {
+  .grid2, .outs { grid-template-columns: 1fr; }
+  .clock b { font-size: 24px; }
+  .odd b { font-size: 34px; }
+  .prices b { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fill, .meter .dot, .split-up { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="bar pad" dir="rtl" lang="ar">
+  <div class="bar-in">
+    <div class="seg tabs" role="radiogroup" aria-label="العملة">
+      <input type="radio" name="coin" id="cBTC" value="BTC" checked><label for="cBTC">BTC<small id="tabBTC"><span class="num">–</span></small></label>
+      <input type="radio" name="coin" id="cETH" value="ETH"><label for="cETH">ETH<small id="tabETH"><span class="num">–</span></small></label>
+      <input type="radio" name="coin" id="cBNB" value="BNB"><label for="cBNB">BNB<small id="tabBNB"><span class="num">–</span></small></label>
+    </div>
+    <div class="bar-row">
+      <div class="clock">
+        <small id="roundLbl">باقي على نهاية الجولة</small>
+        <b id="clock" class="num">--:--</b>
+      </div>
+      <div id="chip" class="chip neutral">…</div>
+    </div>
+  </div>
+</div>
+
+<main class="app pad" dir="rtl" lang="ar">
+  <header class="intro">
+    <h1>ميزان الجولة</h1>
+    <p class="lede">لجولات Up or Down 5m (طالع أو نازل في 5 دقايق) على BTC وETH وBNB. الصفحة هذي ما تعرف وين بيروح السعر، ولا أحد يعرف. تقدّر لك احتمال كل جهة لحظة بلحظة، وتوضح كم بتربح وكم بتخسر، وتقول لك وقّف لما توصل حدك.</p>
+    <p class="lede" id="liveLink" hidden>النسخة اللايف (سعر Binance كل جزء من الثانية) افتحها في Safari: <a href="https://osrhq.github.io/Goosr/" target="_blank" rel="noopener">osrhq.github.io/Goosr</a></p>
+  </header>
+
+  <!-- live card -->
+  <section class="card" aria-labelledby="heroTitle">
+    <div class="hero-top">
+      <h2 id="heroTitle">BTC Up or Down 5m</h2>
+      <span id="conn" class="conn"><i></i><span id="connTxt">…</span></span>
+    </div>
+    <div class="odds">
+      <div class="odd up"><span>فرصة Up (طالع)</span><b id="pUpBig" class="num">–</b></div>
+      <div class="odd down"><span>فرصة Down (نازل)</span><b id="pDnBig" class="num">–</b></div>
+    </div>
+    <div class="split" aria-hidden="true"><div id="splitUp" class="split-up" style="width:50%"></div></div>
+    <div class="prices">
+      <div><span>سعر البداية<br><bdi>Price to Beat</bdi></span><b id="ptb" class="num">–</b></div>
+      <div><span>السعر الحالي<br><bdi>Current Price</bdi></span><b id="cur" class="num">–</b></div>
+      <div><span>الفرق<br><bdi>Gap</bdi></span><b id="gap" class="num">–</b></div>
+    </div>
+    <canvas id="spark" aria-label="حركة السعر في الجولة الحالية مقارنة بسعر البداية" hidden></canvas>
+    <div class="hero-foot">
+      <div class="field">
+        <span class="lbl">حركة السوق</span>
+        <div class="seg" role="radiogroup" aria-label="حركة السوق">
+          <input type="radio" name="vol" id="volAuto" value="auto" checked><label for="volAuto" id="volAutoL">تلقائي<small id="volAutoS"><span class="num">–</span></small></label>
+          <input type="radio" name="vol" id="volCalm" value="calm"><label for="volCalm">هادية<small id="volCalmS"></small></label>
+          <input type="radio" name="vol" id="volNormal" value="normal"><label for="volNormal">عادية<small id="volNormalS"></small></label>
+          <input type="radio" name="vol" id="volFast" value="fast"><label for="volFast">قوية<small id="volFastS"></small></label>
+        </div>
+        <span class="hint" id="volHint"></span>
+      </div>
+      <div id="waiting" class="waiting" hidden></div>
+    </div>
+  </section>
+
+  <!-- manual gap (no live feed) -->
+  <section class="card" id="manualCard" aria-labelledby="h-m" hidden>
+    <h2 id="h-m">الفرق من التطبيق</h2>
+    <div id="exampleNote" class="example" hidden>هذي أرقام صورتك الساعة 1:17 (باقي 2:02) كمثال. غيّر الفرق أو Up أو Down وتصير الحسبة على الوقت الحالي.</div>
+    <div class="field">
+      <span class="lbl">Current Price (السعر الحالي) مقارنة بـ Price to Beat (سعر البداية)</span>
+      <div class="seg" role="radiogroup" aria-label="اتجاه السعر">
+        <input type="radio" name="dir" id="dirAbove" value="above"><label for="dirAbove" class="up">فوقه ↑<small>الرقم أخضر +</small></label>
+        <input type="radio" name="dir" id="dirBelow" value="below" checked><label for="dirBelow" class="down">تحته ↓<small>الرقم أحمر −</small></label>
+      </div>
+    </div>
+    <div class="field">
+      <label for="diff">الفرق بالدولار</label>
+      <div class="inwrap"><input type="text" id="diff" inputmode="decimal" autocomplete="off" placeholder="24.73"><span>$</span></div>
+      <span class="hint">الرقم اللي جنب Current Price فوق في التطبيق.</span>
+    </div>
+    <div id="stamp" class="stamp" aria-live="polite"></div>
+  </section>
+
+  <!-- compare with the app -->
+  <section class="card" aria-labelledby="h-v">
+    <h2 id="h-v">قارن مع التطبيق</h2>
+    <div class="grid2">
+      <div class="field">
+        <label for="upPct">Up (طالع) %</label>
+        <div class="inwrap"><input type="text" id="upPct" inputmode="decimal" autocomplete="off" placeholder="32"><span>%</span></div>
+      </div>
+      <div class="field">
+        <label for="downPct">Down (نازل) %</label>
+        <div class="inwrap"><input type="text" id="downPct" inputmode="decimal" autocomplete="off" placeholder="67"><span>%</span></div>
+      </div>
+    </div>
+    <div id="pStamp" class="stamp"></div>
+    <div id="verdict" class="verdict neutral" aria-live="polite">
+      <span class="tag" id="vTag">الحكم</span>
+      <h3 id="vTitle">…</h3>
+      <p id="vBody"></p>
+    </div>
+    <div class="probs" id="probs">
+      <div class="prow up">
+        <div class="top"><span>Up (طالع)</span><span>الحسبة <b id="pUpM" class="num">–</b> · التطبيق <span id="pUpA" class="num">–</span></span></div>
+        <div class="track"><div class="fill" id="fUp" style="width:0%"></div><div class="tick" id="tUp" hidden></div></div>
+      </div>
+      <div class="prow down">
+        <div class="top"><span>Down (نازل)</span><span>الحسبة <b id="pDnM" class="num">–</b> · التطبيق <span id="pDnA" class="num">–</span></span></div>
+        <div class="track"><div class="fill" id="fDn" style="width:0%"></div><div class="tick" id="tDn" hidden></div></div>
+      </div>
+      <div class="legend"><span><i></i>فرصتك حسب الحسبة</span><span><i class="t"></i>سعر التطبيق</span></div>
+    </div>
+  </section>
+
+  <!-- trade -->
+  <section class="card" aria-labelledby="h-t">
+    <h2 id="h-t">لو دخلت</h2>
+    <p class="sub">كم بتربح وكم بتخسر قبل ما تضغط Buy (شراء).</p>
+    <div class="seg" role="radiogroup" aria-label="الاتجاه">
+      <input type="radio" name="side" id="sideUp" value="up"><label for="sideUp" class="up">Up (طالع)</label>
+      <input type="radio" name="side" id="sideDn" value="down" checked><label for="sideDn" class="down">Down (نازل)</label>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label for="amt">المبلغ</label>
+        <div class="inwrap"><input type="text" id="amt" inputmode="decimal" autocomplete="off" value="10"><span>$</span></div>
+        <div class="quick" id="amtQuick"><button type="button" data-v="2">2</button><button type="button" data-v="5">5</button><button type="button" data-v="10">10</button></div>
+      </div>
+      <div class="field">
+        <label for="toWin">To Win (اللي يرجع لك)</label>
+        <div class="inwrap"><input type="text" id="toWin" inputmode="decimal" autocomplete="off" placeholder="اختياري"><span>$</span></div>
+        <span class="hint">انسخه من التطبيق بعد ما تكتب المبلغ، عشان الحسبة تمشي على سعرك الفعلي.</span>
+      </div>
+    </div>
+    <div class="outs" id="tOuts">
+      <div class="out"><span>لو كسبت</span><b id="oWin" class="num">–</b><em id="oPay"></em></div>
+      <div class="out"><span>لو خسرت</span><b id="oLose" class="num neg">–</b><em>يروح المبلغ كله</em></div>
+      <div class="out"><span>فرصتك حسب الحسبة</span><b id="oP" class="num">–</b><em id="oPrice"></em></div>
+      <div class="out"><span>المتوسط على المدى</span><b id="oEV" class="num">–</b><em>للصفقة، مو نتيجة هالمرة</em></div>
+    </div>
+    <div id="tWarn" class="note" hidden></div>
+  </section>
+
+  <!-- exit -->
+  <section class="card" aria-labelledby="h-x">
+    <h2 id="h-x">عندك صفقة مفتوحة؟</h2>
+    <p class="sub">تبيع الحين ولا تنتظر نهاية الجولة؟</p>
+    <div class="seg" role="radiogroup" aria-label="صفقتك">
+      <input type="radio" name="xside" id="xUp" value="up"><label for="xUp" class="up">Up (طالع)</label>
+      <input type="radio" name="xside" id="xDn" value="down" checked><label for="xDn" class="down">Down (نازل)</label>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label for="xShares">Shares (عدد الأسهم)</label>
+        <input type="text" id="xShares" inputmode="decimal" autocomplete="off" placeholder="15">
+        <span class="hint">من Positions (صفقاتك) في التطبيق.</span>
+      </div>
+      <div class="field">
+        <label for="xSell">سعر Sell (البيع) %</label>
+        <div class="inwrap"><input type="text" id="xSell" inputmode="decimal" autocomplete="off" placeholder="60"><span>%</span></div>
+        <span class="hint">الرقم اللي على زر Sell (بيع).</span>
+      </div>
+    </div>
+    <div class="outs" id="xOuts" hidden>
+      <div class="out"><span>لو بعت الحين</span><b id="xSellOut" class="num">–</b><em>لو تنفذ بسعر الشاشة</em></div>
+      <div class="out"><span>لو انتظرت</span><b id="xHoldOut" class="num">–</b><em id="xHoldNote"></em></div>
+    </div>
+    <div id="xVerdict" class="note">اكتب عدد الأسهم من Positions (صفقاتك) وسعر البيع من Sell (بيع).</div>
+  </section>
+
+  <!-- session -->
+  <section class="card" aria-labelledby="h-s">
+    <h2 id="h-s">جلستي</h2>
+    <p class="sub">حدودك تنكتب الحين وأنت هادي، مو وسط الجولة.</p>
+    <div class="grid2">
+      <div class="field"><label for="sStart">رصيد البداية</label><div class="inwrap"><input type="text" id="sStart" inputmode="decimal" autocomplete="off" value="170.95"><span>$</span></div></div>
+      <div class="field"><label for="sNow">رصيدي الحين</label><div class="inwrap"><input type="text" id="sNow" inputmode="decimal" autocomplete="off" value="170.95"><span>$</span></div></div>
+      <div class="field"><label for="sFloor">أوقف لو نزل رصيدي لـ</label><div class="inwrap"><input type="text" id="sFloor" inputmode="decimal" autocomplete="off" value="120"><span>$</span></div></div>
+      <div class="field"><label for="sTarget">هدفي</label><div class="inwrap"><input type="text" id="sTarget" inputmode="decimal" autocomplete="off" value="270.95"><span>$</span></div></div>
+      <div class="field"><label for="sMinutes">مدة الجلسة (دقيقة)</label><input type="text" id="sMinutes" inputmode="numeric" autocomplete="off" value="60"></div>
+      <div class="field"><label for="sMaxBet">أقصى مبلغ للصفقة</label><div class="inwrap"><input type="text" id="sMaxBet" inputmode="decimal" autocomplete="off" value="10"><span>$</span></div></div>
+    </div>
+    <div class="field">
+      <div class="meter" aria-hidden="true"><div class="dot" id="sDot" style="right:33%"></div></div>
+      <div class="meter-l"><span>حد الوقف <span id="sFloorL" class="num"></span></span><span>الهدف <span id="sTargetL" class="num"></span></span></div>
+    </div>
+    <div class="outs">
+      <div class="out"><span>ربحك أو خسارتك في الجلسة</span><b id="sPnl" class="num">–</b></div>
+      <div class="out"><span>الوقت الباقي</span><b id="sTime">–</b><em id="sTimeNote"></em></div>
+      <div class="out wide"><span>فرصتك توصل الهدف قبل حد الوقف</span><b id="sOdds" class="num">–</b><em id="sOddsNote"></em></div>
+    </div>
+    <div id="sState" class="note" hidden></div>
+    <div class="btns">
+      <button type="button" class="btn" id="sBegin">ابدأ الجلسة</button>
+      <button type="button" class="btn ghost" id="sReset">صفّر الجلسة</button>
+    </div>
+  </section>
+
+  <!-- study -->
+  <section class="card">
+    <details class="method" id="study">
+      <summary>وش لقت الدراسة؟</summary>
+      <ul class="facts" id="facts">
+        <li>الحسبة تشوف كم السعر بعيد عن Price to Beat (سعر البداية)، وتقارنه بكم تتحرك العملة عادة في الوقت الباقي.</li>
+        <li>جربتها على 850 جولة بيتكوين حقيقية (أسعار Binance كل ثانية). لما قالت 70%، كانت الجولة تطلع فعليًا قريب من 70%. الفرق غالبًا أقل من 6 نقاط.</li>
+        <li>في أول دقيقة من الجولة، الحسبة ما تفرق كثير عن رمي العملة.</li>
+        <li>التطبيق والبوتات (برامج التداول الآلية) يحسبون نفس الحسبة وأسرع منك. عشان كذا أغلب الوقت بيطلع لك «السعر عادل».</li>
+      </ul>
+      <div class="cal" id="calWrap"></div>
+    </details>
+  </section>
+
+  <section class="card">
+    <details class="settings">
+      <summary>إعدادات</summary>
+      <div class="field" style="margin-top:12px">
+        <label for="fee">رسوم المنصة %</label>
+        <div class="inwrap"><input type="text" id="fee" inputmode="decimal" autocomplete="off" value="0.4"><span>%</span></div>
+        <span class="hint">من صورتك: 0.71 USDT (دولار رقمي) على 170.95 = حوالي 0.4%.</span>
+      </div>
+    </details>
+  </section>
+
+  <footer id="foot">الأرقام تنحفظ في جوالك بس.</footer>
+</main>
+
+<script>
+/* ---------- parameters from the study ---------- */
+const PARAMS = {
+  coins: {
+    BTC: { presets: { calm: 21, normal: 30, fast: 40 } },
+    ETH: { presets: { calm: 0.86, normal: 1.17, fast: 1.57 } },
+    BNB: { presets: { calm: 0.22, normal: 0.29, fast: 0.39 } },
+  },
+  edgeMin: 0.08,       // gaps smaller than this sit inside the model's error
+  tailLo: 0.10, tailHi: 0.90,
+  staleSec: 15,
+  calibration: null,   // filled from the study
+};
+
+/* ---------- pure math (no DOM) ---------- */
+const Mizan = (() => {
+  const ROUND_MS = 300000;
+  function erf(x) {
+    const s = x < 0 ? -1 : 1; x = Math.abs(x);
+    const t = 1 / (1 + 0.3275911 * x);
+    const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+    return s * y;
+  }
+  const phi = x => 0.5 * (1 + erf(x / Math.SQRT2));
+  // chance the round ends at or above Price to Beat
+  function probUp(diff, tLeftSec, sigmaPerMin) {
+    if (!isFinite(diff)) return NaN;
+    if (!(tLeftSec > 0)) return diff >= 0 ? 1 : 0;
+    if (!(sigmaPerMin > 0)) return NaN;
+    return phi(diff / (sigmaPerMin * Math.sqrt(tLeftSec / 60)));
+  }
+  const roundStart = ms => Math.floor(ms / ROUND_MS) * ROUND_MS;
+  const roundEnd = ms => roundStart(ms) + ROUND_MS;
+  // per-minute sigma in price units from consecutive 1-minute closes
+  function sigmaFromCloses(closes) {
+    const r = [];
+    for (let i = 1; i < closes.length; i++) if (closes[i] > 0 && closes[i - 1] > 0) r.push(Math.log(closes[i] / closes[i - 1]));
+    if (r.length < 10) return NaN;
+    const m = r.reduce((a, b) => a + b, 0) / r.length;
+    const v = r.reduce((a, b) => a + (b - m) * (b - m), 0) / (r.length - 1);
+    return Math.sqrt(v) * closes[closes.length - 1];
+  }
+  function parseNum(s) {
+    if (s == null) return NaN;
+    let t = String(s).trim().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+    t = t.replace(/[^\d.,٫،]/g, '');
+    if (/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(t)) t = t.replace(/,/g, '');
+    t = t.replace(/[٫,،]/g, '.');
+    if ((t.match(/\./g) || []).length > 1) return NaN;
+    return (t === '' || t === '.') ? NaN : parseFloat(t);
+  }
+  // buying `amount`. toWin (the app's payout) wins over the screen price when it is above the amount.
+  function trade({ amount, price, fee, toWin, p, err }) {
+    let shares, usedToWin = false;
+    if (toWin > amount) { shares = toWin; usedToWin = true; }
+    else if (price > 0 && price < 1) shares = amount * (1 - fee) / price;
+    else return null;
+    const payout = shares;
+    return {
+      shares, payout, usedToWin,
+      profit: payout - amount, loss: -amount,
+      ev: p * payout - amount,
+      evLo: Math.max(0, p - err) * payout - amount,
+      evHi: Math.min(1, p + err) * payout - amount,
+      effPrice: amount / shares,
+    };
+  }
+  function exit({ shares, sellPrice, fee, p }) {
+    const sell = shares * sellPrice * (1 - fee);
+    const hold = p * shares;
+    return { sell, hold, gain: sell - hold, loseChance: 1 - p };
+  }
+  // edge in probability points after paying the real cost per share
+  const edges = (pUp, costUp, costDown) => ({ up: pUp - costUp, down: (1 - pUp) - costDown });
+  // ±bet walk between floor and target (best case: 50/50, no fees)
+  function sessionOdds(now, floor, target, bet) {
+    if (!isFinite(now) || !(target > floor) || !(bet > 0)) return null;
+    if (now <= floor) return { reach: 0, rounds: 0 };
+    if (now >= target) return { reach: 1, rounds: 0 };
+    const L = Math.ceil((now - floor) / bet - 1e-9), W = Math.ceil((target - now) / bet - 1e-9);
+    return { reach: L / (L + W), rounds: L * W };
+  }
+  // balance limits always apply; the time limit needs a started session
+  function sessionState(s, nowMs) {
+    if (!s) return { status: 'idle', minutesLeft: NaN };
+    const pnl = s.now - s.start;
+    if (isFinite(s.now) && isFinite(s.floor) && s.now <= s.floor) return { status: 'stop_floor', pnl, minutesLeft: NaN };
+    if (isFinite(s.now) && isFinite(s.target) && s.target > s.floor && s.now >= s.target) return { status: 'target', pnl, minutesLeft: NaN };
+    if (!s.startedAt) return { status: 'idle', pnl, minutesLeft: NaN };
+    const minutesLeft = (s.minutes > 0 ? s.minutes : 60) - (nowMs - s.startedAt) / 60000;
+    if (minutesLeft <= 0) return { status: 'stop_time', pnl, minutesLeft: 0 };
+    return { status: 'ok', pnl, minutesLeft };
+  }
+  // Arabic counted nouns
+  function counted(n, one, two, few, many) { n = Math.round(n); return n === 1 ? one : n === 2 ? two : (n >= 3 && n <= 10) ? n + ' ' + few : n + ' ' + many; }
+  const pts = n => counted(n, 'نقطة وحدة', 'نقطتين', 'نقاط', 'نقطة');
+  const secs = n => counted(n, 'ثانية', 'ثانيتين', 'ثواني', 'ثانية');
+  const rounds = n => counted(n, 'جولة وحدة', 'جولتين', 'جولات', 'جولة');
+  const pctP = x => !isFinite(x) ? '–' : x < 0.01 ? '<1%' : x > 0.99 ? '>99%' : Math.round(x * 100) + '%';
+  const isoP = x => '\u2066' + pctP(x) + '\u2069';
+
+  /* verdict: level is neutral | caution | critical | good */
+  function verdict(v) {
+    const S = v.session || { status: 'idle' };
+    if (S.status === 'stop_floor') return { level: 'critical', chip: 'وقّف', tag: 'حد الوقف', title: 'وقّف. وصلت حدك', body: 'رصيدك نزل لحد الوقف اللي حطيته. اسحب الباقي واطلع، ولا تفتح جولة ثانية.' };
+    if (S.status === 'stop_time') return { level: 'critical', chip: 'وقّف', tag: 'خلص الوقت', title: 'وقّف. خلص وقت الجلسة', body: 'الوقت اللي حددته خلص. اسحب رصيدك واطلع.' };
+    if (S.status === 'target') return { level: 'good', chip: 'وصلت هدفك', tag: 'الهدف', title: 'وصلت هدفك. اسحب ووقّف', body: 'هذا اللي كنت تبيه. اسحب الرصيد الحين قبل لا ترجع تلعب فيه.' };
+    if (!v.haveP) {
+      if (v.live) return { level: 'neutral', chip: 'ينتظر السعر', tag: 'الحكم', title: 'ينتظر سعر الجولة', body: v.waitText || 'يتصل بـBinance ويجيب سعر البداية.' };
+      return { level: 'neutral', chip: 'اكتب الفرق', tag: 'الحكم', title: 'اكتب الفرق من التطبيق', body: 'اكتب الفرق اللي جنب Current Price (السعر الحالي)، وسعر Up (طالع) وDown (نازل).' };
+    }
+    if (v.gapRoundChanged) return { level: 'neutral', chip: 'جولة جديدة', tag: 'جولة جديدة', title: 'بدأت جولة جديدة', body: 'الفرق اللي كتبته للجولة اللي قبل. اكتب فرق الجولة الحالية.' };
+    if (v.gapAge > PARAMS.staleSec) return { level: 'caution', chip: 'الفرق قديم', tag: 'تنبيه', title: 'الفرق قديم', body: 'كتبته قبل ' + secs(v.gapAge) + '، والسعر تحرك. حدّثه من التطبيق.' };
+    if (v.tLeft < 10) return { level: 'caution', chip: 'لا تدخل', tag: 'آخر ثواني', title: 'آخر ثواني. لا تدخل', body: 'في آخر الثواني السعر يقفز، والطلب ممكن يتنفذ بسعر سيئ أو يتأخر.' };
+    const early = v.tLeft > 240 ? ' بداية الجولة: باقي وقت طويل والسعر يقدر ينقلب.' : '';
+    if (v.pUp > PARAMS.tailHi || v.pUp < PARAMS.tailLo) {
+      return { level: 'neutral', chip: 'لا تدخل', tag: 'خارج الحسبة', title: 'لا تدخل. محسومة تقريبًا',
+        body: 'الحسبة تعطي Up (طالع) ' + isoP(v.pUp) + '. فوق 90% وتحت 10% ما جربتها كفاية، والسوق هنا غالبًا أدق منها. والربح هنا صغير والخسارة كبيرة.' };
+    }
+    if (!v.havePrices) return { level: 'neutral', chip: 'Up ' + pctP(v.pUp), tag: 'الحسبة الحين', title: 'Up (طالع) ' + isoP(v.pUp) + ' · Down (نازل) ' + isoP(1 - v.pUp), body: 'اكتب سعر Up (طالع) وDown (نازل) من التطبيق عشان أقارن وأقولك إذا السعر عادل.' + early };
+    if (!v.sumOk) return { level: 'neutral', chip: 'راجع النسب', tag: 'تنبيه', title: 'راجع Up (طالع) وDown (نازل)', body: 'مجموعهم لازم يقارب 100%، مثل 32 و67. اكتبهم كنسبة مو كسر عشري.' };
+    if (v.pricesRoundChanged) return { level: 'neutral', chip: 'جولة جديدة', tag: 'جولة جديدة', title: 'نسب التطبيق للجولة اللي قبل', body: 'اكتب سعر Up (طالع) وDown (نازل) للجولة الحالية.' };
+    if (v.pricesAge > PARAMS.staleSec) return { level: 'caution', chip: 'النسب قديمة', tag: 'تنبيه', title: 'نسب التطبيق قديمة', body: 'كتبتها قبل ' + secs(v.pricesAge) + '. النسب تتغير كل ثانية، حدّثها.' };
+    const e = edges(v.pUp, v.costUp, v.costDown);
+    const best = e.up >= e.down ? 'up' : 'down';
+    const bestEdge = Math.max(e.up, e.down);
+    if (bestEdge < PARAMS.edgeMin) {
+      return { level: 'neutral', chip: 'لا تدخل', tag: 'ما فيه أفضلية', title: 'لا تدخل. السعر عادل',
+        body: 'الحسبة تعطي Up (طالع) ' + isoP(v.pUp) + ' والتطبيق يبيعه بـ' + isoP(v.upPrice) + '. الفرق أصغر من خطأ الحسبة. يعني على المدى ما تكسب منها شي، وتدفع الرسوم فوقها.' + early };
+    }
+    const name = best === 'up' ? 'Up (طالع)' : 'Down (نازل)';
+    const pm = best === 'up' ? v.pUp : 1 - v.pUp;
+    const pa = best === 'up' ? v.upPrice : v.downPrice;
+    return { level: 'caution', chip: 'فرق، مو ضمان', tag: 'فيه فرق، مو ضمان', side: best,
+      title: 'الحسبة تختلف عن التطبيق بـ' + pts(bestEdge * 100),
+      body: 'على ' + name + ': الحسبة تقول ' + isoP(pm) + ' والتطبيق يبيعه بـ' + isoP(pa) + '. غالبًا السوق شاف شي قبلك: البوتات تشوف أسعار أسرع، وسعر التطبيق يختلف شوي عن Binance (باينانس)، أو «حركة السوق» أسرع من اللي اخترته. ولو دخلت، احتمال تخسر ' + isoP(1 - pm) + '، ولا تتعدى أقصى مبلغ حددته.' + early };
+  }
+  return { ROUND_MS, erf, phi, probUp, roundStart, roundEnd, sigmaFromCloses, parseNum, trade, exit, edges, sessionOdds, sessionState, counted, pts, secs, rounds, pctP, isoP, verdict };
+})();
+window.Mizan = Mizan;
+
+/* ---------- live Binance feed (only on the hosted page) ---------- */
+const LIVE = !!document.querySelector('meta[name="mizan-live"]');
+const Live = (() => {
+  const COINS = Object.keys(PARAMS.coins);
+  const coins = {};
+  COINS.forEach(c => coins[c] = { last: NaN, lastT: 0, round: 0, ptb: NaN, ptbOk: false, path: [], sigma: NaN, sigmaAt: 0, loading: 0 });
+  const HOSTS = ['wss://data-stream.binance.vision/stream?streams=', 'wss://stream.binance.com:9443/stream?streams='];
+  const REST = 'https://data-api.binance.vision/api/v3/';
+  let ws = null, hostIdx = 0, retry = 0, connected = false, connectedSince = Infinity, lastMsgAt = 0, offset = 0, started = false;
+  const now = () => Date.now() + offset;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  async function getJSON(path) {
+    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 8000);
+    try { const r = await fetch(REST + path, { cache: 'no-store', signal: ctl.signal }); if (!r.ok) throw new Error('http ' + r.status); return await r.json(); }
+    finally { clearTimeout(tm); }
+  }
+  async function syncTime() {
+    try { const t0 = Date.now(); const j = await getJSON('time'); const t1 = Date.now(); if (j && j.serverTime) offset = j.serverTime - (t0 + t1) / 2; } catch (e) {}
+  }
+  async function loadRound(c, R) {
+    const k = coins[c];
+    if (k.loading === R) return;
+    k.loading = R;
+    for (let a = 0; a < 4; a++) {
+      try {
+        const rows = await getJSON('klines?symbol=' + c + 'USDT&interval=1s&startTime=' + R + '&limit=300');
+        if (k.round !== R) break;
+        if (rows.length && rows[0][0] < R + 3000) { k.ptb = +rows[0][1]; k.ptbOk = true; }
+        const firstLive = k.path.length ? k.path[0][0] : Infinity;
+        const hist = rows.map(r => [r[0] + 999, +r[4]]).filter(p => p[0] < firstLive);
+        k.path = hist.concat(k.path);
+        break;
+      } catch (e) { await sleep(800 * (a + 1)); }
+    }
+    if (k.loading === R) k.loading = 0;
+  }
+  async function loadSigma(c) {
+    const k = coins[c];
+    try {
+      const rows = await getJSON('klines?symbol=' + c + 'USDT&interval=1m&limit=61');
+      const s = Mizan.sigmaFromCloses(rows.map(r => +r[4]));
+      if (isFinite(s) && s > 0) { k.sigma = s; k.sigmaAt = Date.now(); }
+    } catch (e) {}
+  }
+  function onTrade(c, p, T) {
+    const k = coins[c];
+    const R = Mizan.roundStart(T);
+    if (R !== k.round) {
+      // we saw the boundary live only if we were already connected before it started
+      const seenLive = k.round === R - Mizan.ROUND_MS && connectedSince <= R;
+      k.round = R; k.path = []; k.ptb = NaN; k.ptbOk = false;
+      if (seenLive) { k.ptb = p; k.ptbOk = true; } else loadRound(c, R);
+    }
+    k.last = p; k.lastT = T;
+    const P = k.path;
+    if (P.length && T - P[P.length - 1][0] < 250) P[P.length - 1][1] = p; else P.push([T, p]);
+  }
+  function connect() {
+    if (ws && (ws.readyState === 0 || ws.readyState === 1)) return;
+    const streams = COINS.map(c => c.toLowerCase() + 'usdt@aggTrade').join('/');
+    let sock;
+    try { sock = new WebSocket(HOSTS[hostIdx] + streams); } catch (e) { hostIdx = (hostIdx + 1) % HOSTS.length; retryLater(); return; }
+    ws = sock;
+    let opened = false;
+    const openTimer = setTimeout(() => { if (!opened) { try { sock.close(); } catch (e) {} } }, 7000);
+    sock.onopen = () => { opened = true; clearTimeout(openTimer); connected = true; connectedSince = now(); retry = 0; };
+    sock.onmessage = ev => {
+      lastMsgAt = Date.now();
+      let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+      const d = m && (m.data || m);
+      if (!d || d.e !== 'aggTrade' || !d.s) return;
+      const c = d.s.replace(/USDT$/, '');
+      if (coins[c]) onTrade(c, +d.p, +d.T);
+    };
+    sock.onerror = () => {};
+    sock.onclose = () => {
+      clearTimeout(openTimer);
+      if (ws !== sock) return;
+      ws = null; connected = false; connectedSince = Infinity;
+      if (!opened) hostIdx = (hostIdx + 1) % HOSTS.length;
+      retryLater();
+    };
+  }
+  function retryLater() { const d = Math.min(10000, 1000 * Math.pow(2, retry++)); setTimeout(connect, d); }
+  function start() {
+    if (started) return; started = true;
+    syncTime().then(() => connect());
+    COINS.forEach(loadSigma);
+    setInterval(() => COINS.forEach(c => { if (Date.now() - coins[c].sigmaAt > 60000) loadSigma(c); }), 15000);
+    setInterval(() => {
+      // watchdog: a silent socket gets replaced
+      if (connected && Date.now() - lastMsgAt > 10000 && ws) { try { ws.close(); } catch (e) {} }
+    }, 3000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      syncTime();
+      if (!ws) connect();
+      else if (Date.now() - lastMsgAt > 5000) { try { ws.close(); } catch (e) {} }
+    });
+  }
+  const status = () => ({ connected, ageMs: lastMsgAt ? Date.now() - lastMsgAt : Infinity });
+  return { coins, start, now, status };
+})();
+
+/* ---------- page ---------- */
+(() => {
+  const $ = id => document.getElementById(id);
+  const KEY = 'mizan.v2';
+  const COINS = Object.keys(PARAMS.coins);
+  const EXAMPLE = { coin: 'BTC', diff: '24.73', dir: 'below', up: '32', down: '67', tLeft: 122 };
+  const num = Mizan.parseNum;
+  const money = (x, sign) => { if (!isFinite(x)) return '–'; const a = Math.abs(x).toFixed(2); if (!sign) return '$' + a; return (x > 0.004 ? '+' : x < -0.004 ? '−' : '') + '$' + a; };
+  const iso = s => '⁦' + s.replace(/^([+−])\$/, '$1⁠$') + '⁩';
+  const pctP = Mizan.pctP;
+  const mmss = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  const hhmm = ms => { const d = new Date(ms); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+  const fmtPrice = x => isFinite(x) ? '$' + x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '–';
+  const fmtSigma = x => !isFinite(x) ? '–' : '$' + (x >= 10 ? Math.round(x) : x >= 1 ? x.toFixed(1) : x.toFixed(2));
+  const cache = new Map();
+  const setText = (id, t) => { if (cache.get(id) !== t) { cache.set(id, t); $(id).textContent = t; } };
+  const setClass = (id, c) => { const k = id + '#cls'; if (cache.get(k) !== c) { cache.set(k, c); $(id).className = c; } };
+  const nowMs = () => LIVE ? Live.now() : Date.now();
+
+  /* state */
+  const blankCoin = () => ({ up: '', down: '', pricesAt: 0, pricesRound: 0, dir: 'below', diff: '', gapAt: 0, gapTLeft: 0, gapRound: 0 });
+  let st = null;
+  try { const raw = localStorage.getItem(KEY); if (raw) st = JSON.parse(raw); } catch (e) {}
+  if (!st || typeof st !== 'object') st = {};
+  st.coins = st.coins || {};
+  COINS.forEach(c => { st.coins[c] = Object.assign(blankCoin(), st.coins[c] || {}); });
+  if (!PARAMS.coins[st.coin]) st.coin = 'BTC';
+  if (st.example === undefined) st.example = !LIVE;
+  if (!LIVE && st.example) Object.assign(st.coins.BTC, { up: EXAMPLE.up, down: EXAMPLE.down, dir: EXAMPLE.dir, diff: EXAMPLE.diff });
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+
+  const shared = ['amt', 'toWin', 'xShares', 'xSell', 'sStart', 'sNow', 'sFloor', 'sTarget', 'sMinutes', 'sMaxBet', 'fee'];
+  const sharedRadios = ['vol', 'side', 'xside'];
+  st.form = st.form || {};
+  shared.forEach(id => { if (st.form[id] != null) $(id).value = st.form[id]; });
+  sharedRadios.forEach(n => { const v = st.form[n]; if (v) { const r = document.querySelector('input[name="' + n + '"][value="' + v + '"]'); if (r) r.checked = true; } });
+  if (!LIVE) { $('volAuto').disabled = true; $('volAutoL').hidden = true; if ($('volAuto').checked) $('volNormal').checked = true; }
+  const radio = n => { const r = document.querySelector('input[name="' + n + '"]:checked'); return r ? r.value : null; };
+  function saveForm() { shared.forEach(id => st.form[id] = $(id).value); sharedRadios.forEach(n => st.form[n] = radio(n)); save(); }
+
+  function loadCoinInputs() {
+    const k = st.coins[st.coin];
+    $('upPct').value = k.up; $('downPct').value = k.down; $('diff').value = k.diff;
+    (k.dir === 'above' ? $('dirAbove') : $('dirBelow')).checked = true;
+    $('c' + st.coin).checked = true;
+    setText('heroTitle', st.coin + ' Up or Down 5m');
+  }
+  loadCoinInputs();
+
+  /* events */
+  document.addEventListener('input', e => {
+    const id = e.target.id, k = st.coins[st.coin], t = nowMs();
+    if (id === 'upPct' || id === 'downPct') {
+      k.up = $('upPct').value; k.down = $('downPct').value;
+      k.pricesAt = t; k.pricesRound = currentRoundEnd(st.coin, t);
+    } else if (id === 'diff') {
+      if (/[-−]/.test(e.target.value)) $('dirBelow').checked = true;
+      if (/\+/.test(e.target.value)) $('dirAbove').checked = true;
+      k.diff = e.target.value; k.dir = radio('dir');
+      k.gapAt = t; k.gapRound = Mizan.roundEnd(t); k.gapTLeft = (k.gapRound - t) / 1000;
+      if (st.coin === 'BTC') st.example = false;
+    } else if (id === 'amt') {
+      $('toWin').value = '';
+    } else if (id === 'xSell') {
+      st.xSellAt = t;
+    }
+    if (st.example && st.coin === 'BTC' && (id === 'upPct' || id === 'downPct')) {
+      st.example = false; k.gapAt = t; k.gapRound = Mizan.roundEnd(t); k.gapTLeft = (k.gapRound - t) / 1000;
+    }
+    saveForm(); render();
+  });
+  document.addEventListener('change', e => {
+    if (e.target.type !== 'radio') return;
+    if (e.target.name === 'coin') { st.coin = e.target.value; loadCoinInputs(); }
+    if (e.target.name === 'dir') { st.coins[st.coin].dir = e.target.value; }
+    saveForm(); render();
+  });
+  $('amtQuick').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $('amt').value = b.dataset.v; $('toWin').value = ''; saveForm(); render(); });
+  $('sBegin').addEventListener('click', () => {
+    if (!(num($('sMinutes').value) > 0)) $('sMinutes').value = '60';
+    $('sStart').value = $('sNow').value || $('sStart').value;
+    st.session = { startedAt: Date.now() };
+    saveForm(); render();
+  });
+  $('sReset').addEventListener('click', () => { st.session = null; save(); render(); });
+  // keep the screen awake while watching a round (when the browser allows it)
+  let wakeLock = null;
+  async function keepAwake() { try { if (navigator.wakeLock && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) {} }
+  if (LIVE) {
+    document.addEventListener('pointerdown', keepAwake, { passive: true });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') keepAwake(); });
+  }
+
+  function currentRoundEnd(c, t) {
+    if (LIVE) { const k = Live.coins[c]; if (k.round) return k.round + Mizan.ROUND_MS; }
+    return Mizan.roundEnd(t);
+  }
+  function sigmaFor(c) {
+    const v = radio('vol') || 'normal';
+    if (v === 'auto') { const s = LIVE ? Live.coins[c].sigma : NaN; return isFinite(s) ? s : PARAMS.coins[c].presets.normal; }
+    return PARAMS.coins[c].presets[v] || PARAMS.coins[c].presets.normal;
+  }
+  // model state for one coin at time t
+  function model(c, t) {
+    if (LIVE) {
+      const k = Live.coins[c];
+      const end = k.round ? k.round + Mizan.ROUND_MS : Mizan.roundEnd(t);
+      const tLeft = (end - t) / 1000;
+      if (!k.round || !k.ptbOk || !isFinite(k.last)) return { haveP: false, tLeft, end, wait: k.round && !k.ptbOk ? 'يجيب سعر البداية من Binance…' : 'يتصل بـBinance…' };
+      if (tLeft <= 0) return { haveP: false, tLeft: 0, end, wait: 'الجولة خلصت، ينتظر الجولة الجديدة…' };
+      const diff = k.last - k.ptb;
+      return { haveP: true, live: true, ptb: k.ptb, cur: k.last, diff, tLeft, end, pUp: Mizan.probUp(diff, tLeft, sigmaFor(c)), gapAge: 0, gapRoundChanged: false };
+    }
+    const k = st.coins[c];
+    const end = Mizan.roundEnd(t);
+    const diffAbs = num(k.diff);
+    if (!isFinite(diffAbs)) return { haveP: false, tLeft: (end - t) / 1000, end };
+    const diff = k.dir === 'above' ? diffAbs : -diffAbs;
+    if (c === 'BTC' && st.example) return { haveP: true, example: true, diff, tLeft: EXAMPLE.tLeft, end, pUp: Mizan.probUp(diff, EXAMPLE.tLeft, sigmaFor(c)), gapAge: 0, gapRoundChanged: false };
+    const gapAge = (t - k.gapAt) / 1000;
+    return { haveP: true, diff, tLeft: k.gapTLeft, liveLeft: (end - t) / 1000, end, pUp: Mizan.probUp(diff, k.gapTLeft, sigmaFor(c)), gapAge, gapRoundChanged: k.gapRound !== end };
+  }
+
+  /* sparkline */
+  let colors = null, colorsAt = 0;
+  function themeColors() {
+    if (!colors || Date.now() - colorsAt > 2000) {
+      const cs = getComputedStyle(document.documentElement);
+      colors = { up: cs.getPropertyValue('--up').trim(), down: cs.getPropertyValue('--down').trim(), muted: cs.getPropertyValue('--muted').trim(), ink: cs.getPropertyValue('--ink').trim() };
+      colorsAt = Date.now();
+    }
+    return colors;
+  }
+  function drawSpark(c, sigma) {
+    const cv = $('spark'); const k = Live.coins[c];
+    const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight || 120;
+    if (!w) return;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+    const col = themeColors();
+    if (!k.ptbOk || !k.path.length) return;
+    const R = k.round, ptb = k.ptb;
+    let maxDev = isFinite(sigma) ? sigma * 0.6 : 0;
+    for (const p of k.path) maxDev = Math.max(maxDev, Math.abs(p[1] - ptb));
+    maxDev = (maxDev || 1) * 1.15;
+    const pad = 10, mid = h / 2;
+    const X = t => Math.min(w, Math.max(0, ((t - R) / Mizan.ROUND_MS) * w));
+    const Y = p => mid - ((p - ptb) / maxDev) * (mid - pad);
+    ctx.setLineDash([4, 4]); ctx.strokeStyle = col.muted; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(w, mid); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = col.muted; ctx.font = '11px "IBM Plex Sans Arabic", sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText('سعر البداية', w - 6, mid - 5);
+    const lastP = k.path[k.path.length - 1][1];
+    ctx.strokeStyle = lastP >= ptb ? col.up : col.down; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    k.path.forEach((p, i) => { const x = X(p[0]), y = Y(p[1]); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+    ctx.stroke();
+    const lx = X(k.path[k.path.length - 1][0]), ly = Y(lastP);
+    ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.arc(lx, ly, 3.5, 0, Math.PI * 2); ctx.fill();
+  }
+
+  function render() {
+    const t = nowMs();
+    const c = st.coin, k = st.coins[c];
+    const m = model(c, t);
+    const liveLeft = LIVE ? m.tLeft : (m.end - t) / 1000;
+
+    // bar
+    setText('clock', mmss(liveLeft));
+    $('clock').classList.toggle('late', liveLeft < 30);
+    setText('roundLbl', 'باقي على نهاية جولة ' + hhmm(m.end - (LIVE ? (Live.now() - Date.now()) : 0)));
+    COINS.forEach(cc => {
+      let txt = '–';
+      if (LIVE) { const mm = cc === c ? m : model(cc, t); if (mm.haveP) txt = 'Up ' + pctP(mm.pUp); }
+      else if (cc === c && m.haveP) txt = 'Up ' + pctP(m.pUp);
+      const el = $('tab' + cc).firstElementChild; if (el.textContent !== txt) el.textContent = txt;
+    });
+
+    // live card
+    $('manualCard').hidden = LIVE;
+    $('spark').hidden = !LIVE;
+    $('liveLink').hidden = LIVE;
+    if (LIVE) {
+      const s = Live.status();
+      const on = s.connected && s.ageMs < 5000;
+      setClass('conn', 'conn ' + (on ? 'on' : 'off'));
+      setText('connTxt', on ? 'لايف من Binance' : s.connected ? 'ينتظر أسعار…' : 'يعيد الاتصال…');
+    } else {
+      setClass('conn', 'conn');
+      setText('connTxt', m.example ? 'مثال من صورتك' : 'يدوي');
+    }
+    const showP = m.haveP;
+    setText('pUpBig', showP ? pctP(m.pUp) : '–');
+    setText('pDnBig', showP ? pctP(1 - m.pUp) : '–');
+    $('splitUp').style.width = showP ? (m.pUp * 100).toFixed(1) + '%' : '50%';
+    setText('ptb', LIVE && showP ? fmtPrice(m.ptb) : '–');
+    setText('cur', LIVE && isFinite(Live.coins[c].last) ? fmtPrice(Live.coins[c].last) : '–');
+    const gapTxt = showP ? (m.diff >= 0 ? '+' : '−') + '$' + Math.abs(m.diff).toFixed(2) : '–';
+    setText('gap', gapTxt);
+    setClass('gap', 'num ' + (showP ? (m.diff >= 0 ? 'pos' : 'neg') : ''));
+    const sig = sigmaFor(c);
+    const P = PARAMS.coins[c].presets;
+    setText('volCalmS', fmtSigma(P.calm)); setText('volNormalS', fmtSigma(P.normal)); setText('volFastS', fmtSigma(P.fast));
+    if (LIVE) { const ls = Live.coins[c].sigma; $('volAutoS').firstElementChild.textContent = isFinite(ls) ? fmtSigma(ls) : '–'; }
+    setText('volHint', LIVE && radio('vol') === 'auto'
+      ? 'تلقائي: محسوب من حركة ' + c + ' في آخر ساعة. الحين ' + iso(fmtSigma(sig)) + ' بالدقيقة.'
+      : 'الأرقام: كم تتحرك ' + c + ' بالدقيقة عادة. عادية تناسب أغلب الأوقات.');
+    const waitEl = $('waiting');
+    waitEl.hidden = !(LIVE && !m.haveP);
+    if (LIVE && !m.haveP) setText('waiting', m.wait || '');
+    if (LIVE) drawSpark(c, sig);
+
+    // manual stamp
+    if (!LIVE) {
+      $('exampleNote').hidden = !(m.example);
+      const stamp = $('stamp');
+      if (m.example) { setText('stamp', 'محسوب على: باقي 2:02 (مثال)'); stamp.classList.remove('stale'); }
+      else if (m.haveP) {
+        setText('stamp', m.gapRoundChanged ? 'الفرق للجولة اللي قبل' : 'محسوب على: باقي ' + mmss(m.tLeft) + (m.gapAge < 1 ? ' · الحين' : ' · قبل ' + Mizan.secs(m.gapAge)));
+        stamp.classList.toggle('stale', m.gapRoundChanged || m.gapAge > PARAMS.staleSec);
+      } else setText('stamp', '');
+    }
+
+    // app prices
+    const upP = num(k.up) / 100, dnP = num(k.down) / 100;
+    const havePrices = upP > 0 && upP < 1 && dnP > 0 && dnP < 1;
+    const sumOk = havePrices && Math.abs(upP + dnP - 1) <= 0.06;
+    const pricesAge = k.pricesAt ? (t - k.pricesAt) / 1000 : 0;
+    const pricesRoundChanged = havePrices && !(m.example) && k.pricesRound && k.pricesRound !== currentRoundEnd(c, t);
+    const pricesFresh = havePrices && sumOk && !pricesRoundChanged && (m.example || pricesAge <= PARAMS.staleSec);
+    if (havePrices && !m.example) {
+      setText('pStamp', pricesRoundChanged ? 'النسب للجولة اللي قبل' : 'كتبتها ' + (pricesAge < 1 ? 'الحين' : 'قبل ' + Mizan.secs(pricesAge)));
+      $('pStamp').classList.toggle('stale', !pricesFresh);
+    } else setText('pStamp', havePrices ? 'نسب المثال' : '');
+
+    // model freshness (manual gap can go stale; live is always current)
+    const modelFresh = m.haveP && !m.gapRoundChanged && !(m.gapAge > PARAMS.staleSec) && (LIVE || m.example || (m.liveLeft > 0));
+
+    // trade
+    const fee = Math.min(Math.max((num($('fee').value) || 0) / 100, 0), 0.2);
+    const side = radio('side');
+    const pSide = m.haveP ? (side === 'up' ? m.pUp : 1 - m.pUp) : NaN;
+    const screenPrice = side === 'up' ? upP : dnP;
+    const amount = num($('amt').value), toWinRaw = num($('toWin').value);
+    const toWin = toWinRaw > amount ? toWinRaw : 0;
+    const sf = { start: num($('sStart').value), now: num($('sNow').value), floor: num($('sFloor').value), target: num($('sTarget').value), minutes: num($('sMinutes').value), maxBet: num($('sMaxBet').value) };
+    if (st.session && st.session.startedAt) sf.startedAt = st.session.startedAt;
+    const ss = Mizan.sessionState(sf, Date.now());
+    const priceForTrade = (pricesFresh || (m.example && havePrices)) ? screenPrice : NaN;
+    const tr = (amount > 0 && modelFresh) ? Mizan.trade({ amount, price: priceForTrade, fee, toWin, p: pSide, err: PARAMS.edgeMin }) : null;
+    const tw = $('tWarn');
+    const msgs = []; let cls = 'note';
+    if (toWinRaw > 0 && !(toWinRaw > amount)) { msgs.push('To Win لازم يكون أكبر من المبلغ: اكتب المبلغ اللي يرجع لك كامل.'); cls = 'note warn'; }
+    if (tr) {
+      setText('oWin', money(tr.profit, true)); setClass('oWin', 'num ' + (tr.profit > 0 ? 'pos' : 'neg'));
+      setText('oPay', 'يرجع لك ' + money(tr.payout));
+      setText('oLose', money(tr.loss, true));
+      setText('oP', pctP(pSide));
+      setText('oPrice', 'سعرك الفعلي ' + Math.round(tr.effPrice * 100) + '%' + (tr.usedToWin ? ' (من To Win)' : ''));
+      setText('oEV', money(tr.ev, true)); setClass('oEV', 'num ' + (tr.evHi < 0 ? 'neg' : ''));
+      if (tr.usedToWin && screenPrice > 0 && Math.abs(tr.effPrice - screenPrice / (1 - fee)) > 0.10) { msgs.push('To Win ما يطابق المبلغ والسعر. اكتبه من جديد بعد ما تكتب المبلغ.'); if (cls === 'note') cls = 'note warn'; }
+      else if (tr.usedToWin && screenPrice > 0 && tr.effPrice - screenPrice > 0.03) { msgs.push('سعرك الفعلي ' + Mizan.isoP(tr.effPrice) + ' مو ' + Mizan.isoP(screenPrice) + ' اللي في الشاشة، لأن المبلغ أكبر من الأسهم المعروضة بسعر الشاشة.'); if (cls === 'note') cls = 'note warn'; }
+      if (tr.evLo < 0 && tr.evHi > 0) msgs.push('المتوسط بين ' + iso(money(tr.evLo, true)) + ' و' + iso(money(tr.evHi, true)) + ' حسب خطأ الحسبة. يعني ما تعرف إذا هي لصالحك أو ضدك.');
+      else if (tr.evHi < 0) msgs.push('حتى في أحسن حال للحسبة، هذي الصفقة خسرانة على المدى.');
+      else if (tr.evLo > 0) msgs.push('المتوسط لصالحك على الورق، بس غالبًا لأن السوق شاف شي قبلك. هالمرة يا تكسب ' + iso(money(tr.profit)) + ' يا تروح ' + iso(money(amount)) + ' كلها.');
+    } else {
+      ['oWin', 'oLose', 'oP', 'oEV'].forEach(id => setText(id, '–'));
+      setText('oPay', ''); setText('oPrice', '');
+      if (amount > 0 && m.haveP && !modelFresh) msgs.push(LIVE ? 'ينتظر سعر الجولة.' : 'حدّث الفرق من التطبيق أول.');
+      else if (amount > 0 && m.haveP && !(priceForTrade > 0) && !toWin) msgs.push('اكتب سعر Up (طالع) وDown (نازل) من التطبيق، أو To Win، عشان أحسب.');
+    }
+    if (ss.status === 'stop_floor' || ss.status === 'stop_time') { msgs.length = 0; msgs.push('وقّف: وصلت حدك. لا تفتح صفقة جديدة.'); cls = 'note stop'; }
+    else if (ss.status === 'target') { msgs.length = 0; msgs.push('وصلت هدفك. لا تفتح صفقة جديدة.'); cls = 'note good'; }
+    else if (isFinite(sf.maxBet) && amount > sf.maxBet) { msgs.unshift('المبلغ أكبر من حدك (' + iso(money(sf.maxBet)) + '). نزّله.'); cls = 'note stop'; }
+    if (!['stop_floor', 'stop_time', 'target'].includes(ss.status) && isFinite(sf.now) && sf.now > 0 && amount >= sf.now * 0.5) { msgs.unshift('هذا نص رصيدك أو أكثر. خسارة وحدة تقضي على جلستك.'); cls = 'note stop'; }
+    tw.hidden = msgs.length === 0; tw.className = cls; tw.textContent = msgs.join(' ');
+    $('tOuts').classList.toggle('is-stale', !tr);
+
+    // verdict
+    const costUp = (side === 'up' && tr && tr.usedToWin) ? tr.effPrice : upP / (1 - fee);
+    const costDown = (side === 'down' && tr && tr.usedToWin) ? tr.effPrice : dnP / (1 - fee);
+    const v = Mizan.verdict({
+      session: ss, live: LIVE, haveP: m.haveP, waitText: m.wait,
+      gapRoundChanged: !!m.gapRoundChanged, gapAge: m.gapAge || 0,
+      tLeft: LIVE ? m.tLeft : (m.example ? EXAMPLE.tLeft : m.liveLeft),
+      pUp: m.pUp, havePrices, sumOk, pricesAge: m.example ? 0 : pricesAge, pricesRoundChanged,
+      upPrice: upP, downPrice: dnP, costUp, costDown,
+    });
+    setClass('verdict', 'verdict ' + v.level);
+    setText('vTag', v.tag); setText('vTitle', v.title); setText('vBody', v.body);
+    setClass('chip', 'chip ' + v.level); setText('chip', v.chip);
+
+    // bars
+    setText('pUpM', modelFresh ? pctP(m.pUp) : '–');
+    setText('pDnM', modelFresh ? pctP(1 - m.pUp) : '–');
+    setText('pUpA', havePrices ? pctP(upP) : '–');
+    setText('pDnA', havePrices ? pctP(dnP) : '–');
+    $('fUp').style.width = modelFresh ? (m.pUp * 100).toFixed(1) + '%' : '0%';
+    $('fDn').style.width = modelFresh ? ((1 - m.pUp) * 100).toFixed(1) + '%' : '0%';
+    const tick = (el, q) => { if (q > 0 && q < 1) { el.hidden = false; el.style.right = (q * 100).toFixed(1) + '%'; } else el.hidden = true; };
+    tick($('tUp'), upP); tick($('tDn'), dnP);
+    $('probs').classList.toggle('is-stale', !modelFresh || (havePrices && !pricesFresh));
+
+    // exit
+    const xShares = num($('xShares').value), xSell = num($('xSell').value) / 100;
+    const xp = m.haveP ? (radio('xside') === 'up' ? m.pUp : 1 - m.pUp) : NaN;
+    const xAge = st.xSellAt ? (t - st.xSellAt) / 1000 : 0;
+    const xv = $('xVerdict');
+    if (xShares > 0 && xSell > 0 && xSell < 1 && modelFresh && xAge <= PARAMS.staleSec) {
+      const x = Mizan.exit({ shares: xShares, sellPrice: xSell, fee, p: xp });
+      $('xOuts').hidden = false;
+      setText('xSellOut', money(x.sell)); setText('xHoldOut', money(x.hold));
+      setText('xHoldNote', 'متوسط بس، النتيجة يا ' + iso(money(xShares)) + ' يا صفر');
+      const band = PARAMS.edgeMin * xShares;
+      const pre = m.example ? 'على أرقام المثال: ' : '';
+      if (x.gain > band) { xv.className = 'note good'; xv.textContent = pre + 'البيع الحين أحسن بـ' + iso(money(x.gain)) + '، وتطلع بمبلغ ثابت بدل يا كل شي يا صفر.'; }
+      else if (x.gain >= -band) { xv.className = 'note'; xv.textContent = pre + 'تقريبًا نفس الشي حسابيًا. البيع يريحك من احتمال ' + Mizan.isoP(x.loseChance) + ' إنها تروح كلها.'; }
+      else { xv.className = 'note warn'; xv.textContent = pre + 'الانتظار أحسن حسب الحسبة بـ' + iso(money(-x.gain)) + '، بس فيه احتمال ' + Mizan.isoP(x.loseChance) + ' إنها تروح كلها.'; }
+    } else {
+      $('xOuts').hidden = true; xv.className = 'note';
+      xv.textContent = (xShares > 0 && xSell > 0 && xAge > PARAMS.staleSec) ? 'سعر البيع قديم. حدّثه من Sell (بيع).'
+        : (xShares > 0 && xSell > 0 && !modelFresh) ? (LIVE ? 'ينتظر سعر الجولة.' : 'حدّث الفرق من التطبيق قبل ما تقرر.')
+        : 'اكتب عدد الأسهم من Positions (صفقاتك) وسعر البيع من Sell (بيع).';
+    }
+
+    // session
+    setText('sFloorL', isFinite(sf.floor) ? money(sf.floor) : '');
+    setText('sTargetL', isFinite(sf.target) ? money(sf.target) : '');
+    if (isFinite(sf.floor) && isFinite(sf.target) && sf.target > sf.floor && isFinite(sf.now)) {
+      const r = Math.min(Math.max((sf.now - sf.floor) / (sf.target - sf.floor), 0), 1);
+      $('sDot').style.right = (r * 100).toFixed(1) + '%';
+    }
+    const pnl = sf.now - sf.start;
+    setText('sPnl', isFinite(pnl) ? money(pnl, true) : '–');
+    setClass('sPnl', 'num ' + (pnl > 0.004 ? 'pos' : pnl < -0.004 ? 'neg' : ''));
+    if (ss.status === 'ok') { setText('sTime', mmss(ss.minutesLeft * 60)); setText('sTimeNote', 'من ' + Mizan.counted(sf.minutes > 0 ? sf.minutes : 60, 'دقيقة', 'دقيقتين', 'دقايق', 'دقيقة')); }
+    else if (ss.status === 'stop_time') { setText('sTime', '0:00'); setText('sTimeNote', 'خلص الوقت'); }
+    else { setText('sTime', isFinite(sf.minutes) && sf.minutes > 0 ? Mizan.counted(sf.minutes, 'دقيقة', 'دقيقتين', 'دقايق', 'دقيقة') : '–'); setText('sTimeNote', st.session ? '' : 'يبدأ العد لما تضغط «ابدأ الجلسة»'); }
+    const odds = Mizan.sessionOdds(sf.now, sf.floor, sf.target, sf.maxBet);
+    if (odds) {
+      setText('sOdds', pctP(odds.reach));
+      const mins = odds.rounds * 5;
+      setText('sOddsNote', odds.rounds > 0 ? 'يعني ' + Mizan.isoP(1 - odds.reach) + ' إنك توصل حد الوقف قبله. وهذا في أحسن حال (50/50 وبدون رسوم) بصفقات ' + iso(money(sf.maxBet)) + '. وبتلعب تقريبًا ' + Mizan.rounds(odds.rounds) + ' (' + (mins >= 60 ? (mins / 60).toFixed(1) + ' ساعة' : Mizan.counted(mins, 'دقيقة', 'دقيقتين', 'دقايق', 'دقيقة')) + ') قبل ما توصل لواحد منهم.' : '');
+    } else { setText('sOdds', '–'); setText('sOddsNote', ''); }
+    const sMsg = {
+      stop_floor: ['note stop', 'وصلت حد الوقف. اسحب الباقي واطلع.'],
+      stop_time: ['note stop', 'خلص وقت الجلسة. اسحب رصيدك واطلع.'],
+      target: ['note good', 'وصلت هدفك. اسحب الحين.'],
+      ok: ['note', 'الجلسة شغالة. حدّث «رصيدي الحين» بعد كل جولة.'],
+    }[ss.status];
+    const sEl = $('sState');
+    if (sMsg) { sEl.hidden = false; sEl.className = sMsg[0]; sEl.textContent = sMsg[1]; } else sEl.hidden = true;
+    const stopped = ['stop_floor', 'stop_time', 'target'].includes(ss.status);
+    $('sBegin').hidden = stopped;
+    setText('sReset', (ss.status === 'stop_time') ? 'ألغِ الوقف' : 'صفّر الجلسة');
+    setText('sBegin', ss.status === 'idle' ? 'ابدأ الجلسة' : 'ابدأ من جديد');
+  }
+
+  /* study panel */
+  function renderStudy() {
+    const cal = PARAMS.calibration;
+    if (!cal) return;
+    const wrap = $('calWrap');
+    const rows = cal.rows.map(r => '<tr><td>' + r.bin + '</td><td>' + r.actual + '</td><td>' + r.n + '</td></tr>').join('');
+    wrap.innerHTML = '<table><caption>' + cal.caption + '</caption><thead><tr><th>الحسبة قالت</th><th>طلعت فعليًا</th><th>عدد المرات</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+  renderStudy();
+
+  render();
+  if (LIVE) {
+    Live.start();
+    let last = 0;
+    const loop = ts => { if (ts - last >= 100) { last = ts; render(); } requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+    setInterval(() => { if (document.visibilityState === 'visible') render(); }, 1000);
+  } else {
+    setInterval(render, 1000);
+  }
+})();
+</script>
+</body>
+</html>
