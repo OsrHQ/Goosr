@@ -108,6 +108,16 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .decision.stop { background: var(--stop-soft); border-color: var(--stop); }
 .decision.stop b { color: var(--stop); }
 .rulemini { margin: 0; font-size: 13px; color: var(--muted); }
+.help summary { cursor: pointer; font-weight: 700; font-size: 16px; }
+.help h3 { margin: 14px 0 4px; font-size: 15px; }
+.help p { margin: 0 0 6px; font-size: 14.5px; max-width: 62ch; }
+.steps { margin: 10px 0 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; }
+.ex { border-collapse: collapse; width: 100%; font-size: 14.5px; margin: 4px 0 8px; }
+.ex th, .ex td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: right; }
+.ex th { font-weight: 600; color: var(--muted); font-size: 13px; }
+.ex td.pos { color: var(--up); font-weight: 700; }
+.ex td.neg { color: var(--down); font-weight: 700; }
+.hint2 { color: var(--muted); font-size: 13px !important; }
 .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .field label { font-size: 13px; font-weight: 600; }
 .inwrap { position: relative; }
@@ -196,6 +206,36 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
       <div class="field"><label for="goal">هدفي</label><div class="inwrap"><input type="text" id="goal" inputmode="decimal" autocomplete="off" value="100"><span>$</span></div></div>
     </div>
     <div id="bankMsg" class="msg"></div>
+  </section>
+
+  <section class="card help">
+    <details id="help" open>
+      <summary>كيف أستخدمها؟ ووش فايدتها؟</summary>
+      <ol class="steps">
+        <li>اختر العملة من فوق.</li>
+        <li><b>قبل ما تشتري:</b> اختر «أبي أدخل» واكتب سعر Up (طالع) من التطبيق. يطلع لك «ادخل» أو «لا تدخل» أو «الشراء مقفل».</li>
+        <li><b>وأنت داخل صفقة:</b> اختر «عندي صفقة»، وحدد جهتك، واكتب سعر Sell (بيع). يطلع لك «بيع الحين» أو «خلها لين النهاية» أو «على كيفك».</li>
+      </ol>
+      <h3>بكم أدخل؟</h3>
+      <p>الصفحة تحدد المبلغ في رسالة «ادخل»: بالكثير 10% من رصيدك. برصيد 10 دولار يعني 1 دولار، فلو خسرت يبقى لك 9 وتكمل. ولما يكبر الرصيد، يكبر المبلغ معه.</p>
+      <h3>وش الفايدة؟</h3>
+      <p>تفرز لك الصفقة الحلوة من السيئة. نفس الجهة وفرصتها 72%، لو دخلتها 100 مرة بدولار:</p>
+      <table class="ex">
+        <thead><tr><th>سعرها في التطبيق</th><th>النتيجة تقريبًا</th></tr></thead>
+        <tbody>
+          <tr><td><span class="num">61%</span></td><td class="pos"><span class="num">+$17</span> ربح</td></tr>
+          <tr><td><span class="num">75%</span></td><td class="neg"><span class="num">−$4</span> خسارة</td></tr>
+        </tbody>
+      </table>
+      <p>الفرق كله في السعر اللي اشتريت فيه. الصفحة تقول «ادخل» بس لما السعر أرخص من الفرصة بفرق واضح.</p>
+      <h3>متى أبيع؟</h3>
+      <ul class="steps">
+        <li><b>خلها لين النهاية:</b> لما السوق يعطيك أقل مما تستاهل صفقتك. هنا الفوز أحسن.</li>
+        <li><b>بيع الحين:</b> لما السوق يدفع أكثر من فرصتها الحقيقية، فتطلع بمبلغ بدل ما تخاطر بكله.</li>
+        <li>التطبيق يقفل البيع في آخر دقيقة، والشراء في آخر 30 ثانية.</li>
+      </ul>
+      <p class="hint2">«ادخل» معناها السعر أرخص من الفرصة، مو فوز أكيد. ممكن تخسرها، والصفحة تقول لك كم احتمال الخسارة.</p>
+    </details>
   </section>
 
   <p class="livelink" id="liveLink" hidden>النسخة اللايف افتحها في Safari: <a href="https://osrhq.github.io/Goosr/" target="_blank" rel="noopener">osrhq.github.io/Goosr</a></p>
@@ -366,6 +406,8 @@ const Live = (() => {
   }
   loadCoin();
   $('manual').hidden = LIVE; $('spark').hidden = !LIVE; $('liveLink').hidden = LIVE;
+  if (st.helpClosed) $('help').open = false;
+  $('help').addEventListener('toggle', () => { st.helpClosed = !$('help').open; save(); });
 
   function sigmaFor(c) { const s = LIVE ? Live.coins[c].sigma : NaN; return isFinite(s) ? s : PARAMS.coins[c].sigma; }
   function model(c, t) {
