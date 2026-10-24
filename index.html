@@ -111,6 +111,22 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .decision.stop { background: var(--stop-soft); border-color: var(--stop); }
 .decision.stop b { color: var(--stop); }
 .rulemini { margin: 0; font-size: 13px; color: var(--muted); }
+.liveq { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--sunk); font-size: 15px; }
+.liveq b { font-weight: 800; }
+.liveq b.up { color: var(--up); }
+.liveq b.down { color: var(--down); }
+.liveq small { display: block; color: var(--muted); font-size: 12.5px; }
+#linkBox summary { cursor: pointer; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pill { font-size: 12.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--sunk); color: var(--muted); }
+.pill.on { background: var(--good-soft); color: var(--good); }
+.pill.bad { background: var(--stop-soft); color: var(--stop); }
+.linkp { margin: 10px 0; font-size: 14px; }
+.keyrow { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.keyrow input { font-size: 16px !important; font-weight: 500 !important; padding-right: 10px !important; }
+.btn { font: inherit; font-weight: 700; font-size: 15px; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: var(--surface); cursor: pointer; }
+.linkbtn { margin-top: 8px; font: inherit; font-size: 13.5px; background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; text-decoration: underline; }
+.btn:focus-visible, .linkbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tabs label small.go { color: var(--good); }
 .help summary { cursor: pointer; font-weight: 700; font-size: 16px; }
 .help h3 { margin: 14px 0 4px; font-size: 15px; }
 .help p { margin: 0 0 6px; font-size: 14.5px; max-width: 62ch; }
@@ -190,6 +206,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
       <div class="field"><label for="upQ">سعر Up (طالع) في التطبيق</label><div class="inwrap"><input type="text" id="upQ" inputmode="decimal" autocomplete="off" placeholder="40"><span>%</span></div></div>
       <div class="field"><label for="dnQ">سعر Down (نازل) في التطبيق</label><div class="inwrap"><input type="text" id="dnQ" inputmode="decimal" autocomplete="off" placeholder="60"><span>%</span></div></div>
     </div>
+    <p class="liveq" id="liveQ" hidden></p>
     <div id="holdBox" class="bank" hidden>
       <div class="field"><span class="flabel">صفقتك</span>
         <div class="seg" role="radiogroup" aria-label="صفقتك">
@@ -212,11 +229,31 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
     <div id="bankMsg" class="msg"></div>
   </section>
 
+  <section class="card" id="linkCard" hidden>
+    <details id="linkBox">
+      <summary>ربط أسعار التطبيق <span id="linkState" class="pill">…</span></summary>
+      <p class="linkp">لما تربط، الصفحة تجيب سعر Up (طالع) وDown (نازل) من التطبيق لحالها، لايف، وتقول لك «ادخل» أو «لا تدخل» بدون ما تكتب شي. الأسعار من Predict.fun، وهي نفس أسواق تبويب التوقعات في Binance.</p>
+      <div class="keyrow">
+        <input type="password" id="pfKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="الصق المفتاح هنا" aria-label="مفتاح Predict.fun">
+        <button type="button" class="btn" id="pfSave">حفظ</button>
+      </div>
+      <button type="button" class="linkbtn" id="pfClear" hidden>امسح المفتاح</button>
+      <ol class="steps">
+        <li>افتح <a href="https://developers.predict.fun" target="_blank" rel="noopener">developers.predict.fun</a> وادخل فريقك.</li>
+        <li>Apps (التطبيقات) ← Create app (سوِّ تطبيق).</li>
+        <li>داخل التطبيق: API Keys (المفاتيح) ← Create (إنشاء). وفي CORS origins (المواقع المسموحة) اكتب <span class="num">https://osrhq.github.io</span></li>
+        <li>انسخ المفتاح، والصقه فوق، واضغط حفظ.</li>
+      </ol>
+      <p class="hint2">المفتاح ينحفظ في جوالك بس، ويقرأ الأسعار بس: ما يقدر يشتري ولا يسحب. لا ترسله لأحد.</p>
+    </details>
+  </section>
+
   <section class="card help">
     <details id="help" open>
       <summary>كيف أستخدمها؟ ووش فايدتها؟</summary>
       <ol class="steps">
         <li>اختر العملة من فوق.</li>
+        <li><b>لو ربطت أسعار التطبيق</b> (تحت «ربط أسعار التطبيق»)، ما تحتاج تكتب أي سعر، والعملة اللي فيها فرصة دخول يطلع عليها «ادخل» فوق.</li>
         <li><b>قبل ما تشتري:</b> اختر «أبي أدخل» واكتب سعر Up (طالع) من التطبيق. يطلع لك «ادخل» أو «لا تدخل» أو «الشراء مقفل»، أو «وقّف» لو خلص رصيدك أو وصلت هدفك.</li>
         <li><b>وأنت داخل صفقة:</b> اختر «عندي صفقة»، وحدد جهتك، واكتب سعر Sell (بيع). يطلع لك «بيع الحين» أو «خلها الحين» أو «على كيفك».</li>
       </ol>
@@ -352,8 +389,10 @@ const Mizan = (() => {
       return { kind: 'no', title: 'على كيفك', body: 'البيع والانتظار تقريبًا نفس الشي. البيع يريحك من احتمال ' + isoP(1 - p) + ' إنها تروح كلها.' };
     }
     if (v.tLeft < PARAMS.buyCloseSec) return { kind: 'no', title: 'الشراء مقفل', body: 'انتظر الجولة الجاية.' };
+    if (v.live && !(v.upQ > 0 && v.upQ < 1 && v.dnQ > 0 && v.dnQ < 1)) return { kind: 'no', title: 'لا تدخل', body: 'ما فيه بائعين كفاية في التطبيق لهالجولة.' };
+    if (v.live && v.spread > 0.05) return { kind: 'no', title: 'لا تدخل', body: 'الفرق بين سعر الشراء والبيع في التطبيق كبير الحين، يعني السعر ياكلك.' };
     if (!(v.upQ > 0 && v.upQ < 1 && v.dnQ > 0 && v.dnQ < 1)) return { kind: 'wait', title: 'اكتب سعر Up (طالع) وDown (نازل)', body: 'من أزرار الشراء في التطبيق، وأقولك ادخل ولا لا.' };
-    if (Math.abs(v.upQ + v.dnQ - 1) > 0.06) return { kind: 'wait', title: 'راجع الأرقام', body: 'سعر Up (طالع) وDown (نازل) مجموعهم لازم يقارب 100، مثل 40 و60.' };
+    if (!v.live && Math.abs(v.upQ + v.dnQ - 1) > 0.06) return { kind: 'wait', title: 'راجع الأرقام', body: 'سعر Up (طالع) وDown (نازل) مجموعهم لازم يقارب 100، مثل 40 و60.' };
     if (!(v.qAge >= -2 && v.qAge <= STALE)) return { kind: 'wait', title: 'حدّث الأسعار', body: (v.qAge > 0 && isFinite(v.qAge) ? 'كتبتها قبل ' + secs(v.qAge) + '، ' : 'هذي من جولة قبل، ') + 'والأسعار تتغير كل ثانية.' };
     const cUp = cost(v.upQ), cDn = cost(v.dnQ);
     const eUp = upLo - cUp, eDn = (1 - upHi) - cDn;
@@ -361,6 +400,7 @@ const Mizan = (() => {
     const name = up ? 'Up (طالع)' : 'Down (نازل)';
     if (e < M) return { kind: 'no', title: 'لا تدخل', body: 'السعر عادل: الفرصة والسعر قريبين من بعض. على المدى ما تكسب منها.' };
     if (p > 0.9) return { kind: 'no', title: 'لا تدخل', body: 'فرصة ' + name + ' فوق 90%، وسعرها عالي: تكسب سنتات وتخسر الدولار كله. والحسبة هنا أضعف من السوق.' };
+    if (e > 0.15 && v.live) return { kind: 'no', title: 'لا تدخل', body: 'الفرق بين الحسبة وسعر التطبيق كبير بشكل غريب، وغالبًا التطبيق شاف شي قبلنا.' };
     if (e > 0.15) return { kind: 'wait', title: 'راجع الأرقام', body: 'الفرق بين السعر والفرصة كبير مرة، وغالبًا الأرقام غلط أو قديمة. تأكد إنها لنفس العملة ونفس الجولة، مثل 40.' };
     if (q < 0.10) return { kind: 'no', title: 'لا تدخل', body: 'سعر ' + name + ' أقل من 10%، يعني يانصيب: أغلب المرات يروح الدولار.' };
     if (up ? v.upAuto : v.dnAuto) return { kind: 'wait', title: 'اكتب سعر ' + name + ' من التطبيق', body: 'ممكن يستاهل لو سعره ' + isoP(Math.floor(maxPrice(p) * 100) / 100) + ' أو أقل. الرقم اللي في الخانة تقدير مو سعر التطبيق.' };
@@ -438,6 +478,95 @@ const Live = (() => {
   return { coins, start, now, status };
 })();
 
+/* ---------- app prices from Predict.fun (the same markets as Binance's Prediction tab) ---------- */
+// Documented API: REST https://api.predict.fun (x-api-key) and WebSocket wss://ws.predict.fun/ws?apiKey=…
+// The user's own read-only key stays in this phone's localStorage.
+const Quotes = (() => {
+  const REST = 'https://api.predict.fun', WSURL = 'wss://ws.predict.fun/ws', KEYS = 'mizan.pfkey';
+  let key = ''; try { key = localStorage.getItem(KEYS) || ''; } catch (e) {}
+  const ids = new Map();     // slug -> { id, state: 'ok' | 'pending' | 'error', at }
+  const books = new Map();   // marketId -> { bid, ask, ts }   (prices of Up: Predict's "Yes" side)
+  const topics = new Set();
+  let ws = null, rid = 1, opened = false, fails = 0, badKey = false, lastPoll = new Map();
+  const book = (id, bids, asks) => {
+    const bid = bids && bids.length ? +bids[0][0] : NaN, ask = asks && asks.length ? +asks[0][0] : NaN;
+    if (isFinite(bid) && isFinite(ask) && bid >= ask) return;   // crossed book: ignore
+    books.set(id, { bid, ask, ts: Date.now() });
+  };
+  const send = o => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); };
+  function connect() {
+    if (!key || (ws && ws.readyState <= 1)) return;
+    let sock; try { sock = new WebSocket(WSURL + '?apiKey=' + encodeURIComponent(key)); } catch (e) { later(); return; }
+    ws = sock; opened = false;
+    sock.onopen = () => { opened = true; fails = 0; topics.forEach(tp => send({ method: 'subscribe', requestId: rid++, params: [tp] })); };
+    sock.onmessage = ev => {
+      let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+      if (!m || m.type !== 'M') return;
+      if (m.topic === 'heartbeat') { send({ method: 'heartbeat', data: m.data }); return; }
+      if (typeof m.topic === 'string' && m.topic.indexOf('predictOrderbook/') === 0 && m.data) book(Number(m.data.marketId), m.data.bids, m.data.asks);
+    };
+    sock.onerror = () => {};
+    sock.onclose = () => { if (ws !== sock) return; ws = null; if (!opened) fails++; later(); };
+  }
+  function later() { if (key) setTimeout(connect, Math.min(15000, 1000 * Math.pow(2, Math.min(fails, 4)))); }
+  async function getJSON(path) {
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 8000);
+    try {
+      const r = await fetch(REST + path, { headers: { 'x-api-key': key }, cache: 'no-store', signal: ctl.signal });
+      if (r.status === 401 || r.status === 403) { badKey = true; throw new Error('key'); }
+      if (!r.ok) throw new Error('http ' + r.status);
+      badKey = false; return await r.json();
+    } finally { clearTimeout(tm); }
+  }
+  async function resolve(slug) {
+    const cur = ids.get(slug);
+    if (cur && (cur.state === 'ok' || cur.state === 'pending' || Date.now() - cur.at < 5000)) return;
+    ids.set(slug, { state: 'pending', at: Date.now() });
+    try {
+      const j = await getJSON('/v1/categories/' + slug);
+      const mk = j && j.data && j.data.markets && j.data.markets[0];
+      const id = mk && Number(mk.id);
+      if (!id) throw new Error('no market');
+      ids.set(slug, { id, state: 'ok', at: Date.now() });
+      const tp = 'predictOrderbook/' + id;
+      if (!topics.has(tp)) { topics.add(tp); send({ method: 'subscribe', requestId: rid++, params: [tp] }); }
+      connect();
+    } catch (e) { ids.set(slug, { state: 'error', at: Date.now() }); }
+  }
+  // fallback when the socket is quiet: the documented REST order book, at most every 3 s per market
+  async function poll(id) {
+    if (Date.now() - (lastPoll.get(id) || 0) < 3000) return;
+    lastPoll.set(id, Date.now());
+    try { const j = await getJSON('/v1/markets/' + id + '/orderbook'); if (j && j.data) book(id, j.data.bids, j.data.asks); } catch (e) {}
+  }
+  // keep only the current round's markets subscribed
+  function prune(keepIds) {
+    topics.forEach(tp => { const id = Number(tp.split('/')[1]); if (!keepIds.has(id)) { topics.delete(tp); send({ method: 'unsubscribe', requestId: rid++, params: [tp] }); books.delete(id); } });
+  }
+  // live app prices for a coin's round, or null. up/down bid/ask in 0..1.
+  function quote(coin, roundStartMs) {
+    if (!key || !roundStartMs) return null;
+    const slug = coin.toLowerCase() + '-updown-5m-' + Math.round(roundStartMs / 1000);
+    const e = ids.get(slug);
+    if (!e || e.state !== 'ok') { resolve(slug); return null; }
+    const b = books.get(e.id);
+    if (!b || Date.now() - b.ts > 4000) poll(e.id);
+    if (!b || Date.now() - b.ts > 10000) return null;
+    const r2 = x => Math.round(x * 100) / 100;
+    return { marketId: e.id, upBid: b.bid, upAsk: b.ask, dnBid: isFinite(b.ask) ? r2(1 - b.ask) : NaN, dnAsk: isFinite(b.bid) ? r2(1 - b.bid) : NaN, spread: b.ask - b.bid, age: (Date.now() - b.ts) / 1000 };
+  }
+  function idFor(coin, roundStartMs) { const e = ids.get(coin.toLowerCase() + '-updown-5m-' + Math.round(roundStartMs / 1000)); return e && e.state === 'ok' ? e.id : 0; }
+  function setKey(k) {
+    key = (k || '').trim(); badKey = false; fails = 0;
+    try { if (key) localStorage.setItem(KEYS, key); else localStorage.removeItem(KEYS); } catch (e) {}
+    ids.clear(); books.clear(); topics.clear();
+    const old = ws; ws = null; try { old && old.close(); } catch (e) {}
+    if (key) connect();
+  }
+  const status = () => !key ? 'nokey' : badKey ? 'badkey' : (books.size && [...books.values()].some(b => Date.now() - b.ts < 10000)) ? 'live' : 'connecting';
+  return { quote, idFor, prune, setKey, status, hasKey: () => !!key };
+})();
+
 /* ---------- page ---------- */
 (() => {
   const $ = id => document.getElementById(id);
@@ -470,10 +599,17 @@ const Live = (() => {
   }
   loadCoin();
   $('manual').hidden = LIVE; $('spark').hidden = !LIVE; $('liveLink').hidden = LIVE;
+  $('linkCard').hidden = !LIVE;
+  if (LIVE) {
+    $('linkBox').open = !Quotes.hasKey();
+    $('pfSave').addEventListener('click', () => { const v = $('pfKey').value.trim(); if (!v) return; Quotes.setKey(v); $('pfKey').value = ''; render(); });
+    $('pfClear').addEventListener('click', () => { Quotes.setKey(''); $('linkBox').open = true; render(); });
+  }
   if (st.helpClosed) $('help').open = false;
   $('help').addEventListener('toggle', () => { st.helpClosed = !$('help').open; save(); });
 
   // live: realized move of the last hour (the study's strongest volatility signal); otherwise the clock table
+  function appQuote(c) { return LIVE && Live.coins[c].round ? Quotes.quote(c, Live.coins[c].round) : null; }
   function sigmaFor(c) { const s = LIVE ? Live.coins[c].sigma : NaN; return isFinite(s) ? s : Mizan.clockSigma(c, LIVE ? Live.coins[c].last : NaN, Date.now()); }
   function model(c, t) {
     if (LIVE) {
@@ -562,7 +698,10 @@ const Live = (() => {
     COINS.forEach(cc => {
       const mm = cc === c ? m : (LIVE ? model(cc, t) : { ok: false });
       const el = $('tab' + cc);
-      if (mm.ok) { const up = mm.pUp >= 0.5; const txt = (up ? '↑ ' : '↓ ') + LRI + pctP(up ? mm.pUp : 1 - mm.pUp) + PDI; if (el.textContent !== txt) { el.textContent = txt; el.className = up ? 'up' : 'down'; } }
+      const aq = mm.ok ? appQuote(cc) : null;
+      const go = aq ? Mizan.decide({ bal: num(st.bal), goal: num(st.goal), ok: true, tLeft: mm.tLeft, pUp: mm.pUp, pAlt: mm.pAlt, mode: 'enter', live: true, upQ: aq.upAsk, dnQ: aq.dnAsk, spread: aq.spread, qAge: 0 }) : null;
+      if (go && go.kind === 'go') { const txt = 'ادخل ' + (go.side === 'up' ? '↑' : '↓'); if (el.textContent !== txt) { el.textContent = txt; el.className = 'go'; } }
+      else if (mm.ok) { const up = mm.pUp >= 0.5; const txt = (up ? '↑ ' : '↓ ') + LRI + pctP(up ? mm.pUp : 1 - mm.pUp) + PDI; if (el.textContent !== txt) { el.textContent = txt; el.className = up ? 'up' : 'down'; } }
       else if (el.textContent !== '–') { el.textContent = '–'; el.className = ''; }
     });
     // header
@@ -609,12 +748,34 @@ const Live = (() => {
     setClass('bankMsg', bankCls); setHTML('bankMsg', bankHTML);
     // the decision
     const k = st.m[c];
-    const d = Mizan.decide({
+    const aq = m.ok ? appQuote(c) : null;
+    const d = Mizan.decide(aq ? {
+      bal, goal, ok: m.ok, wait: m.wait, tLeft: left, pUp: m.pUp, pAlt: m.pAlt, mode: st.mode, live: true,
+      upQ: aq.upAsk, dnQ: aq.dnAsk, spread: aq.spread, qAge: 0,
+      side: k.side, sellQ: k.side === 'up' ? aq.upBid : aq.dnBid, sellAge: 0,
+    } : {
       bal, goal, ok: m.ok, wait: m.wait, tLeft: left, pUp: m.pUp, pAlt: m.pAlt, mode: st.mode,
       upQ: num(k.upQ) / 100, dnQ: num(k.dnQ) / 100, qAge: k.qAt && k.qRound === m.end ? (t - k.qAt) / 1000 : Infinity,
       upAuto: k.auto === 'upQ', dnAuto: k.auto === 'dnQ',
       side: k.side, sellQ: num(k.sellQ) / 100, sellAge: k.sellAt && k.sellRound === m.end ? (t - k.sellAt) / 1000 : Infinity,
     });
+    // live app prices replace the typing boxes
+    const pc = x => isFinite(x) ? LRI + Math.round(x * 100) + '%' + PDI : '–';
+    $('enterBox').hidden = st.mode === 'hold' || !!aq;
+    $('sellQ').closest('.field').hidden = !!aq;
+    $('liveQ').hidden = !aq;
+    if (aq) setHTML('liveQ', st.mode === 'hold'
+      ? 'سعر البيع في التطبيق الحين: Up (طالع) <b class="up">' + pc(aq.upBid) + '</b> · Down (نازل) <b class="down">' + pc(aq.dnBid) + '</b><small>لايف من التطبيق</small>'
+      : 'سعر الشراء في التطبيق الحين: Up (طالع) <b class="up">' + pc(aq.upAsk) + '</b> · Down (نازل) <b class="down">' + pc(aq.dnAsk) + '</b><small>لايف من التطبيق</small>');
+    // link status
+    if (LIVE) {
+      const qs = Quotes.status();
+      const lbl = { nokey: ['pill', 'مو مربوط'], badkey: ['pill bad', 'المفتاح غلط'], live: ['pill on', 'مربوط لايف'], connecting: ['pill', 'يتصل…'] }[qs];
+      setClass('linkState', lbl[0]); setText('linkState', lbl[1]);
+      $('pfClear').hidden = qs === 'nokey';
+      const keep = new Set(); COINS.forEach(cc => { const id = Live.coins[cc].round ? Quotes.idFor(cc, Live.coins[cc].round) : 0; if (id) keep.add(id); });
+      if (keep.size) Quotes.prune(keep);
+    }
     setClass('decision', 'decision ' + d.kind); setText('dTitle', d.title); setText('dBody', d.body);
     // glance line: highest worthwhile price per side
     if (m.ok && left >= PARAMS.buyCloseSec && st.mode === 'enter' && d.kind !== 'stop') {
