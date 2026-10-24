@@ -244,6 +244,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
     <div class="bank">
       <div class="field"><label for="bal">رصيدي الحين (حدّثه بعد كل صفقة)</label><div class="inwrap"><input type="text" id="bal" inputmode="decimal" autocomplete="off" value="10"><span>$</span></div></div>
       <div class="field"><label for="goal">هدفي</label><div class="inwrap"><input type="text" id="goal" inputmode="decimal" autocomplete="off" value="100"><span>$</span></div></div>
+      <div class="field"><label for="floor">أوقف لو نزل رصيدي لـ</label><div class="inwrap"><input type="text" id="floor" inputmode="decimal" autocomplete="off" placeholder="مثلًا 90"><span>$</span></div></div>
     </div>
     <div id="bankMsg" class="msg"></div>
   </section>
@@ -392,6 +393,7 @@ const Mizan = (() => {
   function decide(v) {
     const M = PARAMS.edgeMin, HOLD_M = 0.05, STALE = PARAMS.staleSec;
     if (v.bal <= 0) return { kind: 'stop', title: 'وقّف', body: 'خلص الرصيد اللي حددته. لا تودع من جديد.' };
+    if (v.floor > 0 && v.bal <= v.floor) return { kind: 'stop', title: 'وقّف. وصلت حدك', body: 'رصيدك وصل الحد اللي حطيته بنفسك وأنت هادي. اسحب الباقي وكمّل يوم ثاني.' };
     if (!isFinite(v.bal) || !(v.goal > 0)) return { kind: 'wait', title: 'اكتب رصيدك وهدفك', body: 'منهم أحسب المبلغ ومتى توقف.' };
     if (v.bal >= v.goal) return { kind: 'stop', title: 'وصلت هدفك. اسحب', body: 'اسحب الحين ووقّف، قبل لا ترجع تلعب فيه.' };
     if (v.bal < 2) return { kind: 'stop', title: 'وقّف', body: 'باقي أقل من 2 دولار، وأقل صفقة دولار، يعني نص رصيدك أو أكثر. اسحب الباقي ولا تودع من جديد.' };
@@ -644,7 +646,7 @@ const Quotes = (() => {
   let st = {};
   try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) {}
   if (!PARAMS.coins[st.coin]) st.coin = 'BTC';
-  st.bal = st.bal ?? '10'; st.goal = st.goal ?? '100';
+  st.bal = st.bal ?? '10'; st.goal = st.goal ?? '100'; st.floor = st.floor ?? '';
   st.m = st.m || {}; COINS.forEach(c => st.m[c] = Object.assign({ dir: 'below', diff: '', at: 0, left: 0, round: 0, upQ: '', dnQ: '', qAt: 0, side: 'down', sellQ: '', sellAt: 0 }, st.m[c] || {}));
   st.mode = st.mode === 'hold' ? 'hold' : 'enter';
   st.bell = !!st.bell;
@@ -652,7 +654,7 @@ const Quotes = (() => {
   Mizan.setRound(st.len * 60000);
   $('len' + st.len).checked = true;
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
-  $('bal').value = st.bal; $('goal').value = st.goal;
+  $('bal').value = st.bal; $('goal').value = st.goal; $('floor').value = st.floor;
   function loadCoin() {
     $('c' + st.coin).checked = true; const k = st.m[st.coin];
     $('diff').value = k.diff; (k.dir === 'above' ? $('dirAbove') : $('dirBelow')).checked = true;
@@ -740,7 +742,7 @@ const Quotes = (() => {
 
   document.addEventListener('input', e => {
     const id = e.target.id, t = tNow();
-    if (id === 'bal' || id === 'goal') st[id] = e.target.value;
+    if (id === 'bal' || id === 'goal' || id === 'floor') st[id] = e.target.value;
     if (id === 'upQ' || id === 'dnQ') {
       const k = st.m[st.coin], other = id === 'upQ' ? 'dnQ' : 'upQ', R = Mizan.roundEnd(t);
       k[id] = e.target.value; k[id + 'At'] = t; k[id + 'R'] = R; if (k.auto === id) k.auto = '';
@@ -809,7 +811,7 @@ const Quotes = (() => {
       const mm = cc === c ? m : (LIVE ? model(cc, t) : { ok: false });
       const el = $('tab' + cc);
       const aq = mm.ok ? appQuote(cc) : null;
-      const go = aq ? Mizan.decide({ bal: num(st.bal), goal: num(st.goal), ok: true, tLeft: mm.tLeft, pUp: mm.pUp, pAlt: mm.pAlt, mode: 'enter', live: true, upQ: aq.upAsk, dnQ: aq.dnAsk, spread: aq.spread, qAge: 0 }) : null;
+      const go = aq ? Mizan.decide({ bal: num(st.bal), goal: num(st.goal), floor: num(st.floor), ok: true, tLeft: mm.tLeft, pUp: mm.pUp, pAlt: mm.pAlt, mode: 'enter', live: true, upQ: aq.upAsk, dnQ: aq.dnAsk, spread: aq.spread, qAge: 0 }) : null;
       if (go && go.kind === 'go') {
         const txt = 'ادخل ' + (go.side === 'up' ? '↑' : '↓'); if (el.textContent !== txt) { el.textContent = txt; el.className = 'go'; }
         Alert.fire(cc, Live.coins[cc].round, 'go-' + go.side, '✓ ادخل ' + (go.side === 'up' ? 'Up (طالع)' : 'Down (نازل)') + ' في ' + cc);
@@ -863,11 +865,11 @@ const Quotes = (() => {
     const k = st.m[c];
     const aq = m.ok ? appQuote(c) : null;
     const d = Mizan.decide(aq ? {
-      bal, goal, ok: m.ok, wait: m.wait, tLeft: left, pUp: m.pUp, pAlt: m.pAlt, mode: st.mode, live: true,
+      bal, goal, floor: num(st.floor), ok: m.ok, wait: m.wait, tLeft: left, pUp: m.pUp, pAlt: m.pAlt, mode: st.mode, live: true,
       upQ: aq.upAsk, dnQ: aq.dnAsk, spread: aq.spread, qAge: 0,
       side: k.side, sellQ: k.side === 'up' ? aq.upBid : aq.dnBid, sellAge: 0,
     } : {
-      bal, goal, ok: m.ok, wait: m.wait, tLeft: left, pUp: m.pUp, pAlt: m.pAlt, mode: st.mode,
+      bal, goal, floor: num(st.floor), ok: m.ok, wait: m.wait, tLeft: left, pUp: m.pUp, pAlt: m.pAlt, mode: st.mode,
       upQ: num(k.upQ) / 100, dnQ: num(k.dnQ) / 100, qAge: k.qAt && k.qRound === m.end ? (t - k.qAt) / 1000 : Infinity,
       upAuto: k.auto === 'upQ', dnAuto: k.auto === 'dnQ',
       side: k.side, sellQ: num(k.sellQ) / 100, sellAge: k.sellAt && k.sellRound === m.end ? (t - k.sellAt) / 1000 : Infinity,
