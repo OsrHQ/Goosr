@@ -244,6 +244,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
         <li>ما فيه شي في التطبيق يتنبأ بالاتجاه أحسن من بُعد السعر والوقت الباقي. الزخم، والسلاسل، والعملات الثانية، كلها ما تفيد.</li>
         <li>السلاسل: بعد جولة طالع، الجاية طلعت 49% تقريبًا. يعني ما فيه شي اسمه «جا دورها».</li>
         <li>العملات الثلاث تمشي مع بعض: إذا BTC طلع، ETH يطلع في 82–84% من المرات. يعني 10 دولار على الثلاث كأنها رهان واحد بـ26 دولار تقريبًا.</li>
+        <li>سوق ETH وBNB في التطبيق صغير، فالسعر يتحرك عليك أكثر لما تشتري. BTC أحسن.</li>
         <li>السوق أهدى في الويكند، وحركته تتضاعف وقت افتتاح السوق الأمريكي (العصر بتوقيت السعودية). الصفحة تحسب هذا لحالها.</li>
       </ul>
       <p class="hint2">«ادخل» معناها السعر أرخص من الفرصة، مو فوز أكيد. ممكن تخسرها، والصفحة تقول لك كم احتمال الخسارة.</p>
@@ -270,7 +271,8 @@ const PARAMS = {
       we: [0.92,1.13,0.82,0.80,0.75,0.75,0.64,0.64,0.63,0.69,0.67,0.79,0.81,0.58,0.63,0.72,0.86,0.95,1.05,1.01,0.89,0.68,0.60,0.67] },
   },
   edgeMin: 0.08,        // the model's error band: a side is only worth it this far below its chance
-  fee: 0.004,
+  // fee per share = feeRate × min(price, 1 − price): 0.71 USDT on 237.22 shares at 71.8¢ in the user's screenshot
+  feeRate: 0.01,
   buyCloseSec: 30, sellCloseSec: 60,
   staleSec: 15,         // app prices typed longer ago than this are too old
 };
@@ -280,13 +282,17 @@ const Mizan = (() => {
   const ROUND_MS = 300000;
   function erf(x) { const s = x < 0 ? -1 : 1; x = Math.abs(x); const t = 1 / (1 + 0.3275911 * x); return s * (1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x)); }
   const phi = x => 0.5 * (1 + erf(x / Math.SQRT2));
-  function probUp(diff, tLeft, sigma) { if (!isFinite(diff)) return NaN; if (!(tLeft > 0)) return diff >= 0 ? 1 : 0; if (!(sigma > 0)) return NaN; return phi(diff / (sigma * Math.sqrt(tLeft / 60))); }
+  function probUp(diff, tLeft, sigma) { if (!isFinite(diff)) return NaN; if (!(tLeft > 0)) return diff > 0 ? 1 : diff < 0 ? 0 : 0.5; if (!(sigma > 0)) return NaN; return phi(diff / (sigma * Math.sqrt(tLeft / 60))); }
   const roundStart = ms => Math.floor(ms / ROUND_MS) * ROUND_MS;
   const roundEnd = ms => roundStart(ms) + ROUND_MS;
   function sigmaFromCloses(c) { const r = []; for (let i = 1; i < c.length; i++) if (c[i] > 0 && c[i - 1] > 0) r.push(Math.log(c[i] / c[i - 1])); if (r.length < 10) return NaN; const m = r.reduce((a, b) => a + b, 0) / r.length; return Math.sqrt(r.reduce((a, b) => a + (b - m) ** 2, 0) / (r.length - 1)) * c[c.length - 1]; }
   function parseNum(s) { if (s == null) return NaN; let t = String(s).trim().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); t = t.replace(/[^\d.,٫،]/g, ''); if (/^[1-9]\d{0,2}(,\d{3})+(\.\d+)?$/.test(t)) t = t.replace(/,/g, ''); t = t.replace(/[٫,،]/g, '.'); if ((t.match(/\./g) || []).length > 1) return NaN; return (t === '' || t === '.') ? NaN : parseFloat(t); }
   // highest app price (0..1) at which a side with chance p is still worth buying
-  const maxPrice = p => (p - PARAMS.edgeMin) * (1 - PARAMS.fee);
+  // what one share really costs, and what one share really pays when sold
+  const cost = q => q + PARAMS.feeRate * Math.min(q, 1 - q);
+  const proceeds = q => q - PARAMS.feeRate * Math.min(q, 1 - q);
+  // highest app price at which a side with chance p is still worth buying
+  const maxPrice = p => { const t = p - PARAMS.edgeMin; const lo = t / (1 + PARAMS.feeRate); return lo <= 0.5 ? lo : (t - PARAMS.feeRate) / (1 - PARAMS.feeRate); };
   // in a fair game no way of betting beats balance/goal; fees make it lower
   const reachOdds = (bal, goal) => (bal > 0 && goal > bal) ? bal / goal : NaN;
   // the model is over-confident in the tails, so it never shows more than 96% or less than 4%
@@ -308,7 +314,7 @@ const Mizan = (() => {
   // BNB on Binance has sticky $0.01 ticks: a fatter-tailed, slower shape (used as a second opinion)
   function probUpT2(diff, tLeft, sigma) {
     if (!isFinite(diff) || !(sigma > 0)) return NaN;
-    if (!(tLeft > 0)) return diff >= 0 ? 1 : 0;
+    if (!(tLeft > 0)) return diff > 0 ? 1 : diff < 0 ? 0 : 0.5;
     const z = diff / (0.472 * sigma * Math.pow(tLeft / 60, 0.721));
     return 0.5 + z / (2 * Math.sqrt(2 + z * z));
   }
@@ -326,7 +332,7 @@ const Mizan = (() => {
   }
   /* one decision. kind: go | sell | no | stop | wait */
   function decide(v) {
-    const FEE = PARAMS.fee, M = PARAMS.edgeMin, HOLD_M = 0.05, STALE = PARAMS.staleSec;
+    const M = PARAMS.edgeMin, HOLD_M = 0.05, STALE = PARAMS.staleSec;
     if (v.bal <= 0) return { kind: 'stop', title: 'وقّف', body: 'خلص الرصيد اللي حددته. لا تودع من جديد.' };
     if (!isFinite(v.bal) || !(v.goal > 0)) return { kind: 'wait', title: 'اكتب رصيدك وهدفك', body: 'منهم أحسب المبلغ ومتى توقف.' };
     if (v.bal >= v.goal) return { kind: 'stop', title: 'وصلت هدفك. اسحب', body: 'اسحب الحين ووقّف، قبل لا ترجع تلعب فيه.' };
@@ -340,7 +346,7 @@ const Mizan = (() => {
       if (v.tLeft < PARAMS.sellCloseSec) return { kind: 'no', title: 'البيع مقفل', body: 'الصفقة تكمل للنهاية. ' + now };
       if (!(v.sellQ > 0 && v.sellQ < 1)) return { kind: 'wait', title: 'اكتب سعر البيع', body: 'من زر Sell (بيع) في التطبيق. ' + now };
       if (!(v.sellAge >= -2 && v.sellAge <= STALE)) return { kind: 'wait', title: 'حدّث سعر البيع', body: (v.sellAge > 0 && isFinite(v.sellAge) ? 'كتبته قبل ' + secs(v.sellAge) + '. ' : 'هذا من جولة قبل. ') + now };
-      const val = v.sellQ * (1 - FEE) - pHi, valLo = v.sellQ * (1 - FEE) - pLo;
+      const val = proceeds(v.sellQ) - pHi, valLo = proceeds(v.sellQ) - pLo;
       if (val >= HOLD_M) return { kind: 'sell', title: 'بيع الحين', body: 'السوق يدفع ' + isoP(v.sellQ) + ' وفرصتها ' + isoP(p) + '. البيع أحسن من الانتظار.' };
       if (valLo <= -HOLD_M) return { kind: 'no', title: 'خلها الحين', body: 'فرصتها ' + isoP(p) + ' والبيع بـ' + isoP(v.sellQ) + ' أقل منها. بس تخسرها كلها في ' + isoP(1 - p) + ' من المرات. رجّع شيّك قبل ما يقفل البيع.' };
       return { kind: 'no', title: 'على كيفك', body: 'البيع والانتظار تقريبًا نفس الشي. البيع يريحك من احتمال ' + isoP(1 - p) + ' إنها تروح كلها.' };
@@ -349,7 +355,7 @@ const Mizan = (() => {
     if (!(v.upQ > 0 && v.upQ < 1 && v.dnQ > 0 && v.dnQ < 1)) return { kind: 'wait', title: 'اكتب سعر Up (طالع) وDown (نازل)', body: 'من أزرار الشراء في التطبيق، وأقولك ادخل ولا لا.' };
     if (Math.abs(v.upQ + v.dnQ - 1) > 0.06) return { kind: 'wait', title: 'راجع الأرقام', body: 'سعر Up (طالع) وDown (نازل) مجموعهم لازم يقارب 100، مثل 40 و60.' };
     if (!(v.qAge >= -2 && v.qAge <= STALE)) return { kind: 'wait', title: 'حدّث الأسعار', body: (v.qAge > 0 && isFinite(v.qAge) ? 'كتبتها قبل ' + secs(v.qAge) + '، ' : 'هذي من جولة قبل، ') + 'والأسعار تتغير كل ثانية.' };
-    const cUp = v.upQ / (1 - FEE), cDn = v.dnQ / (1 - FEE);
+    const cUp = cost(v.upQ), cDn = cost(v.dnQ);
     const eUp = upLo - cUp, eDn = (1 - upHi) - cDn;
     const up = eUp >= eDn, e = up ? eUp : eDn, p = up ? v.pUp : 1 - v.pUp, q = up ? v.upQ : v.dnQ, c = up ? cUp : cDn;
     const name = up ? 'Up (طالع)' : 'Down (نازل)';
@@ -362,7 +368,7 @@ const Mizan = (() => {
     if (amt < 1) return { kind: 'stop', title: 'وقّف', body: 'رصيدك أقل من $1، أقل مبلغ في التطبيق. لا تودع من جديد.' };
     const lock = v.tLeft < PARAMS.sellCloseSec ? ' البيع مقفل الحين: لو دخلت، الصفقة تكمل للنهاية.' : '';
     const big = amt > 0.1 * v.bal + 1e-9 ? ' انتبه: ' + isoD(amt) + ' هي \u2066' + Math.round(100 * amt / v.bal) + '%\u2069 من رصيدك، لأن التطبيق ما يقبل أقل من دولار.' : '';
-    const win = amt ? amt * (1 - FEE) / q - amt : 0;
+    const win = amt ? amt / c - amt : 0;
     return { kind: 'go', side: up ? 'up' : 'down', amount: amt, title: 'ادخل ' + name + (amt ? ' بـ' + isoD(amt) : ''),
       body: 'تخسر تقريبًا في ' + isoP(1 - p) + ' من المرات: لو خسرت ' + isoS(-amt) + ' · لو كسبت ' + isoS(win) + '. سعره ' + isoP(q) + ' وفرصته حسب الحسبة ' + isoP(p) + '، مو مضمون.' + big + lock };
   }
@@ -578,7 +584,7 @@ const Live = (() => {
       setText('leadPct', pctP(p));
       setText('leadOther', (up ? 'Down (نازل) ' : 'Up (طالع) ') + LRI + pctP(1 - p) + PDI);
       const ab = m.diff >= 0;
-      setHTML('gapLine', m.diff === 0 ? 'السعر نفس سعر البداية <span class="num">(Price to Beat)</span>. لو بقى كذا يفوز Up (طالع).'
+      setHTML('gapLine', m.diff === 0 ? 'السعر نفس سعر البداية <span class="num">(Price to Beat)</span>. لو بقى كذا تنقسم الجولة نص بنص.'
         : 'السعر <b class="' + (ab ? 'pos' : 'neg') + '">' + (ab ? 'فوق' : 'تحت') + '</b> سعر البداية <span class="num">(Price to Beat)</span> بـ<b class="num ' + (ab ? 'pos' : 'neg') + '">$' + Math.abs(m.diff).toFixed(2) + '</b>');
     } else {
       setClass('lead', 'lead'); setText('leadName', 'الأرجح'); setText('leadPct', '–'); setText('leadOther', ''); setHTML('gapLine', m.wait || '');
