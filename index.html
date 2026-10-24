@@ -105,6 +105,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .decision span { font-size: 14.5px; }
 .decision.go { background: var(--good-soft); border-color: var(--good); }
 .decision.go b { color: var(--good); }
+.btn.entered { margin-top: 8px; align-self: flex-start; background: var(--good); border-color: var(--good); }
 .decision.sell { background: var(--warn-soft); border-color: var(--warn); }
 .decision.sell b { color: var(--warn); }
 .decision.no b { color: var(--muted); }
@@ -216,7 +217,8 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
       </div>
       <div class="field"><label for="sellQ">سعر Sell (البيع) في التطبيق</label><div class="inwrap"><input type="text" id="sellQ" inputmode="decimal" autocomplete="off" placeholder="55"><span>%</span></div></div>
     </div>
-    <div id="decision" class="decision" aria-live="polite"><b id="dTitle">…</b><span id="dBody"></span></div>
+    <div id="decision" class="decision" aria-live="polite"><b id="dTitle">…</b><span id="dBody"></span>
+      <button type="button" class="btn entered" id="dEntered" hidden>دخلت، تابع صفقتي</button></div>
     <p class="rulemini" id="rule"></p>
   </section>
 
@@ -255,7 +257,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
         <li>اختر العملة من فوق.</li>
         <li><b>لو ربطت أسعار التطبيق</b> (تحت «ربط أسعار التطبيق»)، ما تحتاج تكتب أي سعر، والعملة اللي فيها فرصة دخول يطلع عليها «ادخل» فوق.</li>
         <li><b>قبل ما تشتري:</b> اختر «أبي أدخل» واكتب سعر Up (طالع) من التطبيق. يطلع لك «ادخل» أو «لا تدخل» أو «الشراء مقفل»، أو «وقّف» لو خلص رصيدك أو وصلت هدفك.</li>
-        <li><b>وأنت داخل صفقة:</b> اختر «عندي صفقة»، وحدد جهتك، واكتب سعر Sell (بيع). يطلع لك «بيع الحين» أو «خلها الحين» أو «على كيفك».</li>
+        <li><b>وأنت داخل صفقة:</b> اختر «عندي صفقة»، وحدد جهتك، واكتب سعر Sell (بيع). يطلع لك «انحش: بيع الحين» أو «خلك: لا تبيع الحين» أو «على كيفك». ولو ضغطت «دخلت» تحت «ادخل»، الصفحة تتابع صفقتك لحالها.</li>
       </ol>
       <h3>بكم أدخل؟</h3>
       <p>الصفحة تحدد المبلغ في رسالة «ادخل»: 10% من رصيدك، وأقل شي دولار لأن التطبيق ما يقبل أقل. برصيد 10 دولار يعني دولار واحد بس. لو نزل رصيدك تحت 10، الدولار يصير أكثر من 10% والصفحة تنبهك، وتحت 2 دولار تقول لك وقّف. لا تزيد المبلغ عشان تعوّض خسارة.</p>
@@ -384,8 +386,8 @@ const Mizan = (() => {
       if (!(v.sellQ > 0 && v.sellQ < 1)) return { kind: 'wait', title: 'اكتب سعر البيع', body: 'من زر Sell (بيع) في التطبيق. ' + now };
       if (!(v.sellAge >= -2 && v.sellAge <= STALE)) return { kind: 'wait', title: 'حدّث سعر البيع', body: (v.sellAge > 0 && isFinite(v.sellAge) ? 'كتبته قبل ' + secs(v.sellAge) + '. ' : 'هذا من جولة قبل. ') + now };
       const val = proceeds(v.sellQ) - pHi, valLo = proceeds(v.sellQ) - pLo;
-      if (val >= HOLD_M) return { kind: 'sell', title: 'بيع الحين', body: 'السوق يدفع ' + isoP(v.sellQ) + ' وفرصتها ' + isoP(p) + '. البيع أحسن من الانتظار.' };
-      if (valLo <= -HOLD_M) return { kind: 'no', title: 'خلها الحين', body: 'فرصتها ' + isoP(p) + ' والبيع بـ' + isoP(v.sellQ) + ' أقل منها. بس تخسرها كلها في ' + isoP(1 - p) + ' من المرات. رجّع شيّك قبل ما يقفل البيع.' };
+      if (val >= HOLD_M) return { kind: 'sell', title: 'انحش: بيع الحين', body: 'السوق يدفع ' + isoP(v.sellQ) + ' وفرصتها ' + isoP(p) + '. البيع أحسن من الانتظار.' };
+      if (valLo <= -HOLD_M) return { kind: 'no', title: 'خلك: لا تبيع الحين', body: 'فرصتها ' + isoP(p) + ' والبيع بـ' + isoP(v.sellQ) + ' أقل منها. بس تخسرها كلها في ' + isoP(1 - p) + ' من المرات. رجّع شيّك قبل ما يقفل البيع.' };
       return { kind: 'no', title: 'على كيفك', body: 'البيع والانتظار تقريبًا نفس الشي. البيع يريحك من احتمال ' + isoP(1 - p) + ' إنها تروح كلها.' };
     }
     if (v.tLeft < PARAMS.buyCloseSec) return { kind: 'no', title: 'الشراء مقفل', body: 'انتظر الجولة الجاية.' };
@@ -398,7 +400,7 @@ const Mizan = (() => {
     const eUp = upLo - cUp, eDn = (1 - upHi) - cDn;
     const up = eUp >= eDn, e = up ? eUp : eDn, p = up ? v.pUp : 1 - v.pUp, q = up ? v.upQ : v.dnQ, c = up ? cUp : cDn;
     const name = up ? 'Up (طالع)' : 'Down (نازل)';
-    if (e < M) return { kind: 'no', title: 'لا تدخل', body: 'السعر عادل: الفرصة والسعر قريبين من بعض. على المدى ما تكسب منها.' };
+    if (e < M) return { kind: 'no', title: '✗ لا تدخل', body: 'السعر عادل: الفرصة والسعر قريبين من بعض. على المدى ما تكسب منها.' };
     if (p > 0.9) return { kind: 'no', title: 'لا تدخل', body: 'فرصة ' + name + ' فوق 90%، وسعرها عالي: تكسب سنتات وتخسر الدولار كله. والحسبة هنا أضعف من السوق.' };
     if (e > 0.15 && v.live) return { kind: 'no', title: 'لا تدخل', body: 'الفرق بين الحسبة وسعر التطبيق كبير بشكل غريب، وغالبًا التطبيق شاف شي قبلنا.' };
     if (e > 0.15) return { kind: 'wait', title: 'راجع الأرقام', body: 'الفرق بين السعر والفرصة كبير مرة، وغالبًا الأرقام غلط أو قديمة. تأكد إنها لنفس العملة ونفس الجولة، مثل 40.' };
@@ -409,8 +411,8 @@ const Mizan = (() => {
     const lock = v.tLeft < PARAMS.sellCloseSec ? ' البيع مقفل الحين: لو دخلت، الصفقة تكمل للنهاية.' : '';
     const big = amt > 0.1 * v.bal + 1e-9 ? ' انتبه: ' + isoD(amt) + ' هي \u2066' + Math.round(100 * amt / v.bal) + '%\u2069 من رصيدك، لأن التطبيق ما يقبل أقل من دولار.' : '';
     const win = amt ? amt / c - amt : 0;
-    return { kind: 'go', side: up ? 'up' : 'down', amount: amt, title: 'ادخل ' + name + (amt ? ' بـ' + isoD(amt) : ''),
-      body: 'تخسر تقريبًا في ' + isoP(1 - p) + ' من المرات: لو خسرت ' + isoS(-amt) + ' · لو كسبت ' + isoS(win) + '. سعره ' + isoP(q) + ' وفرصته حسب الحسبة ' + isoP(p) + '، مو مضمون.' + big + lock };
+    return { kind: 'go', side: up ? 'up' : 'down', amount: amt, title: '✓ ادخل ' + name + (amt ? ' بـ' + isoD(amt) : ''),
+      body: 'لو كسبت ' + isoS(win) + ' · لو خسرت ' + isoS(-amt) + ' · تخسر تقريبًا ' + Math.round((1 - p) * 100) + ' من كل 100 مرة.' + big + lock };
   }
   return { ROUND_MS, phi, probUp, probUpT2, clockSigma, usStandardTime, roundStart, roundEnd, sigmaFromCloses, parseNum, maxPrice, reachOdds, pctP, isoP, stake, decide, secs };
 })();
@@ -600,6 +602,8 @@ const Quotes = (() => {
   loadCoin();
   $('manual').hidden = LIVE; $('spark').hidden = !LIVE; $('liveLink').hidden = LIVE;
   $('linkCard').hidden = !LIVE;
+  let lastGo = null;
+  $('dEntered').addEventListener('click', () => { if (!lastGo) return; st.m[st.coin].side = lastGo; st.mode = 'hold'; save(); loadCoin(); render(); });
   if (LIVE) {
     $('linkBox').open = !Quotes.hasKey();
     $('pfSave').addEventListener('click', () => { const v = $('pfKey').value.trim(); if (!v) return; Quotes.setKey(v); $('pfKey').value = ''; render(); });
@@ -777,6 +781,8 @@ const Quotes = (() => {
       if (keep.size) Quotes.prune(keep);
     }
     setClass('decision', 'decision ' + d.kind); setText('dTitle', d.title); setText('dBody', d.body);
+    $('dEntered').hidden = !(d.kind === 'go' && st.mode === 'enter');
+    lastGo = d.kind === 'go' ? d.side : null;
     // glance line: highest worthwhile price per side
     if (m.ok && left >= PARAMS.buyCloseSec && st.mode === 'enter' && d.kind !== 'stop') {
       const f = p => { const q = Mizan.maxPrice(p); return p <= 0.9 && q > 0.01 ? 'يستاهل لو سعره ' + LRI + Math.floor(q * 100) + '%' + PDI + ' أو أقل' : 'ما يستاهل'; };
