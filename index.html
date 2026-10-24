@@ -96,6 +96,18 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .msg.good { background: var(--good-soft); color: var(--good); }
 
 .bank { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.flabel { font-size: 13px; font-weight: 600; }
+.decision { border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 4px; background: var(--sunk); border: 2px solid var(--line); }
+.decision b { font-size: 26px; font-weight: 800; line-height: 1.2; }
+.decision span { font-size: 14.5px; }
+.decision.go { background: var(--good-soft); border-color: var(--good); }
+.decision.go b { color: var(--good); }
+.decision.sell { background: var(--warn-soft); border-color: var(--warn); }
+.decision.sell b { color: var(--warn); }
+.decision.no b { color: var(--muted); }
+.decision.stop { background: var(--stop-soft); border-color: var(--stop); }
+.decision.stop b { color: var(--stop); }
+.rulemini { margin: 0; font-size: 13px; color: var(--muted); }
 .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .field label { font-size: 13px; font-weight: 600; }
 .inwrap { position: relative; }
@@ -155,10 +167,26 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
     </div>
   </section>
 
-  <section class="card rule" aria-labelledby="h-rule">
-    <h2 id="h-rule">قارن بالتطبيق قبل ما تشتري</h2>
-    <div id="rule"></div>
-    <p>شوف سعر الجهة في التطبيق: إذا أعلى من الرقم هذا، لا تشتريها. الرقم يتغير كل ثانية.</p>
+  <section class="card" aria-label="القرار">
+    <div class="seg" role="radiogroup" aria-label="وضعك">
+      <input type="radio" name="mode" id="mEnter" value="enter" checked><label for="mEnter">أبي أدخل</label>
+      <input type="radio" name="mode" id="mHold" value="hold"><label for="mHold">عندي صفقة</label>
+    </div>
+    <div id="enterBox" class="bank">
+      <div class="field"><label for="upQ">سعر Up (طالع) في التطبيق</label><div class="inwrap"><input type="text" id="upQ" inputmode="decimal" autocomplete="off" placeholder="40"><span>%</span></div></div>
+      <div class="field"><label for="dnQ">سعر Down (نازل) في التطبيق</label><div class="inwrap"><input type="text" id="dnQ" inputmode="decimal" autocomplete="off" placeholder="60"><span>%</span></div></div>
+    </div>
+    <div id="holdBox" class="bank" hidden>
+      <div class="field"><span class="flabel">صفقتك</span>
+        <div class="seg" role="radiogroup" aria-label="صفقتك">
+          <input type="radio" name="hside" id="hUp" value="up"><label for="hUp" class="up">Up (طالع)</label>
+          <input type="radio" name="hside" id="hDn" value="down" checked><label for="hDn" class="down">Down (نازل)</label>
+        </div>
+      </div>
+      <div class="field"><label for="sellQ">سعر البيع في Sell</label><div class="inwrap"><input type="text" id="sellQ" inputmode="decimal" autocomplete="off" placeholder="55"><span>%</span></div></div>
+    </div>
+    <div id="decision" class="decision" aria-live="polite"><b id="dTitle">…</b><span id="dBody"></span></div>
+    <p class="rulemini" id="rule"></p>
   </section>
 
   <section class="card" aria-labelledby="h-bank">
@@ -180,6 +208,7 @@ const PARAMS = {
   edgeMin: 0.08,        // the model's error band: a side is only worth it this far below its chance
   fee: 0.004,
   buyCloseSec: 30, sellCloseSec: 60,
+  staleSec: 15,         // app prices typed longer ago than this are too old
 };
 
 /* ---------- math ---------- */
@@ -197,7 +226,50 @@ const Mizan = (() => {
   // in a fair game no way of betting beats balance/goal; fees make it lower
   const reachOdds = (bal, goal) => (bal > 0 && goal > bal) ? bal / goal : NaN;
   const pctP = x => !isFinite(x) ? '–' : x < 0.01 ? '<1%' : x > 0.99 ? '>99%' : Math.round(x * 100) + '%';
-  return { ROUND_MS, phi, probUp, roundStart, roundEnd, sigmaFromCloses, parseNum, maxPrice, reachOdds, pctP };
+  const isoP = x => '\u2066' + pctP(x) + '\u2069';
+  const isoD = x => '\u2066$' + (Math.round(x * 100) / 100) + '\u2069';
+  function counted(n, one, two, few, many) { n = Math.round(n); return n === 1 ? one : n === 2 ? two : (n >= 3 && n <= 10) ? n + ' ' + few : n + ' ' + many; }
+  const secs = n => counted(n, 'ثانية', 'ثانيتين', 'ثواني', 'ثانية');
+  // stake: a quarter of the Kelly fraction, never above 10% of the balance, at least the app's $1
+  function stake(p, cost, bal) {
+    if (!(bal > 0) || !(cost > 0 && cost < 1)) return 0;
+    const kelly = Math.max(0, (p - cost) / (1 - cost));
+    const a = Math.min(0.10 * bal, 0.25 * kelly * bal);
+    return bal >= 1 ? Math.max(1, Math.floor(a)) : 0;
+  }
+  /* one decision. kind: go | sell | no | stop | wait */
+  function decide(v) {
+    const FEE = PARAMS.fee, M = PARAMS.edgeMin, HOLD_M = 0.05, STALE = PARAMS.staleSec;
+    if (v.bal <= 0) return { kind: 'stop', title: 'وقّف', body: 'خلص الرصيد اللي حددته. لا تودع من جديد.' };
+    if (v.bal >= v.goal) return { kind: 'stop', title: 'وصلت هدفك. اسحب', body: 'اسحب الحين ووقّف، قبل لا ترجع تلعب فيه.' };
+    if (!v.ok) return { kind: 'wait', title: 'انتظر', body: v.wait || '' };
+    if (v.mode === 'hold') {
+      const p = v.side === 'up' ? v.pUp : 1 - v.pUp;
+      const now = 'فرصة صفقتك الحين ' + isoP(p) + '.';
+      if (v.tLeft < PARAMS.sellCloseSec) return { kind: 'no', title: 'البيع مقفل', body: 'الصفقة تكمل للنهاية. ' + now };
+      if (!(v.sellQ > 0 && v.sellQ < 1)) return { kind: 'wait', title: 'اكتب سعر البيع', body: 'من زر Sell (بيع) في التطبيق. ' + now };
+      if (v.sellAge > STALE) return { kind: 'wait', title: 'حدّث سعر البيع', body: 'كتبته قبل ' + secs(v.sellAge) + '. ' + now };
+      const val = v.sellQ * (1 - FEE) - p;
+      if (val >= HOLD_M) return { kind: 'sell', title: 'بيع الحين', body: 'السوق يدفع ' + isoP(v.sellQ) + ' وفرصتها ' + isoP(p) + '. البيع أحسن من الانتظار.' };
+      if (val <= -HOLD_M) return { kind: 'no', title: 'خلها لين النهاية', body: 'فرصتها ' + isoP(p) + ' والبيع بـ' + isoP(v.sellQ) + ' أقل منها. بس تخسرها كلها في ' + isoP(1 - p) + ' من المرات.' };
+      return { kind: 'no', title: 'على كيفك', body: 'البيع والانتظار تقريبًا نفس الشي. البيع يريحك من احتمال ' + isoP(1 - p) + ' إنها تروح كلها.' };
+    }
+    if (v.tLeft < PARAMS.buyCloseSec) return { kind: 'no', title: 'الشراء مقفل', body: 'انتظر الجولة الجاية.' };
+    if (!(v.upQ > 0 && v.upQ < 1 && v.dnQ > 0 && v.dnQ < 1)) return { kind: 'wait', title: 'اكتب سعر Up وDown', body: 'من التطبيق، وأقولك ادخل ولا لا.' };
+    if (Math.abs(v.upQ + v.dnQ - 1) > 0.06) return { kind: 'wait', title: 'راجع الأرقام', body: 'Up وDown مجموعهم لازم يقارب 100، مثل 40 و60.' };
+    if (v.qAge > STALE) return { kind: 'wait', title: 'حدّث الأسعار', body: 'كتبتها قبل ' + secs(v.qAge) + '، والأسعار تتغير كل ثانية.' };
+    const cUp = v.upQ / (1 - FEE), cDn = v.dnQ / (1 - FEE);
+    const eUp = v.pUp - cUp, eDn = (1 - v.pUp) - cDn;
+    const up = eUp >= eDn, e = up ? eUp : eDn, p = up ? v.pUp : 1 - v.pUp, q = up ? v.upQ : v.dnQ, c = up ? cUp : cDn;
+    const name = up ? 'Up (طالع)' : 'Down (نازل)';
+    if (e < M) return { kind: 'no', title: 'لا تدخل', body: 'السعر عادل: الفرصة والسعر قريبين من بعض. على المدى ما تكسب منها.' };
+    if (p > 0.9) return { kind: 'no', title: 'لا تدخل', body: 'فرصتها فوق 90%، والحسبة هنا أضعف من السوق.' };
+    const amt = stake(p, c, v.bal);
+    const lock = v.tLeft < PARAMS.sellCloseSec ? ' وبعدها ما تقدر تبيع.' : '';
+    return { kind: 'go', side: up ? 'up' : 'down', amount: amt, title: 'ادخل ' + name + (amt ? ' بـ' + isoD(amt) : ''),
+      body: 'سعره ' + isoP(q) + ' وفرصته ' + isoP(p) + '. مو مضمون: تخسر في ' + isoP(1 - p) + ' من المرات.' + lock };
+  }
+  return { ROUND_MS, phi, probUp, roundStart, roundEnd, sigmaFromCloses, parseNum, maxPrice, reachOdds, pctP, isoP, stake, decide, secs };
 })();
 window.Mizan = Mizan;
 
@@ -278,10 +350,18 @@ const Live = (() => {
   try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) {}
   if (!PARAMS.coins[st.coin]) st.coin = 'BTC';
   st.bal = st.bal ?? '10'; st.goal = st.goal ?? '100';
-  st.m = st.m || {}; COINS.forEach(c => st.m[c] = Object.assign({ dir: 'below', diff: '', at: 0, left: 0, round: 0 }, st.m[c] || {}));
+  st.m = st.m || {}; COINS.forEach(c => st.m[c] = Object.assign({ dir: 'below', diff: '', at: 0, left: 0, round: 0, upQ: '', dnQ: '', qAt: 0, side: 'down', sellQ: '', sellAt: 0 }, st.m[c] || {}));
+  st.mode = st.mode === 'hold' ? 'hold' : 'enter';
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
   $('bal').value = st.bal; $('goal').value = st.goal;
-  function loadCoin() { $('c' + st.coin).checked = true; const k = st.m[st.coin]; $('diff').value = k.diff; (k.dir === 'above' ? $('dirAbove') : $('dirBelow')).checked = true; }
+  function loadCoin() {
+    $('c' + st.coin).checked = true; const k = st.m[st.coin];
+    $('diff').value = k.diff; (k.dir === 'above' ? $('dirAbove') : $('dirBelow')).checked = true;
+    $('upQ').value = k.upQ; $('dnQ').value = k.dnQ; $('sellQ').value = k.sellQ;
+    (k.side === 'up' ? $('hUp') : $('hDn')).checked = true;
+    (st.mode === 'hold' ? $('mHold') : $('mEnter')).checked = true;
+    $('enterBox').hidden = st.mode === 'hold'; $('holdBox').hidden = st.mode !== 'hold';
+  }
   loadCoin();
   $('manual').hidden = LIVE; $('spark').hidden = !LIVE; $('liveLink').hidden = LIVE;
 
@@ -304,6 +384,14 @@ const Live = (() => {
   document.addEventListener('input', e => {
     const id = e.target.id, t = tNow();
     if (id === 'bal' || id === 'goal') st[id] = e.target.value;
+    if (id === 'upQ' || id === 'dnQ') {
+      const k = st.m[st.coin]; k[id] = e.target.value; k.qAt = t;
+      // fill the other side too, unless it was typed in the last few seconds
+      k['typed_' + id] = t;
+      const a = num(e.target.value), other = id === 'upQ' ? 'dnQ' : 'upQ';
+      if (a > 0 && a < 100 && !(t - (k['typed_' + other] || 0) < 8000)) { $(other).value = String(Math.round((100 - a) * 10) / 10); k[other] = $(other).value; }
+    }
+    if (id === 'sellQ') { const k = st.m[st.coin]; k.sellQ = e.target.value; k.sellAt = t; }
     if (id === 'diff') {
       const k = st.m[st.coin];
       if (/[-−]/.test(e.target.value)) $('dirBelow').checked = true;
@@ -315,6 +403,8 @@ const Live = (() => {
   document.addEventListener('change', e => {
     if (e.target.name === 'coin') { st.coin = e.target.value; loadCoin(); }
     if (e.target.name === 'dir') st.m[st.coin].dir = e.target.value;
+    if (e.target.name === 'mode') { st.mode = e.target.value; loadCoin(); }
+    if (e.target.name === 'hside') st.m[st.coin].side = e.target.value;
     save(); render();
   });
   let wakeLock = null;
@@ -376,18 +466,19 @@ const Live = (() => {
     else if (isFinite(bal) && isFinite(goal)) { const o = Mizan.reachOdds(bal, goal); bankHTML = 'فرصة إن ' + LRI + '$' + bal + PDI + ' تصير ' + LRI + '$' + goal + PDI + ' قبل لا تخلص: <b>' + (o < 0.01 ? LRI + '<1%' + PDI : LRI + Math.floor(o * 100) + '%' + PDI + ' أو أقل') + '</b>مهما كانت طريقة لعبك، ومع الرسوم أقل. إذا خلصت، وقّف ولا تودع.'; }
     else bankHTML = 'اكتب رصيدك وهدفك.';
     setClass('bankMsg', bankCls); setHTML('bankMsg', bankHTML);
-    // the rule
-    let rule;
-    if (bal <= 0) rule = '<div class="msg stop"><b>وقّف</b>خلص الرصيد اللي حددته.</div>';
-    else if (left < PARAMS.buyCloseSec) rule = '<div class="msg"><b>الشراء مقفل</b>انتظر الجولة الجاية.</div>';
-    else if (!m.ok) rule = '<div class="msg">' + (m.wait || '') + '</div>';
-    else {
-      const qUp = Mizan.maxPrice(m.pUp), qDn = Mizan.maxPrice(1 - m.pUp);
-      const line = (cls, name, q) => '<div class="line ' + (q > 0.01 ? cls : 'no') + '"><span>' + name + ' يستاهل تحت</span><b class="num">' + (q > 0.01 ? Math.floor(q * 100) + '%' : 'ما يستاهل') + '</b></div>';
-      rule = (m.pUp >= 0.5 ? line('up', 'Up (طالع)', qUp) + line('down', 'Down (نازل)', qDn) : line('down', 'Down (نازل)', qDn) + line('up', 'Up (طالع)', qUp));
-      if (left < PARAMS.sellCloseSec) rule += '<div class="msg warn">البيع مقفل: لو اشتريت الحين، تكمل الصفقة للنهاية.</div>';
-    }
-    setHTML('rule', rule);
+    // the decision
+    const k = st.m[c];
+    const d = Mizan.decide({
+      bal, goal, ok: m.ok, wait: m.wait, tLeft: left, pUp: m.pUp, mode: st.mode,
+      upQ: num(k.upQ) / 100, dnQ: num(k.dnQ) / 100, qAge: k.qAt ? (t - k.qAt) / 1000 : 0,
+      side: k.side, sellQ: num(k.sellQ) / 100, sellAge: k.sellAt ? (t - k.sellAt) / 1000 : 0,
+    });
+    setClass('decision', 'decision ' + d.kind); setText('dTitle', d.title); setText('dBody', d.body);
+    // glance line: highest worthwhile price per side
+    if (m.ok && left >= PARAMS.buyCloseSec && st.mode === 'enter') {
+      const f = q => q > 0.01 ? LRI + Math.floor(q * 100) + '%' + PDI : 'ما يستاهل';
+      setText('rule', 'Up (طالع) يستاهل تحت ' + f(Mizan.maxPrice(m.pUp)) + ' · Down (نازل) يستاهل تحت ' + f(Mizan.maxPrice(1 - m.pUp)));
+    } else setText('rule', '');
   }
 
   render();
