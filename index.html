@@ -70,6 +70,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .title { display: flex; flex-direction: column; line-height: 1.3; }
 .title b { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
 .title small { color: var(--muted); font-size: 12.5px; }
+#lockLbl { color: var(--warn); font-weight: 500; }
 .clock { font-family: var(--font-display); font-size: 34px; font-weight: 700; line-height: 1; }
 .clock.late { color: var(--down); }
 .conn { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
@@ -159,6 +160,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; }
       <div class="title">
         <b id="ttl">BTC Up or Down 5m</b>
         <small id="roundLbl">جولة –</small>
+        <small id="lockLbl"></small>
         <span id="conn" class="conn"><i></i><span id="connTxt">…</span></span>
       </div>
       <b id="clock" class="clock num">--:--</b>
@@ -246,7 +248,9 @@ const PARAMS = {
   },
   edgeMin: 0.08,         // smaller gaps sit inside the model's error
   sideLo: 0.15, sideHi: 0.85,
-  lateSec: 30, earlySec: 240,
+  buyCloseSec: 30,      // the app stops buying in the last 30 s
+  sellCloseSec: 60,     // and stops selling in the last minute
+  earlySec: 240,
   staleSec: 15,
   fee: 0.004,
   flowWindowSec: 30,
@@ -298,20 +302,21 @@ const Mizan = (() => {
   function verdict(v) {
     if (v.limit === 'floor') return { level: 'critical', title: 'وقّف. وصلت حدك', body: 'رصيدك وصل الحد اللي حطيته. اسحب الباقي واطلع، ولا تفتح جولة ثانية.' };
     if (v.limit === 'goal') return { level: 'good', title: 'وصلت هدفك. اسحب ووقّف', body: 'هذا اللي حددته. اسحب الحين قبل لا ترجع تلعب فيه.' };
+    if (v.tLeft < PARAMS.buyCloseSec) return { level: 'neutral', title: 'الشراء مقفل', body: 'التطبيق يقفل الشراء في آخر 30 ثانية. انتظر الجولة الجاية.' };
     if (!v.haveP) return { level: 'neutral', title: v.live ? 'ينتظر سعر الجولة' : 'اكتب الفرق من التطبيق', body: v.wait || '' };
     if (v.stale) return { level: 'caution', title: 'الفرق قديم', body: 'كتبته قبل ' + secs(v.age) + '، والسعر تحرك. حدّثه.' };
-    if (v.tLeft < PARAMS.lateSec) return { level: 'caution', title: 'آخر ثواني. لا تدخل', body: 'في آخر 30 ثانية السعر يقفز، والطلب ممكن يتنفذ بسعر سيئ.' };
+    const lock = v.tLeft < PARAMS.sellCloseSec ? ' وانتبه: لو اشتريت الحين ما تقدر تبيع، الصفقة تكمل للنهاية.' : '';
     const lead = v.pUp >= 0.5 ? 'Up (طالع)' : 'Down (نازل)', pl = Math.max(v.pUp, 1 - v.pUp);
     if (v.tLeft > PARAMS.earlySec) return { level: 'neutral', title: 'بداية الجولة. انتظر', body: 'باقي أكثر من 4 دقايق، والسعر يقدر ينقلب. الحين ' + lead + ' ' + isoP(pl) + '.' };
-    if (pl > PARAMS.sideHi) return { level: 'neutral', title: lead + ' شبه محسومة', body: 'فرصتها ' + isoP(pl) + '. سعرها في التطبيق غالبًا عالي: تكسب قليل وتخسر كثير.' };
-    if (!v.appUp) return { level: 'neutral', title: 'الأقرب ' + lead + ' ' + isoP(pl), body: 'اكتب سعر Up من التطبيق تحت، عشان تعرف إذا يستاهل.' };
+    if (pl > PARAMS.sideHi) return { level: 'neutral', title: lead + ' شبه محسومة', body: 'فرصتها ' + isoP(pl) + '. سعرها في التطبيق غالبًا عالي: تكسب قليل وتخسر كثير.' + lock };
+    if (!v.appUp) return { level: 'neutral', title: 'الأقرب ' + lead + ' ' + isoP(pl), body: 'اكتب سعر Up من التطبيق تحت، عشان تعرف إذا يستاهل.' + lock };
     if (v.appStale) return { level: 'caution', title: 'سعر التطبيق قديم', body: 'كتبته قبل ' + secs(v.appAge) + '. حدّثه.' };
     const eUp = v.pUp - v.appUp / (1 - PARAMS.fee), eDn = (1 - v.pUp) - (1 - v.appUp) / (1 - PARAMS.fee);
     const best = eUp >= eDn ? 'up' : 'down', e = Math.max(eUp, eDn);
-    if (e < PARAMS.edgeMin) return { level: 'neutral', title: 'السعر عادل. لا تدخل', body: 'الفرصة ' + lead + ' ' + isoP(pl) + '، والتطبيق مسعّرها قريب منها. على المدى ما تكسب منها شي، وتدفع الرسوم فوقها.' };
+    if (e < PARAMS.edgeMin) return { level: 'neutral', title: 'السعر عادل. لا تدخل', body: 'الفرصة ' + lead + ' ' + isoP(pl) + '، والتطبيق مسعّرها قريب منها. على المدى ما تكسب منها شي، وتدفع الرسوم فوقها.' + lock };
     const nm = best === 'up' ? 'Up (طالع)' : 'Down (نازل)';
     const p = best === 'up' ? v.pUp : 1 - v.pUp, q = best === 'up' ? v.appUp : 1 - v.appUp;
-    return { level: 'caution', title: nm + ' أرخص من فرصته بـ' + pts(e * 100), body: 'فرصته ' + isoP(p) + ' والتطبيق يبيعه بـ' + isoP(q) + '. مو ضمان: ممكن السوق شاف شي قبلك. لو دخلت، احتمال تخسر ' + isoP(1 - p) + '، ومبلغ صغير بس.' };
+    return { level: 'caution', title: nm + ' أرخص من فرصته بـ' + pts(e * 100), body: 'فرصته ' + isoP(p) + ' والتطبيق يبيعه بـ' + isoP(q) + '. مو ضمان: ممكن السوق شاف شي قبلك. لو دخلت، احتمال تخسر ' + isoP(1 - p) + '، ومبلغ صغير بس.' + lock };
   }
   return { ROUND_MS, erf, phi, probUp, roundStart, roundEnd, sigmaFromCloses, parseNum, payout, counted, pts, secs, pctP, isoP, verdict };
 })();
@@ -556,7 +561,9 @@ const Live = (() => {
     COINS.forEach(cc => { const mm = cc === c ? m : (LIVE ? model(cc, t) : { haveP: false }); const el = $('tab' + cc).firstElementChild; const txt = mm.haveP ? 'Up ' + pctP(mm.pUp) : '–'; if (el.textContent !== txt) el.textContent = txt; });
     // header
     const left = LIVE ? m.tLeft : (m.end - t) / 1000;
-    setText('clock', mmss(left)); $('clock').classList.toggle('late', left < PARAMS.lateSec);
+    setText('clock', mmss(left)); $('clock').classList.toggle('late', left < PARAMS.sellCloseSec);
+    setText('lockLbl', left > PARAMS.sellCloseSec ? 'البيع يقفل بعد ' + mmss(left - PARAMS.sellCloseSec) + ' · الشراء بعد ' + mmss(left - PARAMS.buyCloseSec)
+      : left > PARAMS.buyCloseSec ? 'البيع مقفل · الشراء يقفل بعد ' + mmss(left - PARAMS.buyCloseSec) : 'الشراء والبيع مقفلين');
     setText('roundLbl', 'جولة ' + hhmm(m.end - (LIVE ? Live.now() - Date.now() : 0)));
     if (LIVE) { const s = Live.status(), on = s.connected && s.ageMs < 5000; setClass('conn', 'conn ' + (on ? 'on' : 'off')); setText('connTxt', on ? 'لايف من Binance' : s.connected ? 'ينتظر أسعار…' : 'يعيد الاتصال…'); }
     else { setClass('conn', 'conn'); setText('connTxt', 'يدوي'); }
