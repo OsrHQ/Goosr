@@ -236,7 +236,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
       <ul class="steps">
         <li><b>خلها الحين:</b> لما السوق يعطيك أقل مما تستاهل صفقتك. هنا الانتظار أحسن على المدى، بس ممكن تخسرها كلها.</li>
         <li><b>بيع الحين:</b> لما السوق يدفع أكثر من فرصتها حسب الحسبة، فتطلع بمبلغ أكيد بدل ما تخاطر بكله.</li>
-        <li>التطبيق يقفل البيع في آخر دقيقة، والشراء في آخر 30 ثانية.</li>
+        <li>التطبيق يقفل البيع في آخر 30 ثانية، والشراء في آخر 15 ثانية.</li>
       </ul>
       <h3>وش لقت الدراسة؟</h3>
       <ul class="steps">
@@ -273,7 +273,7 @@ const PARAMS = {
   edgeMin: 0.08,        // the model's error band: a side is only worth it this far below its chance
   // fee per share = feeRate × min(price, 1 − price): 0.71 USDT on 237.22 shares at 71.8¢ in the user's screenshot
   feeRate: 0.01,
-  buyCloseSec: 30, sellCloseSec: 60,
+  buyCloseSec: 15, sellCloseSec: 30,   // the app stops buying in the last 15 s and selling in the last 30 s
   staleSec: 15,         // app prices typed longer ago than this are too old
 };
 
