@@ -228,6 +228,7 @@ const Mizan = (() => {
   const pctP = x => !isFinite(x) ? '–' : x < 0.01 ? '<1%' : x > 0.99 ? '>99%' : Math.round(x * 100) + '%';
   const isoP = x => '\u2066' + pctP(x) + '\u2069';
   const isoD = x => '\u2066$' + (Math.round(x * 100) / 100) + '\u2069';
+  const isoS = x => '\u2066' + (x < 0 ? '−' : '+') + '$' + (Math.round(Math.abs(x) * 100) / 100).toFixed(2).replace(/\.00$/, '') + '\u2069';
   function counted(n, one, two, few, many) { n = Math.round(n); return n === 1 ? one : n === 2 ? two : (n >= 3 && n <= 10) ? n + ' ' + few : n + ' ' + many; }
   const secs = n => counted(n, 'ثانية', 'ثانيتين', 'ثواني', 'ثانية');
   // stake: a quarter of the Kelly fraction, never above 10% of the balance, at least the app's $1
@@ -268,7 +269,7 @@ const Mizan = (() => {
     const lock = v.tLeft < PARAMS.sellCloseSec ? ' وبعدها ما تقدر تبيع.' : '';
     const win = amt ? amt * (1 - FEE) / q - amt : 0;
     return { kind: 'go', side: up ? 'up' : 'down', amount: amt, title: 'ادخل ' + name + (amt ? ' بـ' + isoD(amt) : ''),
-      body: (amt ? 'لو كسبت: +' + isoD(win) + ' · لو خسرت: −' + isoD(amt) + '. ' : '') + 'سعره ' + isoP(q) + ' وفرصته ' + isoP(p) + ': تكسب في ' + isoP(p) + ' من المرات وتخسر في ' + isoP(1 - p) + '. مو مضمون.' + lock };
+      body: (amt ? 'لو كسبت: ' + isoS(win) + ' · لو خسرت: ' + isoS(-amt) + '. ' : '') + 'سعره ' + isoP(q) + ' وفرصته ' + isoP(p) + ': تكسب في ' + isoP(p) + ' من المرات وتخسر في ' + isoP(1 - p) + '. مو مضمون.' + lock };
   }
   return { ROUND_MS, phi, probUp, roundStart, roundEnd, sigmaFromCloses, parseNum, maxPrice, reachOdds, pctP, isoP, stake, decide, secs };
 })();
