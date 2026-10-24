@@ -56,6 +56,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .tabs label small.down { color: var(--down); }
 .tabs input:checked + label { background: var(--seg-on); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12), inset 0 0 0 1px var(--line); }
 .tabs input:focus-visible + label { outline: 2px solid var(--accent); }
+.bell { width: 100%; margin-top: 6px; font: inherit; font-size: 13.5px; font-weight: 700; padding: 6px; border-radius: 9px; border: 1px dashed var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+.bell.on { border-style: solid; border-color: var(--good); color: var(--good); background: var(--good-soft); }
+.bell:focus-visible { outline: 2px solid var(--accent); }
+.toast { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 130px); z-index: 4; border-radius: 12px; padding: 12px 14px; font-weight: 800; font-size: 17px; background: var(--good); color: var(--surface); box-shadow: 0 6px 18px rgba(0,0,0,.25); cursor: pointer; }
+.toast.sell { background: var(--warn); }
 .lens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; position: relative; }
 .lens input { position: absolute; opacity: 0; pointer-events: none; }
 .lens label { text-align: center; padding: 4px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); }
@@ -169,6 +174,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
       <input type="radio" name="coin" id="cETH" value="ETH"><label for="cETH">ETH<small id="tabETH">–</small></label>
       <input type="radio" name="coin" id="cBNB" value="BNB"><label for="cBNB">BNB<small id="tabBNB">–</small></label>
     </div>
+    <button type="button" id="bell" class="bell" aria-pressed="false">🔔 شغّل التنبيه</button>
     <div class="lens" role="radiogroup" aria-label="طول الجولة">
       <input type="radio" name="len" id="len5" value="5" checked><label for="len5">5 دقايق</label>
       <input type="radio" name="len" id="len15" value="15"><label for="len15">15 دقيقة</label>
@@ -178,6 +184,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
 </div>
 
 <main class="app pad" dir="rtl" lang="ar">
+  <div id="toast" class="toast" role="status" hidden></div>
   <section class="card" aria-labelledby="ttl">
     <div class="top">
       <div class="title">
@@ -265,6 +272,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
       <summary>كيف أستخدمها؟ ووش فايدتها؟</summary>
       <ol class="steps">
         <li>اختر العملة من فوق، وطول الجولة: 5 دقايق أو 15 دقيقة أو ساعة.</li>
+        <li><b>التنبيه:</b> اضغط «شغّل التنبيه» فوق، والصفحة تطلع صوت لما تطلع «ادخل» على أي عملة، أو «انحش» على صفقتك. لازم تكون الصفحة مفتوحة قدامك، لأن الجوال يوقف الصفحات اللي ورا.</li>
         <li><b>لو ربطت أسعار التطبيق</b> (تحت «ربط أسعار التطبيق»)، ما تحتاج تكتب أي سعر، والعملة اللي فيها فرصة دخول يطلع عليها «ادخل» فوق.</li>
         <li><b>قبل ما تشتري:</b> اختر «أبي أدخل» واكتب سعر Up (طالع) من التطبيق. يطلع لك «ادخل» أو «لا تدخل» أو «الشراء مقفل»، أو «وقّف» لو خلص رصيدك أو وصلت هدفك.</li>
         <li><b>وأنت داخل صفقة:</b> اختر «عندي صفقة»، وحدد جهتك، واكتب سعر Sell (بيع). يطلع لك «انحش: بيع الحين» أو «خلك: لا تبيع الحين» أو «على كيفك». ولو ضغطت «دخلت» تحت «ادخل»، الصفحة تتابع صفقتك لحالها.</li>
@@ -534,14 +542,31 @@ const Quotes = (() => {
       badKey = false; return await r.json();
     } finally { clearTimeout(tm); }
   }
-  async function resolve(slug) {
+  // find a round in the open up/down list when its slug is not the one we expect (e.g. ETH/BNB hourly)
+  async function findInList(coin, startMs) {
+    let after = '';
+    for (let page = 0; page < 10; page++) {
+      const j = await getJSON('/v1/categories?marketVariant=CRYPTO_UP_DOWN&status=OPEN&sort=VOLUME_24H_DESC&first=100' + (after ? '&after=' + encodeURIComponent(after) : ''));
+      const list = (j && j.data) || [];
+      for (const cat of list) {
+        const v = cat.variantData || cat.variantDetails || {};
+        const st0 = Date.parse(cat.startsAt), en0 = Date.parse(cat.endsAt);
+        if ((v.priceFeedSymbol || '').toUpperCase() === coin + 'USDT' && st0 === startMs && en0 - st0 === Mizan.ROUND_MS && cat.markets && cat.markets[0]) return Number(cat.markets[0].id);
+      }
+      after = j && j.cursor;
+      if (!after || !list.length) break;
+    }
+    return 0;
+  }
+  async function resolve(slug, coin, startMs) {
     const cur = ids.get(slug);
     if (cur && (cur.state === 'ok' || cur.state === 'pending' || Date.now() - cur.at < (cur.missing ? 60000 : 5000))) return;
     ids.set(slug, { state: 'pending', at: Date.now() });
     try {
       const j = await getJSON('/v1/categories/' + slug);
       const mk = j && j.data && j.data.markets && j.data.markets[0];
-      const id = mk && Number(mk.id);
+      let id = mk && Number(mk.id);
+      if (!id && coin) id = await findInList(coin, startMs);
       if (!id) { ids.set(slug, { state: 'error', missing: true, at: Date.now() }); return; }
       ids.set(slug, { id, state: 'ok', at: Date.now() });
       const tp = 'predictOrderbook/' + id;
@@ -574,12 +599,21 @@ const Quotes = (() => {
     if (!key || !roundStartMs) return null;
     const slug = slugFor(coin, roundStartMs);
     const e = ids.get(slug);
-    if (!e || e.state !== 'ok') { resolve(slug); return null; }
+    if (!e || e.state !== 'ok') { resolve(slug, coin, roundStartMs); return null; }
     const b = books.get(e.id);
     if (!b || Date.now() - b.ts > 4000) poll(e.id);
     if (!b || Date.now() - b.ts > 10000) return null;
     const r2 = x => Math.round(x * 100) / 100;
     return { marketId: e.id, upBid: b.bid, upAsk: b.ask, dnBid: isFinite(b.ask) ? r2(1 - b.ask) : NaN, dnAsk: isFinite(b.bid) ? r2(1 - b.bid) : NaN, spread: b.ask - b.bid, age: (Date.now() - b.ts) / 1000 };
+  }
+  function why(coin, roundStartMs) {
+    if (!key) return 'nokey';
+    if (badKey) return 'badkey';
+    const e = ids.get(slugFor(coin, roundStartMs));
+    if (!e || e.state === 'pending') return 'lookup';
+    if (e.state !== 'ok') return e.missing ? 'missing' : 'error';
+    const b = books.get(e.id);
+    return b && Date.now() - b.ts <= 10000 ? 'live' : 'nobook';
   }
   function idFor(coin, roundStartMs) { const e = ids.get(slugFor(coin, roundStartMs)); return e && e.state === 'ok' ? e.id : 0; }
   function setKey(k) {
@@ -590,7 +624,7 @@ const Quotes = (() => {
     if (key) connect();
   }
   const status = () => !key ? 'nokey' : badKey ? 'badkey' : (books.size && [...books.values()].some(b => Date.now() - b.ts < 10000)) ? 'live' : 'connecting';
-  return { quote, idFor, prune, setKey, status, slugFor, hasKey: () => !!key };
+  return { quote, idFor, prune, setKey, status, slugFor, why, hasKey: () => !!key };
 })();
 
 /* ---------- page ---------- */
@@ -613,6 +647,7 @@ const Quotes = (() => {
   st.bal = st.bal ?? '10'; st.goal = st.goal ?? '100';
   st.m = st.m || {}; COINS.forEach(c => st.m[c] = Object.assign({ dir: 'below', diff: '', at: 0, left: 0, round: 0, upQ: '', dnQ: '', qAt: 0, side: 'down', sellQ: '', sellAt: 0 }, st.m[c] || {}));
   st.mode = st.mode === 'hold' ? 'hold' : 'enter';
+  st.bell = !!st.bell;
   st.len = [5, 15, 60].includes(+st.len) ? +st.len : 5;
   Mizan.setRound(st.len * 60000);
   $('len' + st.len).checked = true;
@@ -630,6 +665,49 @@ const Quotes = (() => {
   $('manual').hidden = LIVE; $('spark').hidden = !LIVE; $('liveLink').hidden = LIVE;
   $('linkCard').hidden = !LIVE;
   let lastGo = null;
+  /* sound alerts while the page is open: a phone browser pauses background tabs, so keep the page in front */
+  const Alert = (() => {
+    let ctx = null, on = false;
+    const seen = new Map();     // what we already alerted: coin|round|kind -> time
+    function beep(freqs) {
+      if (!ctx) return;
+      let t = ctx.currentTime;
+      freqs.forEach(f => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = f; o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+        o.start(t); o.stop(t + 0.24); t += 0.27;
+      });
+    }
+    function enable() {
+      try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); ctx.resume && ctx.resume(); on = true; beep([660]); } catch (e) { on = false; }
+      st.bell = on; save(); paint();
+    }
+    function disable() { on = false; st.bell = false; save(); paint(); }
+    function paint() {
+      const b = $('bell'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on));
+      b.textContent = on ? '🔔 التنبيه شغال' : st.bell ? '🔔 اضغط عشان يرجع الصوت' : '🔔 شغّل التنبيه';
+    }
+    let toastTimer = 0;
+    function toast(text, cls, coin) {
+      const el = $('toast'); el.textContent = text; el.className = 'toast ' + (cls || ''); el.hidden = false; el.dataset.coin = coin || '';
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 12000);
+    }
+    // fire once per coin, round and kind
+    function fire(coin, round, kind, text) {
+      const k = coin + '|' + round + '|' + kind;
+      if (seen.has(k)) return;
+      seen.set(k, Date.now());
+      if (seen.size > 200) seen.clear();
+      toast(text, kind === 'sell' ? 'sell' : '', coin);
+      if (on) beep(kind === 'sell' ? [880, 880, 880] : [660, 990]);
+      try { navigator.vibrate && navigator.vibrate(kind === 'sell' ? [120, 80, 120, 80, 120] : [200]); } catch (e) {}
+    }
+    $('bell').addEventListener('click', () => { on ? disable() : enable(); });
+    $('toast').addEventListener('click', () => { const c = $('toast').dataset.coin; $('toast').hidden = true; if (c && c !== st.coin) { st.coin = c; loadCoin(); save(); render(); } });
+    paint();
+    return { fire };
+  })();
   $('dEntered').addEventListener('click', () => { if (!lastGo) return; st.m[st.coin].side = lastGo; st.mode = 'hold'; save(); loadCoin(); render(); });
   if (LIVE) {
     $('linkBox').open = !Quotes.hasKey();
@@ -732,7 +810,10 @@ const Quotes = (() => {
       const el = $('tab' + cc);
       const aq = mm.ok ? appQuote(cc) : null;
       const go = aq ? Mizan.decide({ bal: num(st.bal), goal: num(st.goal), ok: true, tLeft: mm.tLeft, pUp: mm.pUp, pAlt: mm.pAlt, mode: 'enter', live: true, upQ: aq.upAsk, dnQ: aq.dnAsk, spread: aq.spread, qAge: 0 }) : null;
-      if (go && go.kind === 'go') { const txt = 'ادخل ' + (go.side === 'up' ? '↑' : '↓'); if (el.textContent !== txt) { el.textContent = txt; el.className = 'go'; } }
+      if (go && go.kind === 'go') {
+        const txt = 'ادخل ' + (go.side === 'up' ? '↑' : '↓'); if (el.textContent !== txt) { el.textContent = txt; el.className = 'go'; }
+        Alert.fire(cc, Live.coins[cc].round, 'go-' + go.side, '✓ ادخل ' + (go.side === 'up' ? 'Up (طالع)' : 'Down (نازل)') + ' في ' + cc);
+      }
       else if (mm.ok) { const up = mm.pUp >= 0.5; const txt = (up ? '↑ ' : '↓ ') + LRI + pctP(up ? mm.pUp : 1 - mm.pUp) + PDI; if (el.textContent !== txt) { el.textContent = txt; el.className = up ? 'up' : 'down'; } }
       else if (el.textContent !== '–') { el.textContent = '–'; el.className = ''; }
     });
@@ -795,7 +876,11 @@ const Quotes = (() => {
     const pc = x => isFinite(x) ? LRI + Math.round(x * 100) + '%' + PDI : '–';
     $('enterBox').hidden = st.mode === 'hold' || !!aq;
     $('sellQ').closest('.field').hidden = !!aq;
-    $('liveQ').hidden = !aq;
+    $('liveQ').hidden = !aq && !(LIVE && Quotes.hasKey() && m.ok);
+    if (!aq && LIVE && Quotes.hasKey() && m.ok) {
+      const w = Quotes.why(c, Live.coins[c].round);
+      setHTML('liveQ', '<small>' + ({ lookup: 'يدور على سوق هالجولة في التطبيق…', missing: 'ما لقيت سوق هالجولة في Predict.fun. اكتب السعر بيدك.', error: 'ما قدرت أجيب سوق هالجولة. أحاول مرة ثانية…', nobook: 'ينتظر أسعار التطبيق…', badkey: 'المفتاح غلط. شيّك عليه تحت.', nokey: '', live: '' }[w] || '') + '</small>');
+    }
     if (aq) setHTML('liveQ', st.mode === 'hold'
       ? 'سعر البيع في التطبيق الحين: Up (طالع) <b class="up">' + pc(aq.upBid) + '</b> · Down (نازل) <b class="down">' + pc(aq.dnBid) + '</b><small>لايف من التطبيق</small>'
       : 'سعر الشراء في التطبيق الحين: Up (طالع) <b class="up">' + pc(aq.upAsk) + '</b> · Down (نازل) <b class="down">' + pc(aq.dnAsk) + '</b><small>لايف من التطبيق</small>');
@@ -811,6 +896,7 @@ const Quotes = (() => {
     setClass('decision', 'decision ' + d.kind); setText('dTitle', d.title); setText('dBody', d.body);
     $('dEntered').hidden = !(d.kind === 'go' && st.mode === 'enter');
     lastGo = d.kind === 'go' ? d.side : null;
+    if (d.kind === 'sell' && st.mode === 'hold') Alert.fire(c, LIVE ? Live.coins[c].round : m.end, 'sell', 'انحش: بيع صفقتك في ' + c + ' الحين');
     // glance line: highest worthwhile price per side
     if (m.ok && left >= PARAMS.buyCloseSec && st.mode === 'enter' && d.kind !== 'stop') {
       const f = p => { const q = Mizan.maxPrice(p); return p <= 0.9 && q > 0.01 ? 'يستاهل لو سعره ' + LRI + Math.floor(q * 100) + '%' + PDI + ' أو أقل' : 'ما يستاهل'; };
