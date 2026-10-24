@@ -266,8 +266,9 @@ const Mizan = (() => {
     if (p > 0.9) return { kind: 'no', title: 'لا تدخل', body: 'فرصتها فوق 90%، والحسبة هنا أضعف من السوق.' };
     const amt = stake(p, c, v.bal);
     const lock = v.tLeft < PARAMS.sellCloseSec ? ' وبعدها ما تقدر تبيع.' : '';
+    const win = amt ? amt * (1 - FEE) / q - amt : 0;
     return { kind: 'go', side: up ? 'up' : 'down', amount: amt, title: 'ادخل ' + name + (amt ? ' بـ' + isoD(amt) : ''),
-      body: 'سعره ' + isoP(q) + ' وفرصته ' + isoP(p) + '. مو مضمون: تخسر في ' + isoP(1 - p) + ' من المرات.' + lock };
+      body: (amt ? 'لو كسبت: +' + isoD(win) + ' · لو خسرت: −' + isoD(amt) + '. ' : '') + 'سعره ' + isoP(q) + ' وفرصته ' + isoP(p) + ': تكسب في ' + isoP(p) + ' من المرات وتخسر في ' + isoP(1 - p) + '. مو مضمون.' + lock };
   }
   return { ROUND_MS, phi, probUp, roundStart, roundEnd, sigmaFromCloses, parseNum, maxPrice, reachOdds, pctP, isoP, stake, decide, secs };
 })();
