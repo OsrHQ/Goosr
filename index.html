@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="mizan-live" content="1">
-<meta name="description" content="حاسبة لايف لجولات Up or Down 5m على BTC وETH وBNB: احتمال كل جهة من سعر Binance، الربح والخسارة، وحدود الوقف.">
+<meta name="description" content="حاسبة لايف لجولات Up or Down (5 دقايق و15 دقيقة وساعة) على BTC وETH وBNB: احتمال كل جهة من سعر Binance، سجل صفقات، وقفل يومي.">
 <meta name="robots" content="noindex">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -59,7 +59,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .bell { width: 100%; margin-top: 6px; font: inherit; font-size: 13.5px; font-weight: 700; padding: 6px; border-radius: 9px; border: 1px dashed var(--line); background: transparent; color: var(--muted); cursor: pointer; }
 .bell.on { border-style: solid; border-color: var(--good); color: var(--good); background: var(--good-soft); }
 .bell:focus-visible { outline: 2px solid var(--accent); }
-.toast { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 130px); z-index: 4; border-radius: 12px; padding: 12px 14px; font-weight: 800; font-size: 17px; background: var(--good); color: var(--surface); box-shadow: 0 6px 18px rgba(0,0,0,.25); cursor: pointer; }
+.toast { position: fixed; z-index: 6; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); max-width: 448px; margin: 0 auto; border-radius: 12px; padding: 12px 14px; font-weight: 800; font-size: 17px; background: var(--good); color: var(--surface); box-shadow: 0 6px 18px rgba(0,0,0,.25); cursor: pointer; }
 .toast.sell { background: var(--warn); }
 .lens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; position: relative; }
 .lens input { position: absolute; opacity: 0; pointer-events: none; }
@@ -116,6 +116,18 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .decision.go { background: var(--good-soft); border-color: var(--good); }
 .decision.go b { color: var(--good); }
 .btn.entered { margin-top: 8px; align-self: flex-start; background: var(--good); border-color: var(--good); }
+.btn.sold { margin-top: 8px; align-self: flex-start; background: var(--warn); border-color: var(--warn); }
+.jlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.jlist li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; background: var(--sunk); font-size: 14px; }
+.jlist li span { min-width: 0; }
+.jlist li small { display: block; color: var(--muted); font-size: 12px; }
+.jlist .res { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.jlist b.pos { color: var(--up); }
+.jlist b.neg { color: var(--down); }
+.jlist b.wait { color: var(--muted); font-weight: 600; }
+.mini { font: inherit; font-size: 12.5px; font-weight: 600; padding: 3px 9px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.mini:focus-visible { outline: 2px solid var(--accent); }
+#lockBtn { align-self: flex-start; margin-top: 0; }
 .decision.sell { background: var(--warn-soft); border-color: var(--warn); }
 .decision.sell b { color: var(--warn); }
 .decision.no b { color: var(--muted); }
@@ -132,8 +144,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .pill.on { background: var(--good-soft); color: var(--good); }
 .pill.bad { background: var(--stop-soft); color: var(--stop); }
 .linkp { margin: 10px 0; font-size: 14px; }
-.keyrow { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
-.keyrow input { font-size: 16px !important; font-weight: 500 !important; padding-right: 10px !important; }
+.keyrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.keyrow input { width: 100%; min-width: 0; font: inherit; font-size: 16px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--sunk); color: var(--ink); }
 .btn { font: inherit; font-weight: 700; font-size: 15px; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: var(--surface); cursor: pointer; }
 .linkbtn { margin-top: 8px; font: inherit; font-size: 13.5px; background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; text-decoration: underline; }
 .btn:focus-visible, .linkbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -148,7 +160,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .ex td.pos { color: var(--up); font-weight: 700; }
 .ex td.neg { color: var(--down); font-weight: 700; }
 .hint2 { color: var(--muted); font-size: 13px !important; }
-.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field { display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; min-width: 0; }
 .field label { font-size: 13px; font-weight: 600; }
 .inwrap { position: relative; }
 .inwrap span { position: absolute; top: 50%; transform: translateY(-50%); right: 10px; color: var(--muted); pointer-events: none; }
@@ -215,6 +227,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
     </div>
   </section>
 
+  <div id="newsMsg" class="msg warn" role="status" hidden></div>
   <section class="card" aria-label="القرار">
     <div class="seg" role="radiogroup" aria-label="وضعك">
       <input type="radio" name="mode" id="mEnter" value="enter" checked><label for="mEnter">أبي أدخل</label>
@@ -234,19 +247,31 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
       </div>
       <div class="field"><label for="sellQ">سعر Sell (البيع) في التطبيق</label><div class="inwrap"><input type="text" id="sellQ" inputmode="decimal" autocomplete="off" placeholder="55"><span>%</span></div></div>
     </div>
+    <div id="jBox" class="bank" hidden>
+      <div class="field"><label for="jAmt">دخلت بكم؟</label><div class="inwrap"><input type="text" id="jAmt" inputmode="decimal" autocomplete="off" placeholder="10"><span>$</span></div></div>
+      <div class="field"><label for="jQ">بأي سعر؟</label><div class="inwrap"><input type="text" id="jQ" inputmode="decimal" autocomplete="off" placeholder="55"><span>%</span></div></div>
+    </div>
     <div id="decision" class="decision" aria-live="polite"><b id="dTitle">…</b><span id="dBody"></span>
-      <button type="button" class="btn entered" id="dEntered" hidden>دخلت، تابع صفقتي</button></div>
+      <button type="button" class="btn entered" id="dEntered" hidden>دخلت، تابع صفقتي</button>
+      <button type="button" class="btn sold" id="dSold" hidden>بعت، سجّلها</button></div>
     <p class="rulemini" id="rule"></p>
   </section>
 
   <section class="card" aria-labelledby="h-bank">
     <h2 id="h-bank" style="margin:0;font-size:16px">رصيدي</h2>
     <div class="bank">
-      <div class="field"><label for="bal">رصيدي الحين (حدّثه بعد كل صفقة)</label><div class="inwrap"><input type="text" id="bal" inputmode="decimal" autocomplete="off" value="10"><span>$</span></div></div>
+      <div class="field"><label for="bal">رصيدي الحين (يتحدّث من سجلك)</label><div class="inwrap"><input type="text" id="bal" inputmode="decimal" autocomplete="off" value="10"><span>$</span></div></div>
       <div class="field"><label for="goal">هدفي</label><div class="inwrap"><input type="text" id="goal" inputmode="decimal" autocomplete="off" value="100"><span>$</span></div></div>
-      <div class="field"><label for="floor">أوقف لو نزل رصيدي لـ</label><div class="inwrap"><input type="text" id="floor" inputmode="decimal" autocomplete="off" placeholder="مثلًا 90"><span>$</span></div></div>
+      <div class="field"><label for="floor">قفّل اليوم لو نزل رصيدي لـ</label><div class="inwrap"><input type="text" id="floor" inputmode="decimal" autocomplete="off" placeholder="مثلًا 7"><span>$</span></div></div>
     </div>
     <div id="bankMsg" class="msg"></div>
+    <button type="button" class="mini" id="lockBtn">🔒 قفّل «ادخل» لين بكرة</button>
+  </section>
+
+  <section class="card" id="jCard" aria-labelledby="h-j" hidden>
+    <h2 id="h-j" style="margin:0;font-size:16px">سجل اليوم</h2>
+    <div id="jSum" class="msg"></div>
+    <ol id="jList" class="jlist"></ol>
   </section>
 
   <section class="card" id="linkCard" hidden>
@@ -277,7 +302,16 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
         <li><b>لو ربطت أسعار التطبيق</b> (تحت «ربط أسعار التطبيق»)، ما تحتاج تكتب أي سعر، والعملة اللي فيها فرصة دخول يطلع عليها «ادخل» فوق.</li>
         <li><b>قبل ما تشتري:</b> اختر «أبي أدخل» واكتب سعر Up (طالع) من التطبيق. يطلع لك «ادخل» أو «لا تدخل» أو «الشراء مقفل»، أو «وقّف» لو خلص رصيدك أو وصلت هدفك.</li>
         <li><b>وأنت داخل صفقة:</b> اختر «عندي صفقة»، وحدد جهتك، واكتب سعر Sell (بيع). يطلع لك «انحش: بيع الحين» أو «خلك: لا تبيع الحين» أو «على كيفك». ولو ضغطت «دخلت» تحت «ادخل»، الصفحة تتابع صفقتك لحالها.</li>
+        <li><b>سجل الصفقات:</b> اكتب بكم دخلت وبأي سعر. لما تخلص الجولة، الصفحة تجيب النتيجة من Binance وتحدّث رصيدك لحالها. لو بعت قبل النهاية، اضغط «بعت، سجّلها».</li>
       </ol>
+      <h3>القفل والاستراحة</h3>
+      <ul class="steps">
+        <li>لو نزل رصيدك للحد اللي كتبته، «ادخل» يقفل لين 12 بالليل بتوقيت السعودية، حتى لو غيّرت الأرقام.</li>
+        <li>لو خسرت صفقتين ورا بعض، «ادخل» يوقف 15 دقيقة. ملاحقة الخسارة أسرع طريقة تخسر فيها كل شي.</li>
+        <li>تقدر تقفّلها بنفسك من «قفّل «ادخل» لين بكرة». صفقتك المفتوحة تبقى تتابعها.</li>
+      </ul>
+      <h3>الأخبار الأمريكية</h3>
+      <p>أخبار مثل التضخم (CPI) والوظائف (NFP) وقرار الفائدة (FOMC) تحرك BTC فجأة، والحسبة ما تشوفها. الصفحة ما تقول «ادخل» في أي جولة ينزل فيها خبر، ولين ربع ساعة بعده. المواعيد من المواقع الرسمية، وممكن تتغير.</p>
       <h3>بكم أدخل؟</h3>
       <p>الصفحة تحدد المبلغ في رسالة «ادخل»: 10% من رصيدك، وأقل شي دولار لأن التطبيق ما يقبل أقل. برصيد 10 دولار يعني دولار واحد بس. لو نزل رصيدك تحت 10، الدولار يصير أكثر من 10% والصفحة تنبهك، وتحت 2 دولار تقول لك وقّف. لا تزيد المبلغ عشان تعوّض خسارة.</p>
       <h3>وش الفايدة؟</h3>
@@ -285,11 +319,11 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
       <table class="ex">
         <thead><tr><th>سعرها في التطبيق</th><th>النتيجة تقريبًا</th></tr></thead>
         <tbody>
-          <tr><td><span class="num">61%</span></td><td class="pos"><span class="num">+$18</span> ربح</td></tr>
-          <tr><td><span class="num">75%</span></td><td class="neg"><span class="num">−$4</span> خسارة</td></tr>
+          <tr><td><span class="num">61%</span></td><td class="pos"><span class="num">+$16</span> ربح</td></tr>
+          <tr><td><span class="num">75%</span></td><td class="neg"><span class="num">−$5</span> خسارة</td></tr>
         </tbody>
       </table>
-      <p>الفرق كله في السعر اللي اشتريت فيه. الصفحة تقول «ادخل» بس لما السعر أرخص من الفرصة بـ8 نقاط أو أكثر، لأن الحسبة نفسها ممكن تغلط بهالقدر.</p>
+      <p>الفرق كله في السعر اللي اشتريت فيه، بعد رسوم التطبيق (2%). الصفحة تقول «ادخل» بس لما السعر أرخص من الفرصة بـ8 نقاط أو أكثر، لأن الحسبة نفسها ممكن تغلط بهالقدر.</p>
       <h3>متى أبيع؟</h3>
       <ul class="steps">
         <li><b>خلها الحين:</b> لما السوق يعطيك أقل مما تستاهل صفقتك. هنا الانتظار أحسن على المدى، بس ممكن تخسرها كلها.</li>
@@ -304,6 +338,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
         <li>العملات الثلاث تمشي مع بعض: إذا BTC طلع، ETH يطلع في 82–84% من المرات. يعني 10 دولار على الثلاث كأنها رهان واحد بـ26 دولار تقريبًا.</li>
         <li>سوق ETH وBNB في التطبيق صغير، فالسعر يتحرك عليك أكثر لما تشتري. BTC أحسن.</li>
         <li>السوق أهدى في الويكند، وحركته تتضاعف وقت افتتاح السوق الأمريكي (العصر بتوقيت السعودية). الصفحة تحسب هذا لحالها.</li>
+        <li>لو آخر 5 دقايق كانت عنيفة أو فيها تداول كبير، الحركة الجاية غالبًا أكبر. الصفحة تحسب هذا في جولات 5 و15 دقيقة.</li>
       </ul>
       <p class="hint2">«ادخل» معناها السعر أرخص من الفرصة، مو فوز أكيد. ممكن تخسرها، والصفحة تقول لك كم احتمال الخسارة.</p>
     </details>
@@ -329,10 +364,52 @@ const PARAMS = {
       we: [0.92,1.13,0.82,0.80,0.75,0.75,0.64,0.64,0.63,0.69,0.67,0.79,0.81,0.58,0.63,0.72,0.86,0.95,1.05,1.01,0.89,0.68,0.60,0.67] },
   },
   edgeMin: 0.08,        // the model's error band: a side is only worth it this far below its chance
-  // fee per share = feeRate × min(price, 1 − price): 0.71 USDT on 237.22 shares at 71.8¢ in the user's screenshot
-  feeRate: 0.01,
+  // fee per share = feeRate × min(price, 1 − price): the app's order screen shows "(2%)"
+  feeRate: 0.02,
+  coolMin: 15,          // after two losses in a row, no «ادخل» for this many minutes
+  // US releases that move crypto, from federalreserve.gov, bls.gov and bea.gov: [UTC time, name, minutes of turbulence after]
+  news: [
+    ['2026-10-28T18:00Z', 'قرار الفائدة الأمريكية (FOMC)', 30],
+    ['2026-10-28T18:30Z', 'مؤتمر رئيس الفيدرالي الأمريكي (Fed)', 60],
+    ['2026-10-29T12:30Z', 'الناتج المحلي الأمريكي (GDP) وإنفاق المستهلك (PCE)', 15],
+    ['2026-11-06T13:30Z', 'الوظائف الأمريكية (NFP)', 15],
+    ['2026-11-10T13:30Z', 'التضخم الأمريكي (CPI)', 15],
+    ['2026-11-25T13:30Z', 'الناتج المحلي الأمريكي (GDP) وإنفاق المستهلك (PCE)', 15],
+    ['2026-12-04T13:30Z', 'الوظائف الأمريكية (NFP)', 15],
+    ['2026-12-09T19:00Z', 'قرار الفائدة الأمريكية (FOMC)', 30],
+    ['2026-12-09T19:30Z', 'مؤتمر رئيس الفيدرالي الأمريكي (Fed)', 60],
+    ['2026-12-10T13:30Z', 'التضخم الأمريكي (CPI)', 15],
+    ['2026-12-23T13:30Z', 'الناتج المحلي الأمريكي (GDP) وإنفاق المستهلك (PCE)', 15],
+    ['2027-01-08T13:30Z', 'الوظائف الأمريكية (NFP)', 15],
+    ['2027-01-13T13:30Z', 'التضخم الأمريكي (CPI)', 15],
+    ['2027-01-27T19:00Z', 'قرار الفائدة الأمريكية (FOMC)', 30],
+    ['2027-01-27T19:30Z', 'مؤتمر رئيس الفيدرالي الأمريكي (Fed)', 60],
+    ['2027-01-28T13:30Z', 'الناتج المحلي الأمريكي (GDP) وإنفاق المستهلك (PCE)', 15],
+    ['2027-02-05T13:30Z', 'الوظائف الأمريكية (NFP)', 15],
+    ['2027-02-11T13:30Z', 'التضخم الأمريكي (CPI)', 15],
+    ['2027-02-25T13:30Z', 'الناتج المحلي الأمريكي (GDP) وإنفاق المستهلك (PCE)', 15],
+    ['2027-03-05T13:30Z', 'الوظائف الأمريكية (NFP)', 15],
+    ['2027-03-10T13:30Z', 'التضخم الأمريكي (CPI)', 15],
+    ['2027-03-17T18:00Z', 'قرار الفائدة الأمريكية (FOMC)', 30],
+    ['2027-03-17T18:30Z', 'مؤتمر رئيس الفيدرالي الأمريكي (Fed)', 60],
+    ['2027-03-31T12:30Z', 'الناتج المحلي الأمريكي (GDP) وإنفاق المستهلك (PCE)', 15],
+    ['2027-04-02T12:30Z', 'الوظائف الأمريكية (NFP)', 15],
+    ['2027-04-13T12:30Z', 'التضخم الأمريكي (CPI)', 15],
+    ['2027-04-28T18:00Z', 'قرار الفائدة الأمريكية (FOMC)', 30],
+    ['2027-04-28T18:30Z', 'مؤتمر رئيس الفيدرالي الأمريكي (Fed)', 60],
+    ['2027-04-29T12:30Z', 'الناتج المحلي الأمريكي (GDP) وإنفاق المستهلك (PCE)', 15],
+    ['2027-05-07T12:30Z', 'الوظائف الأمريكية (NFP)', 15],
+    ['2027-05-12T12:30Z', 'التضخم الأمريكي (CPI)', 15],
+    ['2027-05-27T12:30Z', 'الناتج المحلي الأمريكي (GDP) وإنفاق المستهلك (PCE)', 15],
+    ['2027-06-04T12:30Z', 'الوظائف الأمريكية (NFP)', 15],
+    ['2027-06-09T18:00Z', 'قرار الفائدة الأمريكية (FOMC)', 30],
+    ['2027-06-09T18:30Z', 'مؤتمر رئيس الفيدرالي الأمريكي (Fed)', 60],
+    ['2027-06-10T12:30Z', 'التضخم الأمريكي (CPI)', 15],
+    ['2027-06-25T12:30Z', 'الناتج المحلي الأمريكي (GDP) وإنفاق المستهلك (PCE)', 15]
+  ],
   buyCloseSec: 15, sellCloseSec: 30,   // the app stops buying in the last 15 s and selling in the last 30 s
   staleSec: 15,         // app prices typed longer ago than this are too old
+  liveStaleSec: 6,      // a live app book not refreshed for this long is too old to act on
 };
 
 /* ---------- math ---------- */
@@ -378,6 +455,29 @@ const Mizan = (() => {
     return 0.5 + z / (2 * Math.sqrt(2 + z * z));
   }
   const isoP = x => '\u2066' + pctP(x) + '\u2069';
+  const isoT = s => { s = Math.max(0, Math.ceil(s)); return '\u2066' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + '\u2069'; };
+  // volatility recipe for 5 and 15 minute rounds (fit on 60 days, checked on 60 untouched days): a wild or busy last few minutes means bigger moves next
+  // rows: Binance 1m klines [openTime, open, high, low, close, volume]; asOfMs: server time of the request; sigma: sigmaFromCloses of the same rows
+  function volMult(rows, asOfMs, sigma, roundMs) {
+    const K = { 300000: [0.94, 0.35, 0.05, -0.402, -0.385], 900000: [0.98, 0.20, 0.075, -0.419, -0.391] }[roundMs];
+    if (!K || !(sigma > 0) || !Array.isArray(rows) || !rows.length) return 1;
+    const done = rows.filter(r => +r[0] + 60000 <= asOfMs), n = done.length, last = +rows[rows.length - 1][4];
+    if (n < 30 || !(last > 0)) return 1;
+    let pk = 0;
+    for (let i = n - 5; i < n; i++) { const hi = +done[i][2], lo = +done[i][3]; if (!(hi > 0 && lo > 0)) return 1; const x = Math.log(hi / lo); pk += x * x / (4 * Math.LN2); }
+    const clip = (x, a) => Math.max(-a, Math.min(a, x));
+    const h = clip(0.5 * Math.log(pk / 5 + 1e-18) - Math.log(sigma / last), 3);
+    const m = Math.min(60, n); let vh = 0;
+    for (let i = n - m; i < n; i++) vh += +done[i][5];
+    const sv = clip(Math.log((+done[n - 1][5] + 1e-9) / (vh / m + 1e-9)), 4);
+    if (!isFinite(h) || !isFinite(sv)) return 1;
+    // guard rails: the fit was checked between about 0.85 and 1.15
+    return Math.min(2, Math.max(0.75, K[0] * Math.exp(K[1] * (h - K[3]) + K[2] * (sv - K[4]))));
+  }
+  // a US release inside this round, or a few minutes before it, makes the price jump: no entries then
+  const NEWS = PARAMS.news.map(([iso, name, after]) => ({ t: Date.parse(iso), name, after: after * 60000 }));
+  const newsBlock = (now, end) => NEWS.find(e => e.t - 60000 < end && now < e.t + e.after) || null;
+  const newsNext = (now, within) => NEWS.find(e => now < e.t + e.after && e.t - now < within) || null;
   const isoD = x => '\u2066$' + (Math.round(x * 100) / 100) + '\u2069';
   const isoS = x => '\u2066' + (x < 0 ? '−' : '+') + '\u2060$' + (Math.round(Math.abs(x) * 100) / 100).toFixed(2).replace(/\.00$/, '') + '\u2069';
   function counted(n, one, two, few, many) { n = Math.round(n); return n === 1 ? one : n === 2 ? two : (n >= 3 && n <= 10) ? n + ' ' + few : n + ' ' + many; }
@@ -391,12 +491,16 @@ const Mizan = (() => {
   }
   /* one decision. kind: go | sell | no | stop | wait */
   function decide(v) {
-    const M = PARAMS.edgeMin, HOLD_M = 0.05, STALE = PARAMS.staleSec;
+    const M = PARAMS.edgeMin, HOLD_M = 0.05, STALE = v.live ? PARAMS.liveStaleSec : PARAMS.staleSec;
+    if (v.mode !== 'hold') {
+    if (v.lock) return { kind: 'stop', title: 'مقفّل لين بكرة', body: v.lock };
+    if (v.pause > 0) return { kind: 'stop', title: 'خذ استراحة', body: 'خسرت صفقتين ورا بعض. «ادخل» يرجع بعد ' + isoT(v.pause) + '، عشان ما تلحق الخسارة وتكبّرها.' };
     if (v.bal <= 0) return { kind: 'stop', title: 'وقّف', body: 'خلص الرصيد اللي حددته. لا تودع من جديد.' };
     if (v.floor > 0 && v.bal <= v.floor) return { kind: 'stop', title: 'وقّف. وصلت حدك', body: 'رصيدك وصل الحد اللي حطيته بنفسك وأنت هادي. اسحب الباقي وكمّل يوم ثاني.' };
     if (!isFinite(v.bal) || !(v.goal > 0)) return { kind: 'wait', title: 'اكتب رصيدك وهدفك', body: 'منهم أحسب المبلغ ومتى توقف.' };
     if (v.bal >= v.goal) return { kind: 'stop', title: 'وصلت هدفك. اسحب', body: 'اسحب الحين ووقّف، قبل لا ترجع تلعب فيه.' };
     if (v.bal < 2) return { kind: 'stop', title: 'وقّف', body: 'باقي أقل من 2 دولار، وأقل صفقة دولار، يعني نص رصيدك أو أكثر. اسحب الباقي ولا تودع من جديد.' };
+    }
     if (!v.ok || !(v.pUp >= 0 && v.pUp <= 1) || !isFinite(v.tLeft)) return { kind: 'wait', title: 'انتظر', body: v.wait || '' };
     const upLo = Math.min(v.pUp, isFinite(v.pAlt) ? v.pAlt : v.pUp), upHi = Math.max(v.pUp, isFinite(v.pAlt) ? v.pAlt : v.pUp);
     if (v.mode === 'hold') {
@@ -404,6 +508,8 @@ const Mizan = (() => {
       const pLo = v.side === 'up' ? upLo : 1 - upHi, pHi = v.side === 'up' ? upHi : 1 - upLo;
       const now = 'فرصة صفقتك الحين ' + isoP(p) + '.';
       if (v.tLeft < PARAMS.sellCloseSec) return { kind: 'no', title: 'البيع مقفل', body: 'الصفقة تكمل للنهاية. ' + now };
+      if (v.live && !(v.sellAge <= STALE)) return { kind: 'wait', title: 'انتظر سعر التطبيق', body: 'سعر البيع في التطبيق ما تحدّث من ' + secs(v.sellAge) + '. ' + now };
+      if (v.live && !(v.sellQ > 0 && v.sellQ < 1)) return { kind: 'no', title: 'ما فيه مشتري الحين', body: 'ما أحد يشتري صفقتك في التطبيق هاللحظة، فما تقدر تبيع. ' + now };
       if (!(v.sellQ > 0 && v.sellQ < 1)) return { kind: 'wait', title: 'اكتب سعر البيع', body: 'من زر Sell (بيع) في التطبيق. ' + now };
       if (!(v.sellAge >= -2 && v.sellAge <= STALE)) return { kind: 'wait', title: 'حدّث سعر البيع', body: (v.sellAge > 0 && isFinite(v.sellAge) ? 'كتبته قبل ' + secs(v.sellAge) + '. ' : 'هذا من جولة قبل. ') + now };
       const val = proceeds(v.sellQ) - pHi, valLo = proceeds(v.sellQ) - pLo;
@@ -412,6 +518,8 @@ const Mizan = (() => {
       return { kind: 'no', title: 'على كيفك', body: 'البيع والانتظار تقريبًا نفس الشي. البيع يريحك من احتمال ' + isoP(1 - p) + ' إنها تروح كلها.' };
     }
     if (v.tLeft < PARAMS.buyCloseSec) return { kind: 'no', title: 'الشراء مقفل', body: 'انتظر الجولة الجاية.' };
+    if (v.news) return { kind: 'no', title: 'لا تدخل: خبر أمريكي', body: v.news };
+    if (v.live && !(v.qAge <= STALE)) return { kind: 'wait', title: 'انتظر سعر التطبيق', body: 'أسعار التطبيق ما تحدّثت من ' + secs(v.qAge) + '، وما أحكم على سعر قديم.' };
     if (v.live && !(v.upQ > 0 && v.upQ < 1 && v.dnQ > 0 && v.dnQ < 1)) return { kind: 'no', title: 'لا تدخل', body: 'ما فيه بائعين كفاية في التطبيق لهالجولة.' };
     if (v.live && v.spread > 0.05) return { kind: 'no', title: 'لا تدخل', body: 'الفرق بين سعر الشراء والبيع في التطبيق كبير الحين، يعني السعر ياكلك.' };
     if (!(v.upQ > 0 && v.upQ < 1 && v.dnQ > 0 && v.dnQ < 1)) return { kind: 'wait', title: 'اكتب سعر Up (طالع) وDown (نازل)', body: 'من أزرار الشراء في التطبيق، وأقولك ادخل ولا لا.' };
@@ -427,15 +535,18 @@ const Mizan = (() => {
     if (e > 0.15) return { kind: 'wait', title: 'راجع الأرقام', body: 'الفرق بين السعر والفرصة كبير مرة، وغالبًا الأرقام غلط أو قديمة. تأكد إنها لنفس العملة ونفس الجولة، مثل 40.' };
     if (q < 0.10) return { kind: 'no', title: 'لا تدخل', body: 'سعر ' + name + ' أقل من 10%، يعني يانصيب: أغلب المرات يروح الدولار.' };
     if (up ? v.upAuto : v.dnAuto) return { kind: 'wait', title: 'اكتب سعر ' + name + ' من التطبيق', body: 'ممكن يستاهل لو سعره ' + isoP(Math.floor(maxPrice(p) * 100) / 100) + ' أو أقل. الرقم اللي في الخانة تقدير مو سعر التطبيق.' };
-    const amt = stake(p, c, v.bal);
-    if (amt < 1) return { kind: 'stop', title: 'وقّف', body: 'رصيدك أقل من $1، أقل مبلغ في التطبيق. لا تودع من جديد.' };
+    const amt0 = stake(p, c, v.bal);
+    if (amt0 < 1) return { kind: 'stop', title: 'وقّف', body: 'رصيدك أقل من $1، أقل مبلغ في التطبيق. لا تودع من جديد.' };
+    // never stake past the stop level the user set
+    const amt = v.floor > 0 ? Math.min(amt0, Math.floor(v.bal - v.floor)) : amt0;
+    if (amt < 1) return { kind: 'stop', title: 'وقّف', body: 'باقي أقل من دولار فوق الحد اللي حطيته. وقّف اليوم.' };
     const lock = v.tLeft < PARAMS.sellCloseSec ? ' البيع مقفل الحين: لو دخلت، الصفقة تكمل للنهاية.' : '';
     const big = amt > 0.1 * v.bal + 1e-9 ? ' انتبه: ' + isoD(amt) + ' هي \u2066' + Math.round(100 * amt / v.bal) + '%\u2069 من رصيدك، لأن التطبيق ما يقبل أقل من دولار.' : '';
     const win = amt ? amt / c - amt : 0;
-    return { kind: 'go', side: up ? 'up' : 'down', amount: amt, title: '✓ ادخل ' + name + (amt ? ' بـ' + isoD(amt) : ''),
+    return { kind: 'go', side: up ? 'up' : 'down', amount: amt, q, title: '✓ ادخل ' + name + (amt ? ' بـ' + isoD(amt) : ''),
       body: 'لو كسبت ' + isoS(win) + ' · لو خسرت ' + isoS(-amt) + ' · تخسر تقريبًا ' + Math.round((1 - p) * 100) + ' من كل 100 مرة.' + big + lock };
   }
-  return { get ROUND_MS() { return ROUND_MS; }, setRound, phi, probUp, probUpT2, clockSigma, usStandardTime, roundStart, roundEnd, sigmaFromCloses, parseNum, maxPrice, reachOdds, pctP, isoP, stake, decide, secs };
+  return { get ROUND_MS() { return ROUND_MS; }, setRound, phi, probUp, probUpT2, clockSigma, usStandardTime, roundStart, roundEnd, sigmaFromCloses, parseNum, cost, proceeds, maxPrice, reachOdds, pctP, isoP, stake, decide, secs, volMult, newsBlock, newsNext };
 })();
 window.Mizan = Mizan;
 
@@ -466,7 +577,18 @@ const Live = (() => {
     }
     if (k.loading === R) k.loading = 0;
   }
-  async function loadSigma(c) { try { const rows = await getJSON('klines?symbol=' + c + 'USDT&interval=1m&limit=61'); const s = Mizan.sigmaFromCloses(rows.map(r => +r[4])); if (isFinite(s) && s > 0) { coins[c].sigma = s; coins[c].sigmaAt = Date.now(); } } catch (e) {} }
+  // the last hour of 1m candles: the base move per minute, and the rows the volatility recipe reads
+  async function loadSigma(c) {
+    const k = coins[c]; if (k.sLoading) return; k.sLoading = true;
+    try { const asOf = now(); const rows = await getJSON('klines?symbol=' + c + 'USDT&interval=1m&limit=61'); const s = Mizan.sigmaFromCloses(rows.map(r => +r[4])); if (isFinite(s) && s > 0) Object.assign(k, { sigma: s, sigmaAt: Date.now(), k1m: rows, k1mAsOf: asOf }); } catch (e) {}
+    k.sLoading = false;
+  }
+  // how a finished round ended on Binance: first trade and last trade of its minutes
+  async function outcome(c, R, len) {
+    const rows = await getJSON('klines?symbol=' + c + 'USDT&interval=1m&startTime=' + R + '&limit=' + len);
+    if (!Array.isArray(rows) || rows.length !== len || +rows[0][0] !== R || +rows[len - 1][0] !== R + (len - 1) * 60000) return null;
+    return { open: +rows[0][1], close: +rows[len - 1][4] };
+  }
   function onTrade(c, p, T) {
     const k = coins[c], R = Mizan.roundStart(T);
     if (R !== k.round) {
@@ -494,13 +616,14 @@ const Live = (() => {
   function start() {
     if (started) return; started = true;
     syncTime(); connect(); COINS.forEach(loadSigma);
-    setInterval(() => COINS.forEach(c => { if (Date.now() - coins[c].sigmaAt > 60000) loadSigma(c); }), 15000);
+    // refresh a few seconds after each minute closes, so the recipe sees the newest finished candle
+    setInterval(() => COINS.forEach(c => { const n = now(); if (Math.floor((n - 3000) / 60000) > Math.floor(((coins[c].k1mAsOf || 0) - 3000) / 60000)) loadSigma(c); }), 5000);
     setInterval(() => { if (ws && Date.now() - Math.max(lastMsgAt, openedAt) > 10000) dropSocket(); }, 3000);
     document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') return; syncTime(); if (!ws) connect(); else if (Date.now() - lastMsgAt > 5000) dropSocket(); });
   }
   const status = () => ({ connected, ageMs: lastMsgAt ? Date.now() - lastMsgAt : Infinity });
   function reset() { COINS.forEach(c => Object.assign(coins[c], { round: 0, ptb: NaN, ptbOk: false, path: [], loading: 0 })); }
-  return { coins, start, now, status, reset };
+  return { coins, start, now, status, reset, outcome };
 })();
 
 /* ---------- app prices from Predict.fun (the same markets as Binance's Prediction tab) ---------- */
@@ -545,7 +668,7 @@ const Quotes = (() => {
     } finally { clearTimeout(tm); }
   }
   // find a round in the open up/down list when its slug is not the one we expect (e.g. ETH/BNB hourly)
-  async function findInList(coin, startMs) {
+  async function findInList(coin, startMs, lenMs) {
     let after = '';
     for (let page = 0; page < 10; page++) {
       const j = await getJSON('/v1/categories?marketVariant=CRYPTO_UP_DOWN&status=OPEN&sort=VOLUME_24H_DESC&first=100' + (after ? '&after=' + encodeURIComponent(after) : ''));
@@ -553,7 +676,7 @@ const Quotes = (() => {
       for (const cat of list) {
         const v = cat.variantData || cat.variantDetails || {};
         const st0 = Date.parse(cat.startsAt), en0 = Date.parse(cat.endsAt);
-        if ((v.priceFeedSymbol || '').toUpperCase() === coin + 'USDT' && st0 === startMs && en0 - st0 === Mizan.ROUND_MS && cat.markets && cat.markets[0]) return Number(cat.markets[0].id);
+        if ((v.priceFeedSymbol || '').toUpperCase() === coin + 'USDT' && st0 === startMs && en0 - st0 === lenMs && cat.markets && cat.markets[0]) return Number(cat.markets[0].id);
       }
       after = j && j.cursor;
       if (!after || !list.length) break;
@@ -561,14 +684,14 @@ const Quotes = (() => {
     return 0;
   }
   async function resolve(slug, coin, startMs) {
-    const cur = ids.get(slug);
+    const cur = ids.get(slug), lenMs = Mizan.ROUND_MS;
     if (cur && (cur.state === 'ok' || cur.state === 'pending' || Date.now() - cur.at < (cur.missing ? 60000 : 5000))) return;
     ids.set(slug, { state: 'pending', at: Date.now() });
     try {
       const j = await getJSON('/v1/categories/' + slug);
       const mk = j && j.data && j.data.markets && j.data.markets[0];
       let id = mk && Number(mk.id);
-      if (!id && coin) id = await findInList(coin, startMs);
+      if (!id && coin) id = await findInList(coin, startMs, lenMs);
       if (!id) { ids.set(slug, { state: 'error', missing: true, at: Date.now() }); return; }
       ids.set(slug, { id, state: 'ok', at: Date.now() });
       const tp = 'predictOrderbook/' + id;
@@ -650,6 +773,15 @@ const Quotes = (() => {
   st.m = st.m || {}; COINS.forEach(c => st.m[c] = Object.assign({ dir: 'below', diff: '', at: 0, left: 0, round: 0, upQ: '', dnQ: '', qAt: 0, side: 'down', sellQ: '', sellAt: 0 }, st.m[c] || {}));
   st.mode = st.mode === 'hold' ? 'hold' : 'enter';
   st.bell = !!st.bell;
+  st.j = Array.isArray(st.j) ? st.j.filter(e => e && e.id && PARAMS.coins[e.c]).slice(-100) : [];
+  st.lock = st.lock && typeof st.lock.d === 'string' ? st.lock : null;
+  st.cool = +st.cool || 0;
+  // the Saudi calendar day (UTC+3, no daylight saving) and when the next one starts
+  const sDay = ms => new Date(ms + 3 * 3600e3).toISOString().slice(0, 10);
+  const nextDay = ms => (Math.floor((ms + 3 * 3600e3) / 864e5) + 1) * 864e5 - 3 * 3600e3;
+  const locked = () => !!st.lock && st.lock.d === sDay(Date.now());
+  const count = (n, one, two, few, many) => n === 1 ? one : n === 2 ? two : n >= 3 && n <= 10 ? n + ' ' + few : n + ' ' + many;
+  const hm = ms => { const m = Math.max(1, Math.ceil(ms / 60000)), h = Math.floor(m / 60), r = m % 60, H = count(h, 'ساعة', 'ساعتين', 'ساعات', 'ساعة'), M = count(r, 'دقيقة', 'دقيقتين', 'دقايق', 'دقيقة'); return h ? H + (r ? ' و' + M : '') : M; };
   st.len = [5, 15, 60].includes(+st.len) ? +st.len : 5;
   Mizan.setRound(st.len * 60000);
   $('len' + st.len).checked = true;
@@ -661,12 +793,30 @@ const Quotes = (() => {
     $('upQ').value = k.upQ; $('dnQ').value = k.dnQ; $('sellQ').value = k.sellQ;
     (k.side === 'up' ? $('hUp') : $('hDn')).checked = true;
     (st.mode === 'hold' ? $('mHold') : $('mEnter')).checked = true;
-    $('enterBox').hidden = st.mode === 'hold'; $('holdBox').hidden = st.mode !== 'hold';
+    $('enterBox').hidden = st.mode === 'hold'; $('holdBox').hidden = st.mode !== 'hold'; $('jBox').hidden = st.mode !== 'hold';
+    const e = jEntry(st.coin, false); $('jAmt').value = e ? e.amt : ''; $('jQ').value = e ? e.q : '';
+  }
+  // the journal entry of the position held on a coin (made on «دخلت», or when the user types the amount)
+  function jEntry(c, make) {
+    const h = st.m[c].held; if (!h) return null;
+    let e = h.jid ? st.j.find(x => x.id === h.jid) : null;
+    if (!e && make) { e = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), c, len: h.len, R: h.R, side: st.m[c].side, amt: '', q: '', at: Date.now() }; st.j.push(e); h.jid = e.id; if (st.j.length > 100) st.j = st.j.slice(-100); }
+    return e;
   }
   loadCoin();
   $('manual').hidden = LIVE; $('spark').hidden = !LIVE; $('liveLink').hidden = LIVE;
   $('linkCard').hidden = !LIVE;
-  let lastGo = null;
+  let goMemo = null;   // the last «ادخل» shown: { c, R, side, at, amt, q }
+  // the round a coin is in now (start ms), or 0 while unknown
+  const curRound = c => LIVE ? Live.coins[c].round : Mizan.roundStart(tNow());
+  // a position from «دخلت» or «عندي صفقة» lives only until its own round ends, and only for its round length
+  const heldLive = c => { const h = st.m[c].held; return !!h && tNow() < h.R + h.len * 60000; };
+  const heldOk = c => heldLive(c) && st.m[c].held.len === st.len && (!curRound(c) || curRound(c) === st.m[c].held.R);
+  const holdFor = c => {
+    const h = st.m[c].held = { R: curRound(c) || Mizan.roundStart(tNow()), len: st.len };
+    const e = st.j.find(x => !x.res && x.c === c && x.R === h.R && x.len === h.len); if (e) { h.jid = e.id; st.m[c].side = e.side; }
+  };
+  if (st.mode === 'hold' && !heldOk(st.coin)) { st.mode = 'enter'; loadCoin(); }
   /* sound alerts while the page is open: a phone browser pauses background tabs, so keep the page in front */
   const Alert = (() => {
     let ctx = null, on = false;
@@ -706,11 +856,117 @@ const Quotes = (() => {
       try { navigator.vibrate && navigator.vibrate(kind === 'sell' ? [120, 80, 120, 80, 120] : [200]); } catch (e) {}
     }
     $('bell').addEventListener('click', () => { on ? disable() : enable(); });
-    $('toast').addEventListener('click', () => { const c = $('toast').dataset.coin; $('toast').hidden = true; if (c && c !== st.coin) { st.coin = c; loadCoin(); save(); render(); } });
+    $('toast').addEventListener('click', () => { const c = $('toast').dataset.coin; $('toast').hidden = true; if (c && c !== st.coin) { st.coin = c; st.mode = heldOk(c) ? 'hold' : 'enter'; loadCoin(); save(); render(); } });
+    // iOS suspends Web Audio when the page goes to the background: resume on the next tap, and say so on the button
+    document.addEventListener('pointerdown', () => { if (on && ctx && ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} } }, { passive: true });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && on && ctx && ctx.state !== 'running') { on = false; paint(); } });
     paint();
-    return { fire };
+    return { fire, toast };
   })();
-  $('dEntered').addEventListener('click', () => { if (!lastGo) return; st.m[st.coin].side = lastGo; st.mode = 'hold'; save(); loadCoin(); render(); });
+  $('dEntered').addEventListener('click', () => {
+    if (!goMemo || goMemo.c !== st.coin) return;
+    const k = st.m[st.coin]; k.side = goMemo.side; k.held = { R: goMemo.R, len: st.len }; st.mode = 'hold';
+    const e = jEntry(st.coin, true); e.side = goMemo.side; e.amt = goMemo.amt ? String(goMemo.amt) : ''; e.q = goMemo.q > 0 ? String(Math.round(goMemo.q * 1000) / 10) : '';
+    save(); loadCoin(); render();
+  });
+  /* ---------- trade journal: results come from Binance, the balance follows them ---------- */
+  const fmtS = x => LRI + (x < 0 ? '−' : '+') + '$' + (Math.round(Math.abs(x) * 100) / 100).toFixed(2).replace(/\.00$/, '') + PDI;
+  const Journal = (() => {
+    const valid = e => num(e.amt) > 0 && num(e.q) > 0 && num(e.q) < 100;
+    function pnl(e) {
+      if (!e.res || !valid(e)) return NaN;
+      const a = num(e.amt), sh = a / Mizan.cost(num(e.q) / 100);
+      if (e.res === 'sold') return sh * Mizan.proceeds(e.sq) - a;
+      if (e.res === 'tie') return sh / 2 - a;
+      return (e.res === e.side ? sh : 0) - a;
+    }
+    // keep the balance in step with this entry (only the change since last time)
+    function apply(e) {
+      const p = pnl(e), b = num(st.bal); if (!isFinite(p) || !isFinite(b)) return;
+      const d = p - (e.applied || 0); if (Math.abs(d) < 0.005) return;
+      st.bal = String(Math.round((b + d) * 100) / 100); $('bal').value = st.bal; e.applied = p;
+    }
+    function finish(e, res, extra) {
+      e.res = res; e.doneAt = Date.now(); Object.assign(e, extra || {});
+      if (!valid(e)) { st.j = st.j.filter(x => x !== e); save(); return; }
+      apply(e);
+      // two losses in a row within an hour: a short break
+      const done = st.j.filter(x => x.res && isFinite(pnl(x))).sort((a, b) => a.doneAt - b.doneAt), n = done.length;
+      if (n >= 2 && done[n - 1] === e && pnl(e) < 0 && pnl(done[n - 2]) < 0 && Date.now() - done[n - 2].doneAt < 3600e3) st.cool = Date.now() + PARAMS.coolMin * 60000;
+      save();
+      const p = pnl(e), name = e.c + ' ' + hhmm(e.R + e.len * 60000);
+      Alert.toast(res === 'sold' ? name + ': بعت ' + (p >= 0 ? 'بربح ' : 'بخسارة ') + fmtS(p) : p >= 0 ? '✓ ' + name + ': كسبت ' + fmtS(p) : '✗ ' + name + ': خسرت ' + fmtS(p), p >= 0 ? '' : 'sell', '');
+    }
+    const busy = new Set();
+    async function tick() {
+      if (!LIVE) return;
+      const t = tNow();
+      for (const e of st.j) {
+        if (e.res || busy.has(e.id) || t < e.R + e.len * 60000 + 3000 || (e.tryAt && Date.now() - e.tryAt < 15000)) continue;
+        busy.add(e.id); e.tryAt = Date.now();
+        try { const o = await Live.outcome(e.c, e.R, e.len); if (o && !e.res) { finish(e, o.close > o.open ? 'up' : o.close < o.open ? 'down' : 'tie', { o: o.open, cl: o.close }); render(); } }
+        catch (x) {} finally { busy.delete(e.id); }
+      }
+    }
+    function paint() {
+      const today = sDay(Date.now()), list = st.j.filter(e => sDay(e.at) === today && (valid(e) || !e.res));
+      $('jCard').hidden = !list.length;
+      if (!list.length) return;
+      let net = 0, w = 0, l = 0;
+      list.forEach(e => { const p = pnl(e); if (isFinite(p)) { net += p; if (p >= 0) w++; else l++; } });
+      setClass('jSum', 'msg' + (w + l && net < 0 ? ' stop' : w + l && net > 0 ? ' good' : ''));
+      setHTML('jSum', w + l
+        ? '<b>صافي اليوم ' + fmtS(net) + '</b>' + count(w + l, 'صفقة وحدة', 'صفقتين', 'صفقات', 'صفقة') + ': ربحت ' + w + ' وخسرت ' + l + '.'
+        : '<b>' + count(list.length, 'صفقة وحدة شغالة', 'صفقتين شغالة', 'صفقات شغالة', 'صفقة شغالة') + '</b>النتيجة تطلع لما تخلص الجولة.');
+      const t = tNow();
+      setHTML('jList', list.slice(-12).reverse().map(e => {
+        const p = pnl(e), ended = t >= e.R + e.len * 60000, a = num(e.amt);
+        const what = e.c + ' · ' + hhmm(e.R + e.len * 60000) + ' · ' + (e.side === 'up' ? 'Up (طالع)' : 'Down (نازل)') + (a > 0 ? ' · ' + LRI + '$' + (Math.round(a * 100) / 100) + PDI : '');
+        let note = '', res;
+        if (e.res === 'sold') note = 'بعتها قبل النهاية';
+        else if (e.res && isFinite(e.o) && Math.abs(e.cl - e.o) < 0.00003 * e.o) note = 'فرق صغير مرة، تأكد من التطبيق';
+        if (!e.res && !ended) res = '<b class="wait">شغالة</b>';
+        else if (!e.res && LIVE) res = '<b class="wait">يجيب النتيجة…</b>';
+        else if (!e.res) res = '<button type="button" class="mini" data-act="win" data-id="' + e.id + '">كسبت</button><button type="button" class="mini" data-act="loss" data-id="' + e.id + '">خسرت</button>';
+        else if (!isFinite(p)) res = '<b class="wait">اكتب المبلغ</b>';
+        else res = '<b class="' + (p >= 0 ? 'pos' : 'neg') + '">' + fmtS(p) + '</b>' + (e.res === 'up' || e.res === 'down' ? '<button type="button" class="mini" data-act="flip" data-id="' + e.id + '" aria-label="النتيجة غلط، اعكسها">غلط؟</button>' : '');
+        return '<li><span>' + what + (note ? '<small>' + note + '</small>' : '') + '</span><span class="res">' + res + '</span></li>';
+      }).join(''));
+    }
+    $('jList').addEventListener('click', ev => {
+      const b = ev.target.closest('button[data-act]'); if (!b) return;
+      const e = st.j.find(x => x.id === b.dataset.id); if (!e) return;
+      const other = e.side === 'up' ? 'down' : 'up';
+      if (b.dataset.act === 'win' && !e.res) finish(e, e.side);
+      else if (b.dataset.act === 'loss' && !e.res) finish(e, other);
+      else if (b.dataset.act === 'flip' && (e.res === 'up' || e.res === 'down')) { e.res = e.res === 'up' ? 'down' : 'up'; apply(e); save(); }
+      render();
+    });
+    if (LIVE) setInterval(tick, 3000);
+    return { valid, pnl, apply, finish, paint, tick };
+  })();
+  $('dSold').addEventListener('click', () => {
+    const c = st.coin, k = st.m[c], e = jEntry(c, true), aq = appQuote(c);
+    e.side = k.side;
+    const sq = aq ? (k.side === 'up' ? aq.upBid : aq.dnBid) : num(k.sellQ) / 100;
+    if (!Journal.valid(e)) { Alert.toast('اكتب بكم دخلت وبأي سعر، عشان أحسبها.', 'sell', ''); save(); return; }
+    if (!(sq > 0 && sq < 1)) { Alert.toast('اكتب سعر البيع اللي بعت فيه.', 'sell', ''); return; }
+    Journal.finish(e, 'sold', { sq });
+    k.held = null; st.mode = 'enter'; save(); loadCoin(); render();
+  });
+  // a lock the user sets on purpose: two taps, and it holds until the next Saudi day
+  const LOCK_TXT = '🔒 قفّل «ادخل» لين بكرة';
+  let lockArm = 0;
+  $('lockBtn').addEventListener('click', () => {
+    if (Date.now() - lockArm > 5000) {
+      lockArm = Date.now(); $('lockBtn').textContent = 'متأكد؟ اضغط مرة ثانية. ما يفتح إلا بكرة';
+      setTimeout(() => { if (lockArm && Date.now() - lockArm >= 4900) { lockArm = 0; $('lockBtn').textContent = LOCK_TXT; } }, 5000);
+      return;
+    }
+    lockArm = 0; st.lock = { d: sDay(Date.now()), why: 'self' }; save(); render();
+  });
+  // the stop level locks for the rest of the day, but only when the balance drops onto it (not while typing)
+  let editAt = 0, wasAbove = !(num(st.floor) > 0 && num(st.bal) <= num(st.floor));
   if (LIVE) {
     $('linkBox').open = !Quotes.hasKey();
     $('pfSave').addEventListener('click', () => { const v = $('pfKey').value.trim(); if (!v) return; Quotes.setKey(v); $('pfKey').value = ''; render(); });
@@ -742,7 +998,8 @@ const Quotes = (() => {
 
   document.addEventListener('input', e => {
     const id = e.target.id, t = tNow();
-    if (id === 'bal' || id === 'goal' || id === 'floor') st[id] = e.target.value;
+    if (id === 'bal' || id === 'goal' || id === 'floor') { st[id] = e.target.value; editAt = Date.now(); }
+    if (id === 'jAmt' || id === 'jQ') { const je = jEntry(st.coin, true); je[id === 'jAmt' ? 'amt' : 'q'] = e.target.value; if (je.res) Journal.apply(je); }
     if (id === 'upQ' || id === 'dnQ') {
       const k = st.m[st.coin], other = id === 'upQ' ? 'dnQ' : 'upQ', R = Mizan.roundEnd(t);
       k[id] = e.target.value; k[id + 'At'] = t; k[id + 'R'] = R; if (k.auto === id) k.auto = '';
@@ -762,11 +1019,20 @@ const Quotes = (() => {
     save(); render();
   });
   document.addEventListener('change', e => {
-    if (e.target.name === 'coin') { st.coin = e.target.value; loadCoin(); }
+    if (e.target.name === 'coin') { st.coin = e.target.value; st.mode = heldOk(st.coin) ? 'hold' : 'enter'; loadCoin(); }
     if (e.target.name === 'dir') { st.m[st.coin].dir = e.target.value; st.m[st.coin].dirRound = Mizan.roundEnd(tNow()); }
-    if (e.target.name === 'mode') { st.mode = e.target.value; loadCoin(); }
-    if (e.target.name === 'hside') st.m[st.coin].side = e.target.value;
-    if (e.target.name === 'len') { st.len = +e.target.value; Mizan.setRound(st.len * 60000); if (LIVE) Live.reset(); }
+    if (e.target.name === 'mode') {
+      st.mode = e.target.value;
+      if (st.mode === 'hold') holdFor(st.coin);
+      else { const je = jEntry(st.coin, false); if (je && !je.res && !Journal.valid(je)) st.j = st.j.filter(x => x !== je); st.m[st.coin].held = null; }
+      loadCoin();
+    }
+    if (e.target.name === 'hside') { st.m[st.coin].side = e.target.value; const je = jEntry(st.coin, false); if (je && !je.res) je.side = e.target.value; }
+    if (e.target.name === 'len') {
+      st.len = +e.target.value; Mizan.setRound(st.len * 60000); if (LIVE) Live.reset();
+      COINS.forEach(cc => Object.assign(st.m[cc], { qAt: 0, upQAt: 0, dnQAt: 0, qRound: 0, sellAt: 0, sellRound: 0, at: 0, round: 0 }));
+      st.mode = heldOk(st.coin) ? 'hold' : 'enter'; loadCoin();
+    }
     save(); render();
   });
   let wakeLock = null;
@@ -806,15 +1072,35 @@ const Quotes = (() => {
 
   function render() {
     const t = tNow(), c = st.coin, m = model(c, t);
+    if (st.mode === 'hold' && !heldOk(c)) {
+      const ended = !heldLive(c);
+      if (ended) st.m[c].held = null;
+      st.mode = 'enter'; save(); loadCoin();
+      if (ended) Alert.toast('جولة صفقتك في ' + c + ' خلصت. «أبي أدخل» رجع للجولة الجديدة.', '', '');
+    }
+    // locks: the stop level (sticky for the day), the user's own lock, the break after two losses
+    if (Date.now() - editAt > 4000) {
+      const above = !(num(st.floor) > 0 && num(st.bal) <= num(st.floor));
+      if (wasAbove && !above && !locked()) { st.lock = { d: sDay(Date.now()), why: 'floor' }; save(); Alert.toast('وصلت حدك. «ادخل» مقفّل لين بكرة.', 'sell', ''); }
+      wasAbove = above;
+    }
+    const lockMsg = locked() ? (st.lock.why === 'floor' ? 'رصيدك وصل الحد اللي حطيته. ' : 'قفّلتها بنفسك. ') + 'تفتح الساعة 12 بالليل بتوقيت السعودية، بعد ' + hm(nextDay(Date.now()) - Date.now()) + '. اطلع من التطبيق الحين.' : '';
+    const guard = { lock: lockMsg, pause: st.cool > Date.now() ? (st.cool - Date.now()) / 1000 : 0 };
+    const newsTxt = end => { const e = Mizan.newsBlock(t, end); return !e ? '' : e.t > t ? 'ينزل خبر ' + e.name + ' الساعة ' + hhmm(e.t) + '، قبل نهاية هالجولة. السعر يقفز فجأة والحسبة ما تشوفه.' : 'نزل خبر ' + e.name + ' الساعة ' + hhmm(e.t) + '، والسعر لسا يتخبط. ارجع بعد ' + hhmm(e.t + e.after) + '.'; };
     // tabs: leading side per coin
     COINS.forEach(cc => {
       const mm = cc === c ? m : (LIVE ? model(cc, t) : { ok: false });
       const el = $('tab' + cc);
       const aq = mm.ok ? appQuote(cc) : null;
-      const go = aq ? Mizan.decide({ bal: num(st.bal), goal: num(st.goal), floor: num(st.floor), ok: true, tLeft: mm.tLeft, pUp: mm.pUp, pAlt: mm.pAlt, mode: 'enter', live: true, upQ: aq.upAsk, dnQ: aq.dnAsk, spread: aq.spread, qAge: 0 }) : null;
+      const go = aq ? Mizan.decide({ ...guard, news: newsTxt(mm.end), bal: num(st.bal), goal: num(st.goal), floor: num(st.floor), ok: true, tLeft: mm.tLeft, pUp: mm.pUp, pAlt: mm.pAlt, mode: 'enter', live: true, upQ: aq.upAsk, dnQ: aq.dnAsk, spread: aq.spread, qAge: aq.age }) : null;
+      // a position on a coin that is not on screen is still watched
+      if (aq && cc !== c && heldOk(cc)) {
+        const hk = st.m[cc], hd = Mizan.decide({ ok: true, tLeft: mm.tLeft, pUp: mm.pUp, pAlt: mm.pAlt, mode: 'hold', live: true, side: hk.side, sellQ: hk.side === 'up' ? aq.upBid : aq.dnBid, sellAge: aq.age });
+        if (hd.kind === 'sell') Alert.fire(cc, Live.coins[cc].round, 'sell', 'انحش: بيع صفقتك في ' + cc + ' الحين');
+      }
       if (go && go.kind === 'go') {
         const txt = 'ادخل ' + (go.side === 'up' ? '↑' : '↓'); if (el.textContent !== txt) { el.textContent = txt; el.className = 'go'; }
-        Alert.fire(cc, Live.coins[cc].round, 'go-' + go.side, '✓ ادخل ' + (go.side === 'up' ? 'Up (طالع)' : 'Down (نازل)') + ' في ' + cc);
+        if (!heldOk(cc)) Alert.fire(cc, Live.coins[cc].round, 'go-' + go.side, '✓ ادخل ' + (go.side === 'up' ? 'Up (طالع)' : 'Down (نازل)') + ' في ' + cc);
       }
       else if (mm.ok) { const up = mm.pUp >= 0.5; const txt = (up ? '↑ ' : '↓ ') + LRI + pctP(up ? mm.pUp : 1 - mm.pUp) + PDI; if (el.textContent !== txt) { el.textContent = txt; el.className = up ? 'up' : 'down'; } }
       else if (el.textContent !== '–') { el.textContent = '–'; el.className = ''; }
@@ -856,20 +1142,33 @@ const Quotes = (() => {
     // balance
     const bal = num(st.bal), goal = num(st.goal);
     let bankCls = 'msg', bankHTML;
-    if (bal <= 0) { bankCls = 'msg stop'; bankHTML = '<b>خلص الرصيد. وقّف.</b>لا تودع من جديد.'; }
+    if (locked()) { bankCls = 'msg stop'; bankHTML = '<b>«ادخل» مقفّل لين بكرة.</b>' + lockMsg; }
+    else if (bal <= 0) { bankCls = 'msg stop'; bankHTML = '<b>خلص الرصيد. وقّف.</b>لا تودع من جديد.'; }
     else if (bal >= goal) { bankCls = 'msg good'; bankHTML = '<b>وصلت هدفك. اسحب ووقّف.</b>'; }
+    else if (num(st.floor) > 0 && bal <= num(st.floor)) { bankCls = 'msg stop'; bankHTML = '<b>وصلت الحد اللي حطيته. وقّف.</b>اسحب الباقي وكمّل يوم ثاني.'; }
     else if (isFinite(bal) && isFinite(goal)) { const o = Mizan.reachOdds(bal, goal); bankHTML = 'فرصة إن ' + LRI + '$' + bal + PDI + ' تصير ' + LRI + '$' + goal + PDI + ' قبل لا تخلص: <b>' + (o < 0.01 ? LRI + '<1%' + PDI : LRI + Math.floor(o * 100) + '%' + PDI + ' أو أقل') + '</b>لو أسعار التطبيق عادلة، مهما كانت طريقة لعبك، ومع الرسوم أقل. إذا خلصت، وقّف ولا تودع.'; }
     else bankHTML = 'اكتب رصيدك وهدفك.';
     setClass('bankMsg', bankCls); setHTML('bankMsg', bankHTML);
+    $('lockBtn').hidden = locked();
+    Journal.paint();
+    // US news: a heads-up up to 12 hours before
+    const nx = Mizan.newsNext(t, 12 * 3600e3);
+    $('newsMsg').hidden = !nx;
+    if (nx) {
+      const sameDay = new Date(nx.t).toDateString() === new Date(t).toDateString();
+      setHTML('newsMsg', nx.t - 60000 < m.end
+        ? '<b>📢 خبر أمريكي: ' + nx.name + '</b>الساعة ' + LRI + hhmm(nx.t) + PDI + '. الصفحة ما تقول «ادخل» لين ' + LRI + hhmm(nx.t + nx.after) + PDI + '، لأن السعر يقفز فجأة.'
+        : '<b>📢 ' + (sameDay ? 'اليوم' : 'بكرة') + ' الساعة ' + LRI + hhmm(nx.t) + PDI + ': ' + nx.name + '</b>أي جولة ينزل فيها الخبر، ولين ' + hm(nx.after) + ' بعده، الصفحة ما تقول فيها «ادخل».');
+    }
     // the decision
     const k = st.m[c];
     const aq = m.ok ? appQuote(c) : null;
     const d = Mizan.decide(aq ? {
-      bal, goal, floor: num(st.floor), ok: m.ok, wait: m.wait, tLeft: left, pUp: m.pUp, pAlt: m.pAlt, mode: st.mode, live: true,
-      upQ: aq.upAsk, dnQ: aq.dnAsk, spread: aq.spread, qAge: 0,
-      side: k.side, sellQ: k.side === 'up' ? aq.upBid : aq.dnBid, sellAge: 0,
+      ...guard, news: newsTxt(m.end), bal, goal, floor: num(st.floor), ok: m.ok, wait: m.wait, tLeft: left, pUp: m.pUp, pAlt: m.pAlt, mode: st.mode, live: true,
+      upQ: aq.upAsk, dnQ: aq.dnAsk, spread: aq.spread, qAge: aq.age,
+      side: k.side, sellQ: k.side === 'up' ? aq.upBid : aq.dnBid, sellAge: aq.age,
     } : {
-      bal, goal, floor: num(st.floor), ok: m.ok, wait: m.wait, tLeft: left, pUp: m.pUp, pAlt: m.pAlt, mode: st.mode,
+      ...guard, news: newsTxt(m.end), bal, goal, floor: num(st.floor), ok: m.ok, wait: m.wait, tLeft: left, pUp: m.pUp, pAlt: m.pAlt, mode: st.mode,
       upQ: num(k.upQ) / 100, dnQ: num(k.dnQ) / 100, qAge: k.qAt && k.qRound === m.end ? (t - k.qAt) / 1000 : Infinity,
       upAuto: k.auto === 'upQ', dnAuto: k.auto === 'dnQ',
       side: k.side, sellQ: num(k.sellQ) / 100, sellAge: k.sellAt && k.sellRound === m.end ? (t - k.sellAt) / 1000 : Infinity,
@@ -877,7 +1176,7 @@ const Quotes = (() => {
     // live app prices replace the typing boxes
     const pc = x => isFinite(x) ? LRI + Math.round(x * 100) + '%' + PDI : '–';
     $('enterBox').hidden = st.mode === 'hold' || !!aq;
-    $('sellQ').closest('.field').hidden = !!aq;
+    $('sellQ').closest('.field').hidden = !!aq; $('holdBox').style.gridTemplateColumns = aq ? '1fr' : '';
     $('liveQ').hidden = !aq && !(LIVE && Quotes.hasKey() && m.ok);
     if (!aq && LIVE && Quotes.hasKey() && m.ok) {
       const w = Quotes.why(c, Live.coins[c].round);
@@ -895,14 +1194,19 @@ const Quotes = (() => {
       const keep = new Set(); COINS.forEach(cc => { const id = Live.coins[cc].round ? Quotes.idFor(cc, Live.coins[cc].round) : 0; if (id) keep.add(id); });
       if (keep.size) Quotes.prune(keep);
     }
+    if (st.mode === 'hold' && m.ok) { const e = Mizan.newsBlock(t, m.end); if (e) d.body += ' انتبه: خبر ' + e.name + (e.t > t ? ' ينزل الساعة ' + hhmm(e.t) : ' نزل توه') + '، والسعر ممكن يقفز.'; }
     setClass('decision', 'decision ' + d.kind); setText('dTitle', d.title); setText('dBody', d.body);
-    $('dEntered').hidden = !(d.kind === 'go' && st.mode === 'enter');
-    lastGo = d.kind === 'go' ? d.side : null;
+    if (d.kind === 'go' && st.mode === 'enter') goMemo = { c, R: curRound(c), side: d.side, at: Date.now(), amt: d.amount, q: d.q };
+    $('dSold').hidden = st.mode !== 'hold';
+    const showEntered = st.mode === 'enter' && d.kind !== 'stop' && !!goMemo && goMemo.c === c && goMemo.R === curRound(c) && Date.now() - goMemo.at < 90000;
+    $('dEntered').hidden = !showEntered;
+    if (showEntered) setText('dEntered', 'دخلت ' + (goMemo.side === 'up' ? 'Up (طالع)' : 'Down (نازل)') + '، تابع صفقتي');
     if (d.kind === 'sell' && st.mode === 'hold') Alert.fire(c, LIVE ? Live.coins[c].round : m.end, 'sell', 'انحش: بيع صفقتك في ' + c + ' الحين');
     // glance line: highest worthwhile price per side
-    if (m.ok && left >= PARAMS.buyCloseSec && st.mode === 'enter' && d.kind !== 'stop') {
-      const f = p => { const q = Mizan.maxPrice(p); return p <= 0.9 && q > 0.01 ? 'يستاهل لو سعره ' + LRI + Math.floor(q * 100) + '%' + PDI + ' أو أقل' : 'ما يستاهل'; };
-      setText('rule', 'Up (طالع) ' + f(m.pUp) + ' · Down (نازل) ' + f(1 - m.pUp));
+    if (m.ok && left >= PARAMS.buyCloseSec && st.mode === 'enter' && d.kind !== 'stop' && !Mizan.newsBlock(t, m.end)) {
+      const lo = isFinite(m.pAlt) ? Math.min(m.pUp, m.pAlt) : m.pUp, hi = isFinite(m.pAlt) ? Math.max(m.pUp, m.pAlt) : m.pUp;
+      const f = (p, pc) => { const q = Math.floor(Mizan.maxPrice(pc) * 100), qmin = Math.max(10, Math.ceil(Mizan.maxPrice(pc - 0.07) * 100)); return p <= 0.9 && q >= qmin ? 'يستاهل لو سعره ' + LRI + (q > qmin ? qmin + '–' : '') + q + '%' + PDI : 'ما يستاهل'; };
+      setText('rule', 'Up (طالع) ' + f(m.pUp, lo) + ' · Down (نازل) ' + f(1 - m.pUp, 1 - hi));
     } else setText('rule', '');
   }
 
