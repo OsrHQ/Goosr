@@ -56,6 +56,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .tabs label small.down { color: var(--down); }
 .tabs input:checked + label { background: var(--seg-on); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12), inset 0 0 0 1px var(--line); }
 .tabs input:focus-visible + label { outline: 2px solid var(--accent); }
+.lens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; position: relative; }
+.lens input { position: absolute; opacity: 0; pointer-events: none; }
+.lens label { text-align: center; padding: 4px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); }
+.lens input:checked + label { color: var(--ink); border-color: var(--accent); background: var(--seg-on); }
+.lens input:focus-visible + label { outline: 2px solid var(--accent); }
 
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
@@ -164,6 +169,11 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
       <input type="radio" name="coin" id="cETH" value="ETH"><label for="cETH">ETH<small id="tabETH">–</small></label>
       <input type="radio" name="coin" id="cBNB" value="BNB"><label for="cBNB">BNB<small id="tabBNB">–</small></label>
     </div>
+    <div class="lens" role="radiogroup" aria-label="طول الجولة">
+      <input type="radio" name="len" id="len5" value="5" checked><label for="len5">5 دقايق</label>
+      <input type="radio" name="len" id="len15" value="15"><label for="len15">15 دقيقة</label>
+      <input type="radio" name="len" id="len60" value="60"><label for="len60">ساعة</label>
+    </div>
   </div>
 </div>
 
@@ -254,7 +264,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
     <details id="help" open>
       <summary>كيف أستخدمها؟ ووش فايدتها؟</summary>
       <ol class="steps">
-        <li>اختر العملة من فوق.</li>
+        <li>اختر العملة من فوق، وطول الجولة: 5 دقايق أو 15 دقيقة أو ساعة.</li>
         <li><b>لو ربطت أسعار التطبيق</b> (تحت «ربط أسعار التطبيق»)، ما تحتاج تكتب أي سعر، والعملة اللي فيها فرصة دخول يطلع عليها «ادخل» فوق.</li>
         <li><b>قبل ما تشتري:</b> اختر «أبي أدخل» واكتب سعر Up (طالع) من التطبيق. يطلع لك «ادخل» أو «لا تدخل» أو «الشراء مقفل»، أو «وقّف» لو خلص رصيدك أو وصلت هدفك.</li>
         <li><b>وأنت داخل صفقة:</b> اختر «عندي صفقة»، وحدد جهتك، واكتب سعر Sell (بيع). يطلع لك «انحش: بيع الحين» أو «خلك: لا تبيع الحين» أو «على كيفك». ولو ضغطت «دخلت» تحت «ادخل»، الصفحة تتابع صفقتك لحالها.</li>
@@ -318,7 +328,8 @@ const PARAMS = {
 
 /* ---------- math ---------- */
 const Mizan = (() => {
-  const ROUND_MS = 300000;
+  let ROUND_MS = 300000;
+  const setRound = ms => { ROUND_MS = ms; };
   function erf(x) { const s = x < 0 ? -1 : 1; x = Math.abs(x); const t = 1 / (1 + 0.3275911 * x); return s * (1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x)); }
   const phi = x => 0.5 * (1 + erf(x / Math.SQRT2));
   function probUp(diff, tLeft, sigma) { if (!isFinite(diff)) return NaN; if (!(tLeft > 0)) return diff > 0 ? 1 : diff < 0 ? 0 : 0.5; if (!(sigma > 0)) return NaN; return phi(diff / (sigma * Math.sqrt(tLeft / 60))); }
@@ -414,7 +425,7 @@ const Mizan = (() => {
     return { kind: 'go', side: up ? 'up' : 'down', amount: amt, title: '✓ ادخل ' + name + (amt ? ' بـ' + isoD(amt) : ''),
       body: 'لو كسبت ' + isoS(win) + ' · لو خسرت ' + isoS(-amt) + ' · تخسر تقريبًا ' + Math.round((1 - p) * 100) + ' من كل 100 مرة.' + big + lock };
   }
-  return { ROUND_MS, phi, probUp, probUpT2, clockSigma, usStandardTime, roundStart, roundEnd, sigmaFromCloses, parseNum, maxPrice, reachOdds, pctP, isoP, stake, decide, secs };
+  return { get ROUND_MS() { return ROUND_MS; }, setRound, phi, probUp, probUpT2, clockSigma, usStandardTime, roundStart, roundEnd, sigmaFromCloses, parseNum, maxPrice, reachOdds, pctP, isoP, stake, decide, secs };
 })();
 window.Mizan = Mizan;
 
@@ -434,11 +445,12 @@ const Live = (() => {
     const k = coins[c]; if (k.loading === R) return; k.loading = R;
     for (let a = 0; a < 4; a++) {
       try {
-        const rows = await getJSON('klines?symbol=' + c + 'USDT&interval=1s&startTime=' + R + '&limit=300');
+        const long = Mizan.ROUND_MS > 900000;
+        const rows = await getJSON('klines?symbol=' + c + 'USDT&interval=' + (long ? '1m' : '1s') + '&startTime=' + R + '&limit=' + (long ? 60 : Mizan.ROUND_MS / 1000));
         if (k.round !== R) break;
         if (rows.length && rows[0][0] < R + 3000) { k.ptb = +rows[0][1]; k.ptbOk = true; }
         const first = k.path.length ? k.path[0][0] : Infinity;
-        k.path = rows.map(r => [r[0] + 999, +r[4]]).filter(p => p[0] < first).concat(k.path);
+        k.path = rows.map(r => [r[0] + (long ? 59999 : 999), +r[4]]).filter(p => p[0] < first && p[0] <= Date.now() + offset).concat(k.path);
         break;
       } catch (e) { await sleep(700 * (a + 1)); }
     }
@@ -477,7 +489,8 @@ const Live = (() => {
     document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') return; syncTime(); if (!ws) connect(); else if (Date.now() - lastMsgAt > 5000) dropSocket(); });
   }
   const status = () => ({ connected, ageMs: lastMsgAt ? Date.now() - lastMsgAt : Infinity });
-  return { coins, start, now, status };
+  function reset() { COINS.forEach(c => Object.assign(coins[c], { round: 0, ptb: NaN, ptbOk: false, path: [], loading: 0 })); }
+  return { coins, start, now, status, reset };
 })();
 
 /* ---------- app prices from Predict.fun (the same markets as Binance's Prediction tab) ---------- */
@@ -516,19 +529,20 @@ const Quotes = (() => {
     try {
       const r = await fetch(REST + path, { headers: { 'x-api-key': key }, cache: 'no-store', signal: ctl.signal });
       if (r.status === 401 || r.status === 403) { badKey = true; throw new Error('key'); }
+      if (r.status === 404) return null;
       if (!r.ok) throw new Error('http ' + r.status);
       badKey = false; return await r.json();
     } finally { clearTimeout(tm); }
   }
   async function resolve(slug) {
     const cur = ids.get(slug);
-    if (cur && (cur.state === 'ok' || cur.state === 'pending' || Date.now() - cur.at < 5000)) return;
+    if (cur && (cur.state === 'ok' || cur.state === 'pending' || Date.now() - cur.at < (cur.missing ? 60000 : 5000))) return;
     ids.set(slug, { state: 'pending', at: Date.now() });
     try {
       const j = await getJSON('/v1/categories/' + slug);
       const mk = j && j.data && j.data.markets && j.data.markets[0];
       const id = mk && Number(mk.id);
-      if (!id) throw new Error('no market');
+      if (!id) { ids.set(slug, { state: 'error', missing: true, at: Date.now() }); return; }
       ids.set(slug, { id, state: 'ok', at: Date.now() });
       const tp = 'predictOrderbook/' + id;
       if (!topics.has(tp)) { topics.add(tp); send({ method: 'subscribe', requestId: rid++, params: [tp] }); }
@@ -545,10 +559,20 @@ const Quotes = (() => {
   function prune(keepIds) {
     topics.forEach(tp => { const id = Number(tp.split('/')[1]); if (!keepIds.has(id)) { topics.delete(tp); send({ method: 'unsubscribe', requestId: rid++, params: [tp] }); books.delete(id); } });
   }
+  // Predict slug of a round: btc-updown-5m-<start> / -15m- ; hourly: bitcoin-up-or-down-october-24-2026-11am-et
+  const NAMES = { BTC: 'bitcoin', ETH: 'ethereum', BNB: 'bnb' };
+  const MONTHS = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+  function slugFor(coin, startMs) {
+    const len = Mizan.ROUND_MS / 60000;
+    if (len < 60) return coin.toLowerCase() + '-updown-' + len + 'm-' + Math.round(startMs / 1000);
+    const et = new Date(startMs - (Mizan.usStandardTime(startMs) ? 5 : 4) * 3600e3);
+    const h = et.getUTCHours(), h12 = (h % 12) || 12;
+    return NAMES[coin] + '-up-or-down-' + MONTHS[et.getUTCMonth()] + '-' + et.getUTCDate() + '-' + et.getUTCFullYear() + '-' + h12 + (h < 12 ? 'am' : 'pm') + '-et';
+  }
   // live app prices for a coin's round, or null. up/down bid/ask in 0..1.
   function quote(coin, roundStartMs) {
     if (!key || !roundStartMs) return null;
-    const slug = coin.toLowerCase() + '-updown-5m-' + Math.round(roundStartMs / 1000);
+    const slug = slugFor(coin, roundStartMs);
     const e = ids.get(slug);
     if (!e || e.state !== 'ok') { resolve(slug); return null; }
     const b = books.get(e.id);
@@ -557,7 +581,7 @@ const Quotes = (() => {
     const r2 = x => Math.round(x * 100) / 100;
     return { marketId: e.id, upBid: b.bid, upAsk: b.ask, dnBid: isFinite(b.ask) ? r2(1 - b.ask) : NaN, dnAsk: isFinite(b.bid) ? r2(1 - b.bid) : NaN, spread: b.ask - b.bid, age: (Date.now() - b.ts) / 1000 };
   }
-  function idFor(coin, roundStartMs) { const e = ids.get(coin.toLowerCase() + '-updown-5m-' + Math.round(roundStartMs / 1000)); return e && e.state === 'ok' ? e.id : 0; }
+  function idFor(coin, roundStartMs) { const e = ids.get(slugFor(coin, roundStartMs)); return e && e.state === 'ok' ? e.id : 0; }
   function setKey(k) {
     key = (k || '').trim(); badKey = false; fails = 0;
     try { if (key) localStorage.setItem(KEYS, key); else localStorage.removeItem(KEYS); } catch (e) {}
@@ -566,7 +590,7 @@ const Quotes = (() => {
     if (key) connect();
   }
   const status = () => !key ? 'nokey' : badKey ? 'badkey' : (books.size && [...books.values()].some(b => Date.now() - b.ts < 10000)) ? 'live' : 'connecting';
-  return { quote, idFor, prune, setKey, status, hasKey: () => !!key };
+  return { quote, idFor, prune, setKey, status, slugFor, hasKey: () => !!key };
 })();
 
 /* ---------- page ---------- */
@@ -589,6 +613,9 @@ const Quotes = (() => {
   st.bal = st.bal ?? '10'; st.goal = st.goal ?? '100';
   st.m = st.m || {}; COINS.forEach(c => st.m[c] = Object.assign({ dir: 'below', diff: '', at: 0, left: 0, round: 0, upQ: '', dnQ: '', qAt: 0, side: 'down', sellQ: '', sellAt: 0 }, st.m[c] || {}));
   st.mode = st.mode === 'hold' ? 'hold' : 'enter';
+  st.len = [5, 15, 60].includes(+st.len) ? +st.len : 5;
+  Mizan.setRound(st.len * 60000);
+  $('len' + st.len).checked = true;
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
   $('bal').value = st.bal; $('goal').value = st.goal;
   function loadCoin() {
@@ -659,6 +686,7 @@ const Quotes = (() => {
     if (e.target.name === 'dir') { st.m[st.coin].dir = e.target.value; st.m[st.coin].dirRound = Mizan.roundEnd(tNow()); }
     if (e.target.name === 'mode') { st.mode = e.target.value; loadCoin(); }
     if (e.target.name === 'hside') st.m[st.coin].side = e.target.value;
+    if (e.target.name === 'len') { st.len = +e.target.value; Mizan.setRound(st.len * 60000); if (LIVE) Live.reset(); }
     save(); render();
   });
   let wakeLock = null;
