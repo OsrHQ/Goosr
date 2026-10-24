@@ -9,7 +9,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ميزان الجولة">
-<meta name="theme-color" content="#16202a">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16202a" media="(prefers-color-scheme: dark)">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>ميزان الجولة</title>
 <style>
@@ -79,7 +80,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .gapline { margin: 0; font-size: 15px; text-align: center; }
 .gapline b.pos { color: var(--up); }
 .gapline b.neg { color: var(--down); }
-#spark { width: 100%; height: 100px; display: block; border-radius: 10px; background: var(--sunk); }
+#spark { width: 100%; height: 130px; display: block; border-radius: 10px; background: var(--sunk); }
+.cone { margin: -4px 0 0; font-size: 13.5px; color: var(--muted); text-align: center; }
+.cone b { color: var(--ink); font-weight: 600; }
 
 .rule { display: flex; flex-direction: column; gap: 8px; }
 .rule h2 { margin: 0; font-size: 16px; }
@@ -159,12 +162,13 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
     </div>
 
     <div id="lead" class="lead" aria-live="polite">
-      <span id="leadName">الأقرب</span>
+      <span id="leadName">الأرجح</span>
       <b id="leadPct" class="num">–</b>
       <em id="leadOther"></em>
     </div>
     <p class="gapline" id="gapLine">…</p>
-    <canvas id="spark" aria-label="حركة السعر في الجولة مقارنة بسعر البداية" hidden></canvas>
+    <canvas id="spark" aria-label="حركة السعر في الجولة، والمنطقة اللي غالبًا بيكون فيها لين النهاية" hidden></canvas>
+    <p class="cone" id="coneLine" hidden></p>
 
     <div id="manual" hidden>
       <div class="bank">
@@ -193,7 +197,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
           <input type="radio" name="hside" id="hDn" value="down" checked><label for="hDn" class="down">Down (نازل)</label>
         </div>
       </div>
-      <div class="field"><label for="sellQ">سعر البيع في Sell</label><div class="inwrap"><input type="text" id="sellQ" inputmode="decimal" autocomplete="off" placeholder="55"><span>%</span></div></div>
+      <div class="field"><label for="sellQ">سعر Sell (البيع) في التطبيق</label><div class="inwrap"><input type="text" id="sellQ" inputmode="decimal" autocomplete="off" placeholder="55"><span>%</span></div></div>
     </div>
     <div id="decision" class="decision" aria-live="polite"><b id="dTitle">…</b><span id="dBody"></span></div>
     <p class="rulemini" id="rule"></p>
@@ -202,7 +206,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
   <section class="card" aria-labelledby="h-bank">
     <h2 id="h-bank" style="margin:0;font-size:16px">رصيدي</h2>
     <div class="bank">
-      <div class="field"><label for="bal">رصيدي الحين</label><div class="inwrap"><input type="text" id="bal" inputmode="decimal" autocomplete="off" value="10"><span>$</span></div></div>
+      <div class="field"><label for="bal">رصيدي الحين (حدّثه بعد كل صفقة)</label><div class="inwrap"><input type="text" id="bal" inputmode="decimal" autocomplete="off" value="10"><span>$</span></div></div>
       <div class="field"><label for="goal">هدفي</label><div class="inwrap"><input type="text" id="goal" inputmode="decimal" autocomplete="off" value="100"><span>$</span></div></div>
     </div>
     <div id="bankMsg" class="msg"></div>
@@ -213,25 +217,25 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
       <summary>كيف أستخدمها؟ ووش فايدتها؟</summary>
       <ol class="steps">
         <li>اختر العملة من فوق.</li>
-        <li><b>قبل ما تشتري:</b> اختر «أبي أدخل» واكتب سعر Up (طالع) من التطبيق. يطلع لك «ادخل» أو «لا تدخل» أو «الشراء مقفل».</li>
-        <li><b>وأنت داخل صفقة:</b> اختر «عندي صفقة»، وحدد جهتك، واكتب سعر Sell (بيع). يطلع لك «بيع الحين» أو «خلها لين النهاية» أو «على كيفك».</li>
+        <li><b>قبل ما تشتري:</b> اختر «أبي أدخل» واكتب سعر Up (طالع) من التطبيق. يطلع لك «ادخل» أو «لا تدخل» أو «الشراء مقفل»، أو «وقّف» لو خلص رصيدك أو وصلت هدفك.</li>
+        <li><b>وأنت داخل صفقة:</b> اختر «عندي صفقة»، وحدد جهتك، واكتب سعر Sell (بيع). يطلع لك «بيع الحين» أو «خلها الحين» أو «على كيفك».</li>
       </ol>
       <h3>بكم أدخل؟</h3>
-      <p>الصفحة تحدد المبلغ في رسالة «ادخل»: بالكثير 10% من رصيدك. برصيد 10 دولار يعني 1 دولار، فلو خسرت يبقى لك 9 وتكمل. ولما يكبر الرصيد، يكبر المبلغ معه.</p>
+      <p>الصفحة تحدد المبلغ في رسالة «ادخل»: 10% من رصيدك، وأقل شي دولار لأن التطبيق ما يقبل أقل. برصيد 10 دولار يعني دولار واحد بس. لو نزل رصيدك تحت 10، الدولار يصير أكثر من 10% والصفحة تنبهك، وتحت 2 دولار تقول لك وقّف. لا تزيد المبلغ عشان تعوّض خسارة.</p>
       <h3>وش الفايدة؟</h3>
-      <p>تفرز لك الصفقة الحلوة من السيئة. نفس الجهة وفرصتها 72%، لو دخلتها 100 مرة بدولار:</p>
+      <p>تفرز لك الصفقة الحلوة من السيئة. نفس الجهة، ولو فرصتها فعلًا 72% ودخلتها 100 مرة بدولار:</p>
       <table class="ex">
         <thead><tr><th>سعرها في التطبيق</th><th>النتيجة تقريبًا</th></tr></thead>
         <tbody>
-          <tr><td><span class="num">61%</span></td><td class="pos"><span class="num">+$17</span> ربح</td></tr>
+          <tr><td><span class="num">61%</span></td><td class="pos"><span class="num">+$18</span> ربح</td></tr>
           <tr><td><span class="num">75%</span></td><td class="neg"><span class="num">−$4</span> خسارة</td></tr>
         </tbody>
       </table>
-      <p>الفرق كله في السعر اللي اشتريت فيه. الصفحة تقول «ادخل» بس لما السعر أرخص من الفرصة بفرق واضح.</p>
+      <p>الفرق كله في السعر اللي اشتريت فيه. الصفحة تقول «ادخل» بس لما السعر أرخص من الفرصة بـ8 نقاط أو أكثر، لأن الحسبة نفسها ممكن تغلط بهالقدر.</p>
       <h3>متى أبيع؟</h3>
       <ul class="steps">
-        <li><b>خلها لين النهاية:</b> لما السوق يعطيك أقل مما تستاهل صفقتك. هنا الفوز أحسن.</li>
-        <li><b>بيع الحين:</b> لما السوق يدفع أكثر من فرصتها الحقيقية، فتطلع بمبلغ بدل ما تخاطر بكله.</li>
+        <li><b>خلها الحين:</b> لما السوق يعطيك أقل مما تستاهل صفقتك. هنا الانتظار أحسن على المدى، بس ممكن تخسرها كلها.</li>
+        <li><b>بيع الحين:</b> لما السوق يدفع أكثر من فرصتها حسب الحسبة، فتطلع بمبلغ أكيد بدل ما تخاطر بكله.</li>
         <li>التطبيق يقفل البيع في آخر دقيقة، والشراء في آخر 30 ثانية.</li>
       </ul>
       <h3>وش لقت الدراسة؟</h3>
@@ -247,7 +251,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
   </section>
 
   <p class="livelink" id="liveLink" hidden>النسخة اللايف افتحها في Safari: <a href="https://osrhq.github.io/Goosr/" target="_blank" rel="noopener">osrhq.github.io/Goosr</a></p>
-  <footer>الفرصة محسوبة من حركة سعر Binance (باينانس). ما تعرف وين بيروح السعر، ولا أحد يعرف.</footer>
+  <footer>الأسعار لايف من Binance (باينانس)، وهي نفس أسعار تطبيقك: قارنتها على 4 جولات وطابقت بالسنت. الصفحة ما تعرف وين بيروح السعر، ولا أحد يعرف.</footer>
 </main>
 
 <script>
@@ -280,7 +284,7 @@ const Mizan = (() => {
   const roundStart = ms => Math.floor(ms / ROUND_MS) * ROUND_MS;
   const roundEnd = ms => roundStart(ms) + ROUND_MS;
   function sigmaFromCloses(c) { const r = []; for (let i = 1; i < c.length; i++) if (c[i] > 0 && c[i - 1] > 0) r.push(Math.log(c[i] / c[i - 1])); if (r.length < 10) return NaN; const m = r.reduce((a, b) => a + b, 0) / r.length; return Math.sqrt(r.reduce((a, b) => a + (b - m) ** 2, 0) / (r.length - 1)) * c[c.length - 1]; }
-  function parseNum(s) { if (s == null) return NaN; let t = String(s).trim().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); t = t.replace(/[^\d.,٫،]/g, ''); if (/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(t)) t = t.replace(/,/g, ''); t = t.replace(/[٫,،]/g, '.'); if ((t.match(/\./g) || []).length > 1) return NaN; return (t === '' || t === '.') ? NaN : parseFloat(t); }
+  function parseNum(s) { if (s == null) return NaN; let t = String(s).trim().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); t = t.replace(/[^\d.,٫،]/g, ''); if (/^[1-9]\d{0,2}(,\d{3})+(\.\d+)?$/.test(t)) t = t.replace(/,/g, ''); t = t.replace(/[٫,،]/g, '.'); if ((t.match(/\./g) || []).length > 1) return NaN; return (t === '' || t === '.') ? NaN : parseFloat(t); }
   // highest app price (0..1) at which a side with chance p is still worth buying
   const maxPrice = p => (p - PARAMS.edgeMin) * (1 - PARAMS.fee);
   // in a fair game no way of betting beats balance/goal; fees make it lower
@@ -310,7 +314,7 @@ const Mizan = (() => {
   }
   const isoP = x => '\u2066' + pctP(x) + '\u2069';
   const isoD = x => '\u2066$' + (Math.round(x * 100) / 100) + '\u2069';
-  const isoS = x => '\u2066' + (x < 0 ? '−' : '+') + '$' + (Math.round(Math.abs(x) * 100) / 100).toFixed(2).replace(/\.00$/, '') + '\u2069';
+  const isoS = x => '\u2066' + (x < 0 ? '−' : '+') + '\u2060$' + (Math.round(Math.abs(x) * 100) / 100).toFixed(2).replace(/\.00$/, '') + '\u2069';
   function counted(n, one, two, few, many) { n = Math.round(n); return n === 1 ? one : n === 2 ? two : (n >= 3 && n <= 10) ? n + ' ' + few : n + ' ' + many; }
   const secs = n => counted(n, 'ثانية', 'ثانيتين', 'ثواني', 'ثانية');
   // stake: a quarter of the Kelly fraction, never above 10% of the balance, at least the app's $1
@@ -324,8 +328,10 @@ const Mizan = (() => {
   function decide(v) {
     const FEE = PARAMS.fee, M = PARAMS.edgeMin, HOLD_M = 0.05, STALE = PARAMS.staleSec;
     if (v.bal <= 0) return { kind: 'stop', title: 'وقّف', body: 'خلص الرصيد اللي حددته. لا تودع من جديد.' };
+    if (!isFinite(v.bal) || !(v.goal > 0)) return { kind: 'wait', title: 'اكتب رصيدك وهدفك', body: 'منهم أحسب المبلغ ومتى توقف.' };
     if (v.bal >= v.goal) return { kind: 'stop', title: 'وصلت هدفك. اسحب', body: 'اسحب الحين ووقّف، قبل لا ترجع تلعب فيه.' };
-    if (!v.ok) return { kind: 'wait', title: 'انتظر', body: v.wait || '' };
+    if (v.bal < 2) return { kind: 'stop', title: 'وقّف', body: 'باقي أقل من 2 دولار، وأقل صفقة دولار، يعني نص رصيدك أو أكثر. اسحب الباقي ولا تودع من جديد.' };
+    if (!v.ok || !(v.pUp >= 0 && v.pUp <= 1) || !isFinite(v.tLeft)) return { kind: 'wait', title: 'انتظر', body: v.wait || '' };
     const upLo = Math.min(v.pUp, isFinite(v.pAlt) ? v.pAlt : v.pUp), upHi = Math.max(v.pUp, isFinite(v.pAlt) ? v.pAlt : v.pUp);
     if (v.mode === 'hold') {
       const p = v.side === 'up' ? v.pUp : 1 - v.pUp;
@@ -333,27 +339,32 @@ const Mizan = (() => {
       const now = 'فرصة صفقتك الحين ' + isoP(p) + '.';
       if (v.tLeft < PARAMS.sellCloseSec) return { kind: 'no', title: 'البيع مقفل', body: 'الصفقة تكمل للنهاية. ' + now };
       if (!(v.sellQ > 0 && v.sellQ < 1)) return { kind: 'wait', title: 'اكتب سعر البيع', body: 'من زر Sell (بيع) في التطبيق. ' + now };
-      if (v.sellAge > STALE) return { kind: 'wait', title: 'حدّث سعر البيع', body: 'كتبته قبل ' + secs(v.sellAge) + '. ' + now };
+      if (!(v.sellAge >= -2 && v.sellAge <= STALE)) return { kind: 'wait', title: 'حدّث سعر البيع', body: (v.sellAge > 0 && isFinite(v.sellAge) ? 'كتبته قبل ' + secs(v.sellAge) + '. ' : 'هذا من جولة قبل. ') + now };
       const val = v.sellQ * (1 - FEE) - pHi, valLo = v.sellQ * (1 - FEE) - pLo;
       if (val >= HOLD_M) return { kind: 'sell', title: 'بيع الحين', body: 'السوق يدفع ' + isoP(v.sellQ) + ' وفرصتها ' + isoP(p) + '. البيع أحسن من الانتظار.' };
-      if (valLo <= -HOLD_M) return { kind: 'no', title: 'خلها لين النهاية', body: 'فرصتها ' + isoP(p) + ' والبيع بـ' + isoP(v.sellQ) + ' أقل منها. بس تخسرها كلها في ' + isoP(1 - p) + ' من المرات.' };
+      if (valLo <= -HOLD_M) return { kind: 'no', title: 'خلها الحين', body: 'فرصتها ' + isoP(p) + ' والبيع بـ' + isoP(v.sellQ) + ' أقل منها. بس تخسرها كلها في ' + isoP(1 - p) + ' من المرات. رجّع شيّك قبل ما يقفل البيع.' };
       return { kind: 'no', title: 'على كيفك', body: 'البيع والانتظار تقريبًا نفس الشي. البيع يريحك من احتمال ' + isoP(1 - p) + ' إنها تروح كلها.' };
     }
     if (v.tLeft < PARAMS.buyCloseSec) return { kind: 'no', title: 'الشراء مقفل', body: 'انتظر الجولة الجاية.' };
-    if (!(v.upQ > 0 && v.upQ < 1 && v.dnQ > 0 && v.dnQ < 1)) return { kind: 'wait', title: 'اكتب سعر Up وDown', body: 'من التطبيق، وأقولك ادخل ولا لا.' };
-    if (Math.abs(v.upQ + v.dnQ - 1) > 0.06) return { kind: 'wait', title: 'راجع الأرقام', body: 'Up وDown مجموعهم لازم يقارب 100، مثل 40 و60.' };
-    if (v.qAge > STALE) return { kind: 'wait', title: 'حدّث الأسعار', body: 'كتبتها قبل ' + secs(v.qAge) + '، والأسعار تتغير كل ثانية.' };
+    if (!(v.upQ > 0 && v.upQ < 1 && v.dnQ > 0 && v.dnQ < 1)) return { kind: 'wait', title: 'اكتب سعر Up (طالع) وDown (نازل)', body: 'من أزرار الشراء في التطبيق، وأقولك ادخل ولا لا.' };
+    if (Math.abs(v.upQ + v.dnQ - 1) > 0.06) return { kind: 'wait', title: 'راجع الأرقام', body: 'سعر Up (طالع) وDown (نازل) مجموعهم لازم يقارب 100، مثل 40 و60.' };
+    if (!(v.qAge >= -2 && v.qAge <= STALE)) return { kind: 'wait', title: 'حدّث الأسعار', body: (v.qAge > 0 && isFinite(v.qAge) ? 'كتبتها قبل ' + secs(v.qAge) + '، ' : 'هذي من جولة قبل، ') + 'والأسعار تتغير كل ثانية.' };
     const cUp = v.upQ / (1 - FEE), cDn = v.dnQ / (1 - FEE);
     const eUp = upLo - cUp, eDn = (1 - upHi) - cDn;
     const up = eUp >= eDn, e = up ? eUp : eDn, p = up ? v.pUp : 1 - v.pUp, q = up ? v.upQ : v.dnQ, c = up ? cUp : cDn;
     const name = up ? 'Up (طالع)' : 'Down (نازل)';
     if (e < M) return { kind: 'no', title: 'لا تدخل', body: 'السعر عادل: الفرصة والسعر قريبين من بعض. على المدى ما تكسب منها.' };
-    if (p > 0.9) return { kind: 'no', title: 'لا تدخل', body: 'فرصتها فوق 90%، والحسبة هنا أضعف من السوق.' };
+    if (p > 0.9) return { kind: 'no', title: 'لا تدخل', body: 'فرصة ' + name + ' فوق 90%، وسعرها عالي: تكسب سنتات وتخسر الدولار كله. والحسبة هنا أضعف من السوق.' };
+    if (e > 0.15) return { kind: 'wait', title: 'راجع الأرقام', body: 'الفرق بين السعر والفرصة كبير مرة، وغالبًا الأرقام غلط أو قديمة. تأكد إنها لنفس العملة ونفس الجولة، مثل 40.' };
+    if (q < 0.10) return { kind: 'no', title: 'لا تدخل', body: 'سعر ' + name + ' أقل من 10%، يعني يانصيب: أغلب المرات يروح الدولار.' };
+    if (up ? v.upAuto : v.dnAuto) return { kind: 'wait', title: 'اكتب سعر ' + name + ' من التطبيق', body: 'ممكن يستاهل لو سعره ' + isoP(Math.floor(maxPrice(p) * 100) / 100) + ' أو أقل. الرقم اللي في الخانة تقدير مو سعر التطبيق.' };
     const amt = stake(p, c, v.bal);
-    const lock = v.tLeft < PARAMS.sellCloseSec ? ' وبعدها ما تقدر تبيع.' : '';
+    if (amt < 1) return { kind: 'stop', title: 'وقّف', body: 'رصيدك أقل من $1، أقل مبلغ في التطبيق. لا تودع من جديد.' };
+    const lock = v.tLeft < PARAMS.sellCloseSec ? ' البيع مقفل الحين: لو دخلت، الصفقة تكمل للنهاية.' : '';
+    const big = amt > 0.1 * v.bal + 1e-9 ? ' انتبه: ' + isoD(amt) + ' هي \u2066' + Math.round(100 * amt / v.bal) + '%\u2069 من رصيدك، لأن التطبيق ما يقبل أقل من دولار.' : '';
     const win = amt ? amt * (1 - FEE) / q - amt : 0;
     return { kind: 'go', side: up ? 'up' : 'down', amount: amt, title: 'ادخل ' + name + (amt ? ' بـ' + isoD(amt) : ''),
-      body: (amt ? 'لو كسبت: ' + isoS(win) + ' · لو خسرت: ' + isoS(-amt) + '. ' : '') + 'سعره ' + isoP(q) + ' وفرصته ' + isoP(p) + ': تكسب في ' + isoP(p) + ' من المرات وتخسر في ' + isoP(1 - p) + '. مو مضمون.' + lock };
+      body: 'تخسر تقريبًا في ' + isoP(1 - p) + ' من المرات: لو خسرت ' + isoS(-amt) + ' · لو كسبت ' + isoS(win) + '. سعره ' + isoP(q) + ' وفرصته حسب الحسبة ' + isoP(p) + '، مو مضمون.' + big + lock };
   }
   return { ROUND_MS, phi, probUp, probUpT2, clockSigma, usStandardTime, roundStart, roundEnd, sigmaFromCloses, parseNum, maxPrice, reachOdds, pctP, isoP, stake, decide, secs };
 })();
@@ -393,7 +404,7 @@ const Live = (() => {
       k.round = R; k.path = []; k.ptb = NaN; k.ptbOk = false;
       if (seenLive) { k.ptb = p; k.ptbOk = true; } else loadRound(c, R);
     }
-    k.last = p;
+    k.last = p; k.at = Date.now();
     const P = k.path; if (P.length && T - P[P.length - 1][0] < 250) P[P.length - 1][1] = p; else P.push([T, p]);
   }
   function connect() {
@@ -401,18 +412,21 @@ const Live = (() => {
     let sock; try { sock = new WebSocket(HOSTS[hostIdx] + COINS.map(c => c.toLowerCase() + 'usdt@aggTrade').join('/')); } catch (e) { hostIdx = (hostIdx + 1) % HOSTS.length; retryLater(); return; }
     ws = sock; let opened = false;
     const openTimer = setTimeout(() => { if (!opened) { try { sock.close(); } catch (e) {} } }, 7000);
-    sock.onopen = () => { opened = true; clearTimeout(openTimer); connected = true; connectedSince = now(); retry = 0; };
+    sock.onopen = () => { opened = true; clearTimeout(openTimer); connected = true; connectedSince = now(); openedAt = Date.now(); retry = 0; };
     sock.onmessage = ev => { lastMsgAt = Date.now(); let m; try { m = JSON.parse(ev.data); } catch (e) { return; } const d = m && (m.data || m); if (!d || d.e !== 'aggTrade' || !d.s) return; const c = d.s.replace(/USDT$/, ''); if (coins[c]) onTrade(c, +d.p, +d.T); };
     sock.onerror = () => {};
     sock.onclose = () => { clearTimeout(openTimer); if (ws !== sock) return; ws = null; connected = false; connectedSince = Infinity; if (!opened) hostIdx = (hostIdx + 1) % HOSTS.length; retryLater(); };
   }
+  // a silent or hung socket is replaced at once, without waiting for its close event
+  let openedAt = 0;
+  function dropSocket() { const old = ws; ws = null; connected = false; connectedSince = Infinity; try { old && old.close(); } catch (e) {} retryLater(); }
   function retryLater() { setTimeout(connect, Math.min(10000, 1000 * Math.pow(2, retry++))); }
   function start() {
     if (started) return; started = true;
     syncTime(); connect(); COINS.forEach(loadSigma);
     setInterval(() => COINS.forEach(c => { if (Date.now() - coins[c].sigmaAt > 60000) loadSigma(c); }), 15000);
-    setInterval(() => { if (connected && Date.now() - lastMsgAt > 10000 && ws) { try { ws.close(); } catch (e) {} } }, 3000);
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') return; syncTime(); if (!ws) connect(); else if (Date.now() - lastMsgAt > 5000) { try { ws.close(); } catch (e) {} } });
+    setInterval(() => { if (ws && Date.now() - Math.max(lastMsgAt, openedAt) > 10000) dropSocket(); }, 3000);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') return; syncTime(); if (!ws) connect(); else if (Date.now() - lastMsgAt > 5000) dropSocket(); });
   }
   const status = () => ({ connected, ageMs: lastMsgAt ? Date.now() - lastMsgAt : Infinity });
   return { coins, start, now, status };
@@ -460,12 +474,15 @@ const Live = (() => {
       const k = Live.coins[c], end = k.round ? k.round + Mizan.ROUND_MS : Mizan.roundEnd(t), tLeft = (end - t) / 1000;
       if (!k.round || !k.ptbOk || !isFinite(k.last)) return { ok: false, end, tLeft, wait: k.round ? 'يجيب سعر البداية…' : 'يتصل بـBinance…' };
       if (tLeft <= 0) return { ok: false, end, tLeft: 0, wait: 'ينتظر الجولة الجديدة…' };
+      const s = Live.status();
+      if (!s.connected || s.ageMs > 5000 || !(Date.now() - k.at < 15000)) return { ok: false, end, tLeft, wait: 'السعر اللايف واقف. ينتظر الاتصال…' };
       const diff = k.last - k.ptb, sg = sigmaFor(c);
       return { ok: true, end, tLeft, diff, pUp: Mizan.probUp(diff, tLeft, sg), pAlt: PARAMS.coins[c].t2 ? Mizan.probUpT2(diff, tLeft, sg) : NaN };
     }
     const k = st.m[c], end = Mizan.roundEnd(t), tLeft = (end - t) / 1000, d = num(k.diff);
     if (!isFinite(d)) return { ok: false, end, tLeft, wait: 'اكتب الفرق اللي جنب Current Price (السعر الحالي) في التطبيق.' };
     if (k.round !== end || (t - k.at) / 1000 > 15) return { ok: false, end, tLeft, wait: 'الفرق قديم. اكتبه من جديد.' };
+    if (k.dirRound !== end) return { ok: false, end, tLeft, wait: 'اختار: السعر فوق ولا تحت سعر البداية؟' };
     const diff = k.dir === 'above' ? d : -d, sg = sigmaFor(c);
     return { ok: true, end, tLeft, diff, pUp: Mizan.probUp(diff, k.left, sg), pAlt: PARAMS.coins[c].t2 ? Mizan.probUpT2(diff, k.left, sg) : NaN };
   }
@@ -474,24 +491,26 @@ const Live = (() => {
     const id = e.target.id, t = tNow();
     if (id === 'bal' || id === 'goal') st[id] = e.target.value;
     if (id === 'upQ' || id === 'dnQ') {
-      const k = st.m[st.coin]; k[id] = e.target.value; k.qAt = t;
-      // fill the other side too, unless it was typed in the last few seconds
-      k['typed_' + id] = t;
-      const a = num(e.target.value), other = id === 'upQ' ? 'dnQ' : 'upQ';
-      if (a > 0 && a < 100 && !(t - (k['typed_' + other] || 0) < 8000)) { $(other).value = String(Math.round((100 - a) * 10) / 10); k[other] = $(other).value; }
+      const k = st.m[st.coin], other = id === 'upQ' ? 'dnQ' : 'upQ', R = Mizan.roundEnd(t);
+      k[id] = e.target.value; k[id + 'At'] = t; k[id + 'R'] = R; if (k.auto === id) k.auto = '';
+      // fill the other side only when the user has not typed it fresh in this round
+      const a = num(e.target.value), mine = k.auto !== other && k[other] !== '' && k[other + 'R'] === R && t - (k[other + 'At'] || 0) <= PARAMS.staleSec * 1000;
+      if (a >= 1 && a <= 99 && !mine) { $(other).value = String(Math.round((100 - a) * 10) / 10); k[other] = $(other).value; k[other + 'At'] = t; k[other + 'R'] = R; k.auto = other; }
+      k.qAt = Math.min(k.upQAt || 0, k.dnQAt || 0); k.qRound = k.upQR === k.dnQR ? k.upQR : 0;
     }
-    if (id === 'sellQ') { const k = st.m[st.coin]; k.sellQ = e.target.value; k.sellAt = t; }
+    if (id === 'sellQ') { const k = st.m[st.coin]; k.sellQ = e.target.value; k.sellAt = t; k.sellRound = Mizan.roundEnd(t); }
     if (id === 'diff') {
       const k = st.m[st.coin];
       if (/[-−]/.test(e.target.value)) $('dirBelow').checked = true;
       if (/\+/.test(e.target.value)) $('dirAbove').checked = true;
+      if (/[-−+]/.test(e.target.value)) k.dirRound = Mizan.roundEnd(t);
       k.diff = e.target.value; k.dir = $('dirAbove').checked ? 'above' : 'below'; k.at = t; k.round = Mizan.roundEnd(t); k.left = (k.round - t) / 1000;
     }
     save(); render();
   });
   document.addEventListener('change', e => {
     if (e.target.name === 'coin') { st.coin = e.target.value; loadCoin(); }
-    if (e.target.name === 'dir') st.m[st.coin].dir = e.target.value;
+    if (e.target.name === 'dir') { st.m[st.coin].dir = e.target.value; st.m[st.coin].dirRound = Mizan.roundEnd(tNow()); }
     if (e.target.name === 'mode') { st.mode = e.target.value; loadCoin(); }
     if (e.target.name === 'hside') st.m[st.coin].side = e.target.value;
     save(); render();
@@ -501,21 +520,34 @@ const Live = (() => {
   if (LIVE) { document.addEventListener('pointerdown', keepAwake, { passive: true }); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') keepAwake(); }); }
 
   let colors = null;
-  function drawSpark(c) {
-    const cv = $('spark'), k = Live.coins[c], dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight || 100;
+  // price path so far, plus the range where the price usually ends up (2 in 3 inside the dark band, 19 in 20 inside the light one)
+  function drawSpark(c, tLeft) {
+    const cv = $('spark'), k = Live.coins[c], dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight || 130;
     if (!w) return;
     if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); colors = null; }
     const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
     if (!k.ptbOk || !k.path.length) return;
-    if (!colors) { const cs = getComputedStyle(document.documentElement); colors = { up: cs.getPropertyValue('--up').trim(), down: cs.getPropertyValue('--down').trim(), muted: cs.getPropertyValue('--muted').trim() }; }
-    const R = k.round, ptb = k.ptb, sig = sigmaFor(c);
-    let dev = sig * 0.6; for (const p of k.path) dev = Math.max(dev, Math.abs(p[1] - ptb)); dev = (dev || 1) * 1.15;
-    const mid = h / 2, X = t => Math.min(w, Math.max(0, ((t - R) / Mizan.ROUND_MS) * w)), Y = p => mid - ((p - ptb) / dev) * (mid - 8);
+    if (!colors || Date.now() - (colors.at || 0) > 2000) { const cs = getComputedStyle(document.documentElement); colors = { up: cs.getPropertyValue('--up').trim(), down: cs.getPropertyValue('--down').trim(), muted: cs.getPropertyValue('--muted').trim(), accent: cs.getPropertyValue('--accent').trim(), at: Date.now() }; }
+    const R = k.round, ptb = k.ptb, sig = sigmaFor(c), last = k.path[k.path.length - 1][1], tNowMs = k.path[k.path.length - 1][0];
+    const left = Math.max(0, tLeft || 0), band = s => sig * Math.sqrt(Math.max(0, s) / 60);
+    let dev = sig * 0.6; for (const p of k.path) dev = Math.max(dev, Math.abs(p[1] - ptb));
+    dev = Math.max(dev, Math.abs(last - ptb) + 2 * band(left)) * 1.1 || 1;
+    const mid = h / 2, X = t => Math.min(w, Math.max(0, ((t - R) / Mizan.ROUND_MS) * w)), Y = p => mid - ((p - ptb) / dev) * (mid - 6);
+    // likely range from now to the end
+    if (left > 0) {
+      const x0 = X(tNowMs), N = 24;
+      const cone = (mult, alpha) => {
+        ctx.beginPath();
+        for (let i = 0; i <= N; i++) { const s = left * i / N; ctx.lineTo(x0 + (w - x0) * i / N, Y(last + mult * band(s))); }
+        for (let i = N; i >= 0; i--) { const s = left * i / N; ctx.lineTo(x0 + (w - x0) * i / N, Y(last - mult * band(s))); }
+        ctx.closePath(); ctx.globalAlpha = alpha; ctx.fillStyle = colors.accent; ctx.fill(); ctx.globalAlpha = 1;
+      };
+      cone(2, 0.12); cone(1, 0.22);
+    }
     ctx.setLineDash([4, 4]); ctx.strokeStyle = colors.muted; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(w, mid); ctx.stroke(); ctx.setLineDash([]);
-    const last = k.path[k.path.length - 1][1];
     ctx.strokeStyle = last >= ptb ? colors.up : colors.down; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.beginPath();
     k.path.forEach((p, i) => { const x = X(p[0]), y = Y(p[1]); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
-    ctx.stroke(); ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.arc(X(k.path[k.path.length - 1][0]), Y(last), 3.5, 0, 7); ctx.fill();
+    ctx.stroke(); ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.arc(X(tNowMs), Y(last), 3.5, 0, 7); ctx.fill();
   }
 
   function render() {
@@ -530,43 +562,58 @@ const Live = (() => {
     // header
     const left = m.tLeft;
     setText('clock', mmss(left)); $('clock').classList.toggle('late', left < PARAMS.sellCloseSec);
-    setText('ttl', c + ' · جولة ' + hhmm(m.end - (LIVE ? Live.now() - Date.now() : 0)));
-    setText('lockLbl', left > PARAMS.sellCloseSec ? 'الشراء يقفل بعد ' + mmss(left - PARAMS.buyCloseSec) : left > PARAMS.buyCloseSec ? 'البيع مقفل · الشراء يقفل بعد ' + mmss(left - PARAMS.buyCloseSec) : 'الشراء مقفل');
+    setText('ttl', c + ' · جولة ' + hhmm(m.end));
+    setText('lockLbl', st.mode === 'hold'
+      ? (left > PARAMS.sellCloseSec ? 'البيع يقفل بعد ' + mmss(left - PARAMS.sellCloseSec) : 'البيع مقفل')
+      : (left > PARAMS.sellCloseSec ? 'الشراء يقفل بعد ' + mmss(left - PARAMS.buyCloseSec) : left > PARAMS.buyCloseSec ? 'البيع مقفل · الشراء يقفل بعد ' + mmss(left - PARAMS.buyCloseSec) : 'الشراء والبيع مقفلين'));
     if (LIVE) { const s = Live.status(), on = s.connected && s.ageMs < 5000; setClass('conn', 'conn ' + (on ? 'on' : 'off')); setText('connTxt', on ? 'لايف' : 'يعيد الاتصال…'); }
     else { setClass('conn', 'conn'); setText('connTxt', 'يدوي'); }
     // leading side
     if (m.ok) {
       const up = m.pUp >= 0.5, p = up ? m.pUp : 1 - m.pUp;
       setClass('lead', 'lead ' + (up ? 'up' : 'down'));
-      setText('leadName', up ? '↑ الأقرب Up (طالع)' : '↓ الأقرب Down (نازل)');
+      const even = Math.abs(m.pUp - 0.5) < 0.03;
+      if (even) setClass('lead', 'lead');
+      setText('leadName', even ? 'نص بنص الحين' : up ? '↑ الأرجح الحين Up (طالع)' : '↓ الأرجح الحين Down (نازل)');
       setText('leadPct', pctP(p));
       setText('leadOther', (up ? 'Down (نازل) ' : 'Up (طالع) ') + LRI + pctP(1 - p) + PDI);
       const ab = m.diff >= 0;
-      setHTML('gapLine', 'السعر <b class="' + (ab ? 'pos' : 'neg') + '">' + (ab ? 'فوق' : 'تحت') + '</b> سعر البداية بـ<b class="num ' + (ab ? 'pos' : 'neg') + '">$' + Math.abs(m.diff).toFixed(2) + '</b>');
+      setHTML('gapLine', m.diff === 0 ? 'السعر نفس سعر البداية <span class="num">(Price to Beat)</span>. لو بقى كذا يفوز Up (طالع).'
+        : 'السعر <b class="' + (ab ? 'pos' : 'neg') + '">' + (ab ? 'فوق' : 'تحت') + '</b> سعر البداية <span class="num">(Price to Beat)</span> بـ<b class="num ' + (ab ? 'pos' : 'neg') + '">$' + Math.abs(m.diff).toFixed(2) + '</b>');
     } else {
-      setClass('lead', 'lead'); setText('leadName', 'الأقرب'); setText('leadPct', '–'); setText('leadOther', ''); setText('gapLine', m.wait || '');
+      setClass('lead', 'lead'); setText('leadName', 'الأرجح'); setText('leadPct', '–'); setText('leadOther', ''); setHTML('gapLine', m.wait || '');
     }
-    if (LIVE) drawSpark(c);
+    if (!LIVE && st.m[c].dirRound !== m.end && ($('dirAbove').checked || $('dirBelow').checked)) { $('dirAbove').checked = false; $('dirBelow').checked = false; }
+    if (LIVE) {
+      drawSpark(c, m.tLeft);
+      const lk = Live.coins[c], cl = $('coneLine');
+      if (m.ok && m.tLeft > 1) {
+        const b = sigmaFor(c) * Math.sqrt(m.tLeft / 60), fmt = x => LRI + '$' + x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + PDI;
+        cl.hidden = false;
+        setHTML('coneLine', 'عند نهاية الجولة: غالبًا بين <b>' + fmt(lk.last - b) + '</b> و<b>' + fmt(lk.last + b) + '</b> (2 من 3 مرات). سعر البداية ' + fmt(lk.ptb) + '.');
+      } else cl.hidden = true;
+    }
     // balance
     const bal = num(st.bal), goal = num(st.goal);
     let bankCls = 'msg', bankHTML;
     if (bal <= 0) { bankCls = 'msg stop'; bankHTML = '<b>خلص الرصيد. وقّف.</b>لا تودع من جديد.'; }
     else if (bal >= goal) { bankCls = 'msg good'; bankHTML = '<b>وصلت هدفك. اسحب ووقّف.</b>'; }
-    else if (isFinite(bal) && isFinite(goal)) { const o = Mizan.reachOdds(bal, goal); bankHTML = 'فرصة إن ' + LRI + '$' + bal + PDI + ' تصير ' + LRI + '$' + goal + PDI + ' قبل لا تخلص: <b>' + (o < 0.01 ? LRI + '<1%' + PDI : LRI + Math.floor(o * 100) + '%' + PDI + ' أو أقل') + '</b>مهما كانت طريقة لعبك، ومع الرسوم أقل. إذا خلصت، وقّف ولا تودع.'; }
+    else if (isFinite(bal) && isFinite(goal)) { const o = Mizan.reachOdds(bal, goal); bankHTML = 'فرصة إن ' + LRI + '$' + bal + PDI + ' تصير ' + LRI + '$' + goal + PDI + ' قبل لا تخلص: <b>' + (o < 0.01 ? LRI + '<1%' + PDI : LRI + Math.floor(o * 100) + '%' + PDI + ' أو أقل') + '</b>لو أسعار التطبيق عادلة، مهما كانت طريقة لعبك، ومع الرسوم أقل. إذا خلصت، وقّف ولا تودع.'; }
     else bankHTML = 'اكتب رصيدك وهدفك.';
     setClass('bankMsg', bankCls); setHTML('bankMsg', bankHTML);
     // the decision
     const k = st.m[c];
     const d = Mizan.decide({
       bal, goal, ok: m.ok, wait: m.wait, tLeft: left, pUp: m.pUp, pAlt: m.pAlt, mode: st.mode,
-      upQ: num(k.upQ) / 100, dnQ: num(k.dnQ) / 100, qAge: k.qAt ? (t - k.qAt) / 1000 : 0,
-      side: k.side, sellQ: num(k.sellQ) / 100, sellAge: k.sellAt ? (t - k.sellAt) / 1000 : 0,
+      upQ: num(k.upQ) / 100, dnQ: num(k.dnQ) / 100, qAge: k.qAt && k.qRound === m.end ? (t - k.qAt) / 1000 : Infinity,
+      upAuto: k.auto === 'upQ', dnAuto: k.auto === 'dnQ',
+      side: k.side, sellQ: num(k.sellQ) / 100, sellAge: k.sellAt && k.sellRound === m.end ? (t - k.sellAt) / 1000 : Infinity,
     });
     setClass('decision', 'decision ' + d.kind); setText('dTitle', d.title); setText('dBody', d.body);
     // glance line: highest worthwhile price per side
-    if (m.ok && left >= PARAMS.buyCloseSec && st.mode === 'enter') {
-      const f = q => q > 0.01 ? LRI + Math.floor(q * 100) + '%' + PDI : 'ما يستاهل';
-      setText('rule', 'Up (طالع) يستاهل تحت ' + f(Mizan.maxPrice(m.pUp)) + ' · Down (نازل) يستاهل تحت ' + f(Mizan.maxPrice(1 - m.pUp)));
+    if (m.ok && left >= PARAMS.buyCloseSec && st.mode === 'enter' && d.kind !== 'stop') {
+      const f = p => { const q = Mizan.maxPrice(p); return p <= 0.9 && q > 0.01 ? 'يستاهل لو سعره ' + LRI + Math.floor(q * 100) + '%' + PDI + ' أو أقل' : 'ما يستاهل'; };
+      setText('rule', 'Up (طالع) ' + f(m.pUp) + ' · Down (نازل) ' + f(1 - m.pUp));
     } else setText('rule', '');
   }
 
@@ -577,7 +624,7 @@ const Live = (() => {
     const loop = ts => { if (ts - last >= 200) { last = ts; render(); } requestAnimationFrame(loop); };
     requestAnimationFrame(loop);
     setInterval(() => { if (document.visibilityState === 'visible') render(); }, 1000);
-  } else setInterval(render, 1000);
+  } else setInterval(render, 250);
 })();
 </script>
 </body>
