@@ -234,17 +234,37 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; }
         <li><b>بيع الحين:</b> لما السوق يدفع أكثر من فرصتها الحقيقية، فتطلع بمبلغ بدل ما تخاطر بكله.</li>
         <li>التطبيق يقفل البيع في آخر دقيقة، والشراء في آخر 30 ثانية.</li>
       </ul>
+      <h3>وش لقت الدراسة؟</h3>
+      <ul class="steps">
+        <li>اختبرت الحسبة على جولات حقيقية لـ7 أيام بالثانية و60 يوم بالدقيقة. لما تقول 70%، تطلع الجولة فعليًا قريب من 70%، والفرق أقل من 5 نقاط.</li>
+        <li>ما فيه شي في التطبيق يتنبأ بالاتجاه أحسن من بُعد السعر والوقت الباقي. الزخم، والسلاسل، والعملات الثانية، كلها ما تفيد.</li>
+        <li>السلاسل: بعد جولة طالع، الجاية طلعت 49% تقريبًا. يعني ما فيه شي اسمه «جا دورها».</li>
+        <li>العملات الثلاث تمشي مع بعض: إذا BTC طلع، ETH يطلع في 82–84% من المرات. يعني 10 دولار على الثلاث كأنها رهان واحد بـ26 دولار تقريبًا.</li>
+        <li>السوق أهدى في الويكند، وحركته تتضاعف وقت افتتاح السوق الأمريكي (العصر بتوقيت السعودية). الصفحة تحسب هذا لحالها.</li>
+      </ul>
       <p class="hint2">«ادخل» معناها السعر أرخص من الفرصة، مو فوز أكيد. ممكن تخسرها، والصفحة تقول لك كم احتمال الخسارة.</p>
     </details>
   </section>
 
   <p class="livelink" id="liveLink" hidden>النسخة اللايف افتحها في Safari: <a href="https://osrhq.github.io/Goosr/" target="_blank" rel="noopener">osrhq.github.io/Goosr</a></p>
-  <footer>الفرصة محسوبة من حركة سعر Binance. ما تعرف وين بيروح السعر، ولا أحد يعرف.</footer>
+  <footer>الفرصة محسوبة من حركة سعر Binance (باينانس). ما تعرف وين بيروح السعر، ولا أحد يعرف.</footer>
 </main>
 
 <script>
 const PARAMS = {
-  coins: { BTC: { sigma: 30 }, ETH: { sigma: 1.17 }, BNB: { sigma: 0.29 } },  // usual move per minute (60-day median)
+  // From the study: last-30-day volatility level (% per minute) and the clock table (Saudi hour 0..23).
+  // weekday / weekend rows multiply the level; weekend = Saturday and Sunday in UTC.
+  coins: {
+    BTC: { l30: 0.0349, ref: 80695.04,
+      wd: [0.73,0.9,0.74,1.17,1.32,1.22,1,0.93,1.07,0.96,1.03,1.16,1.02,1.05,1.04,1.33,2.05,2.32,1.78,1.41,1.18,1.09,1.08,0.89],
+      we: [0.71,0.94,0.63,0.55,0.64,0.52,0.45,0.45,0.46,0.53,0.50,0.56,0.55,0.48,0.46,0.53,0.66,0.71,0.90,0.82,0.60,0.56,0.53,0.61] },
+    ETH: { l30: 0.0472, ref: 2371.51,
+      wd: [0.76,0.9,0.76,1.05,1.25,1.12,0.93,0.91,1.06,0.91,1,1.15,1.04,0.96,1.04,1.27,1.89,2.08,1.7,1.41,1.22,1.13,1.12,0.95],
+      we: [0.87,0.97,0.77,0.70,0.70,0.55,0.50,0.48,0.49,0.56,0.51,0.56,0.61,0.53,0.49,0.54,0.84,0.72,0.87,0.89,0.82,0.61,0.57,0.63] },
+    BNB: { l30: 0.0375, ref: 733.08, t2: true,
+      wd: [0.75,0.9,0.8,1.11,1.34,1.08,1.03,0.97,1.04,0.89,0.98,1.05,1.09,0.94,1.04,1.15,1.58,1.68,1.54,1.23,1.12,1.01,0.97,0.87],
+      we: [0.92,1.13,0.82,0.80,0.75,0.75,0.64,0.64,0.63,0.69,0.67,0.79,0.81,0.58,0.63,0.72,0.86,0.95,1.05,1.01,0.89,0.68,0.60,0.67] },
+  },
   edgeMin: 0.08,        // the model's error band: a side is only worth it this far below its chance
   fee: 0.004,
   buyCloseSec: 30, sellCloseSec: 60,
@@ -265,7 +285,29 @@ const Mizan = (() => {
   const maxPrice = p => (p - PARAMS.edgeMin) * (1 - PARAMS.fee);
   // in a fair game no way of betting beats balance/goal; fees make it lower
   const reachOdds = (bal, goal) => (bal > 0 && goal > bal) ? bal / goal : NaN;
-  const pctP = x => !isFinite(x) ? '–' : x < 0.01 ? '<1%' : x > 0.99 ? '>99%' : Math.round(x * 100) + '%';
+  // the model is over-confident in the tails, so it never shows more than 96% or less than 4%
+  const pctP = x => !isFinite(x) ? '–' : x < 0.04 ? '<4%' : x > 0.96 ? '>96%' : Math.round(x * 100) + '%';
+  // US standard time (first Sunday of November to second Sunday of March) moves the US-open block one hour later in Saudi time
+  function usStandardTime(ms) {
+    const y = new Date(ms).getUTCFullYear();
+    const nthSunday = (m, n) => { const first = new Date(Date.UTC(y, m, 1)); const day = 1 + ((7 - first.getUTCDay()) % 7) + 7 * (n - 1); return Date.UTC(y, m, day); };
+    const dstStart = nthSunday(2, 2) + 7 * 3600e3, dstEnd = nthSunday(10, 1) + 6 * 3600e3;
+    return !(ms >= dstStart && ms < dstEnd);
+  }
+  // usual move per minute in dollars from the clock table
+  function clockSigma(c, price, ms) {
+    const P = PARAMS.coins[c], d = new Date(ms), wkend = d.getUTCDay() === 6 || d.getUTCDay() === 0;
+    let h = (d.getUTCHours() + 3) % 24;
+    if (!wkend && usStandardTime(ms)) h = (h + 23) % 24;
+    return P.l30 / 100 * (price > 0 ? price : P.ref) * (wkend ? P.we : P.wd)[h];
+  }
+  // BNB on Binance has sticky $0.01 ticks: a fatter-tailed, slower shape (used as a second opinion)
+  function probUpT2(diff, tLeft, sigma) {
+    if (!isFinite(diff) || !(sigma > 0)) return NaN;
+    if (!(tLeft > 0)) return diff >= 0 ? 1 : 0;
+    const z = diff / (0.472 * sigma * Math.pow(tLeft / 60, 0.721));
+    return 0.5 + z / (2 * Math.sqrt(2 + z * z));
+  }
   const isoP = x => '\u2066' + pctP(x) + '\u2069';
   const isoD = x => '\u2066$' + (Math.round(x * 100) / 100) + '\u2069';
   const isoS = x => '\u2066' + (x < 0 ? '−' : '+') + '$' + (Math.round(Math.abs(x) * 100) / 100).toFixed(2).replace(/\.00$/, '') + '\u2069';
@@ -284,15 +326,17 @@ const Mizan = (() => {
     if (v.bal <= 0) return { kind: 'stop', title: 'وقّف', body: 'خلص الرصيد اللي حددته. لا تودع من جديد.' };
     if (v.bal >= v.goal) return { kind: 'stop', title: 'وصلت هدفك. اسحب', body: 'اسحب الحين ووقّف، قبل لا ترجع تلعب فيه.' };
     if (!v.ok) return { kind: 'wait', title: 'انتظر', body: v.wait || '' };
+    const upLo = Math.min(v.pUp, isFinite(v.pAlt) ? v.pAlt : v.pUp), upHi = Math.max(v.pUp, isFinite(v.pAlt) ? v.pAlt : v.pUp);
     if (v.mode === 'hold') {
       const p = v.side === 'up' ? v.pUp : 1 - v.pUp;
+      const pLo = v.side === 'up' ? upLo : 1 - upHi, pHi = v.side === 'up' ? upHi : 1 - upLo;
       const now = 'فرصة صفقتك الحين ' + isoP(p) + '.';
       if (v.tLeft < PARAMS.sellCloseSec) return { kind: 'no', title: 'البيع مقفل', body: 'الصفقة تكمل للنهاية. ' + now };
       if (!(v.sellQ > 0 && v.sellQ < 1)) return { kind: 'wait', title: 'اكتب سعر البيع', body: 'من زر Sell (بيع) في التطبيق. ' + now };
       if (v.sellAge > STALE) return { kind: 'wait', title: 'حدّث سعر البيع', body: 'كتبته قبل ' + secs(v.sellAge) + '. ' + now };
-      const val = v.sellQ * (1 - FEE) - p;
+      const val = v.sellQ * (1 - FEE) - pHi, valLo = v.sellQ * (1 - FEE) - pLo;
       if (val >= HOLD_M) return { kind: 'sell', title: 'بيع الحين', body: 'السوق يدفع ' + isoP(v.sellQ) + ' وفرصتها ' + isoP(p) + '. البيع أحسن من الانتظار.' };
-      if (val <= -HOLD_M) return { kind: 'no', title: 'خلها لين النهاية', body: 'فرصتها ' + isoP(p) + ' والبيع بـ' + isoP(v.sellQ) + ' أقل منها. بس تخسرها كلها في ' + isoP(1 - p) + ' من المرات.' };
+      if (valLo <= -HOLD_M) return { kind: 'no', title: 'خلها لين النهاية', body: 'فرصتها ' + isoP(p) + ' والبيع بـ' + isoP(v.sellQ) + ' أقل منها. بس تخسرها كلها في ' + isoP(1 - p) + ' من المرات.' };
       return { kind: 'no', title: 'على كيفك', body: 'البيع والانتظار تقريبًا نفس الشي. البيع يريحك من احتمال ' + isoP(1 - p) + ' إنها تروح كلها.' };
     }
     if (v.tLeft < PARAMS.buyCloseSec) return { kind: 'no', title: 'الشراء مقفل', body: 'انتظر الجولة الجاية.' };
@@ -300,7 +344,7 @@ const Mizan = (() => {
     if (Math.abs(v.upQ + v.dnQ - 1) > 0.06) return { kind: 'wait', title: 'راجع الأرقام', body: 'Up وDown مجموعهم لازم يقارب 100، مثل 40 و60.' };
     if (v.qAge > STALE) return { kind: 'wait', title: 'حدّث الأسعار', body: 'كتبتها قبل ' + secs(v.qAge) + '، والأسعار تتغير كل ثانية.' };
     const cUp = v.upQ / (1 - FEE), cDn = v.dnQ / (1 - FEE);
-    const eUp = v.pUp - cUp, eDn = (1 - v.pUp) - cDn;
+    const eUp = upLo - cUp, eDn = (1 - upHi) - cDn;
     const up = eUp >= eDn, e = up ? eUp : eDn, p = up ? v.pUp : 1 - v.pUp, q = up ? v.upQ : v.dnQ, c = up ? cUp : cDn;
     const name = up ? 'Up (طالع)' : 'Down (نازل)';
     if (e < M) return { kind: 'no', title: 'لا تدخل', body: 'السعر عادل: الفرصة والسعر قريبين من بعض. على المدى ما تكسب منها.' };
@@ -311,7 +355,7 @@ const Mizan = (() => {
     return { kind: 'go', side: up ? 'up' : 'down', amount: amt, title: 'ادخل ' + name + (amt ? ' بـ' + isoD(amt) : ''),
       body: (amt ? 'لو كسبت: ' + isoS(win) + ' · لو خسرت: ' + isoS(-amt) + '. ' : '') + 'سعره ' + isoP(q) + ' وفرصته ' + isoP(p) + ': تكسب في ' + isoP(p) + ' من المرات وتخسر في ' + isoP(1 - p) + '. مو مضمون.' + lock };
   }
-  return { ROUND_MS, phi, probUp, roundStart, roundEnd, sigmaFromCloses, parseNum, maxPrice, reachOdds, pctP, isoP, stake, decide, secs };
+  return { ROUND_MS, phi, probUp, probUpT2, clockSigma, usStandardTime, roundStart, roundEnd, sigmaFromCloses, parseNum, maxPrice, reachOdds, pctP, isoP, stake, decide, secs };
 })();
 window.Mizan = Mizan;
 
@@ -409,20 +453,21 @@ const Live = (() => {
   if (st.helpClosed) $('help').open = false;
   $('help').addEventListener('toggle', () => { st.helpClosed = !$('help').open; save(); });
 
-  function sigmaFor(c) { const s = LIVE ? Live.coins[c].sigma : NaN; return isFinite(s) ? s : PARAMS.coins[c].sigma; }
+  // live: realized move of the last hour (the study's strongest volatility signal); otherwise the clock table
+  function sigmaFor(c) { const s = LIVE ? Live.coins[c].sigma : NaN; return isFinite(s) ? s : Mizan.clockSigma(c, LIVE ? Live.coins[c].last : NaN, Date.now()); }
   function model(c, t) {
     if (LIVE) {
       const k = Live.coins[c], end = k.round ? k.round + Mizan.ROUND_MS : Mizan.roundEnd(t), tLeft = (end - t) / 1000;
       if (!k.round || !k.ptbOk || !isFinite(k.last)) return { ok: false, end, tLeft, wait: k.round ? 'يجيب سعر البداية…' : 'يتصل بـBinance…' };
       if (tLeft <= 0) return { ok: false, end, tLeft: 0, wait: 'ينتظر الجولة الجديدة…' };
-      const diff = k.last - k.ptb;
-      return { ok: true, end, tLeft, diff, pUp: Mizan.probUp(diff, tLeft, sigmaFor(c)) };
+      const diff = k.last - k.ptb, sg = sigmaFor(c);
+      return { ok: true, end, tLeft, diff, pUp: Mizan.probUp(diff, tLeft, sg), pAlt: PARAMS.coins[c].t2 ? Mizan.probUpT2(diff, tLeft, sg) : NaN };
     }
     const k = st.m[c], end = Mizan.roundEnd(t), tLeft = (end - t) / 1000, d = num(k.diff);
     if (!isFinite(d)) return { ok: false, end, tLeft, wait: 'اكتب الفرق اللي جنب Current Price (السعر الحالي) في التطبيق.' };
     if (k.round !== end || (t - k.at) / 1000 > 15) return { ok: false, end, tLeft, wait: 'الفرق قديم. اكتبه من جديد.' };
-    const diff = k.dir === 'above' ? d : -d;
-    return { ok: true, end, tLeft, diff, pUp: Mizan.probUp(diff, k.left, sigmaFor(c)) };
+    const diff = k.dir === 'above' ? d : -d, sg = sigmaFor(c);
+    return { ok: true, end, tLeft, diff, pUp: Mizan.probUp(diff, k.left, sg), pAlt: PARAMS.coins[c].t2 ? Mizan.probUpT2(diff, k.left, sg) : NaN };
   }
 
   document.addEventListener('input', e => {
@@ -513,7 +558,7 @@ const Live = (() => {
     // the decision
     const k = st.m[c];
     const d = Mizan.decide({
-      bal, goal, ok: m.ok, wait: m.wait, tLeft: left, pUp: m.pUp, mode: st.mode,
+      bal, goal, ok: m.ok, wait: m.wait, tLeft: left, pUp: m.pUp, pAlt: m.pAlt, mode: st.mode,
       upQ: num(k.upQ) / 100, dnQ: num(k.dnQ) / 100, qAge: k.qAt ? (t - k.qAt) / 1000 : 0,
       side: k.side, sellQ: num(k.sellQ) / 100, sellAge: k.sellAt ? (t - k.sellAt) / 1000 : 0,
     });
