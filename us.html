@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="description" content="تجربة بفلوس وهمية: شراء شهري في السوق الأمريكي من ديسمبر 2026، تختبر فيها التزامك بالخطة، مو السوق.">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16202a" media="(prefers-color-scheme: dark)">
+<title>تجربة السوق الأمريكي</title>
+<link rel="icon" href="data:,">
+<style>
+:root {
+  --bg: #eef1f4; --surface: #ffffff; --sunk: #e3e8ed; --line: #d3dae1;
+  --ink: #142029; --muted: #5a6977; --accent: #285f8f; --accent-soft: #dde9f4; --seg-on: #ffffff;
+  --up: #126b3a; --up-soft: #dcf1e5; --down: #b02e24; --down-soft: #f8e0dd;
+  --warn: #9a5b00; --warn-soft: #fbecd2; --stop: #b3261e; --stop-soft: #f9dcd9; --good: #146c43; --good-soft: #d9efe3;
+  --sa: #285f8f; --sb: #9a5b00; --sc: #7a3f9e;
+  --font: -apple-system, "SF Arabic", "SF Pro Text", "Geeza Pro", "Segoe UI", Tahoma, "Noto Sans Arabic", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e151c; --surface: #16202a; --sunk: #1d2934; --line: #2a3845;
+    --ink: #e5ecf2; --muted: #93a4b4; --accent: #7fb1df; --accent-soft: #1b3044; --seg-on: #2c3d4e;
+    --up: #4fd18b; --up-soft: #173528; --down: #f27b70; --down-soft: #3a1f1d;
+    --warn: #f0b354; --warn-soft: #3a2c14; --stop: #ff8a80; --stop-soft: #43201e; --good: #5fd39a; --good-soft: #163527;
+    --sa: #7fb1df; --sb: #f0b354; --sc: #c79be6;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e151c; --surface: #16202a; --sunk: #1d2934; --line: #2a3845;
+  --ink: #e5ecf2; --muted: #93a4b4; --accent: #7fb1df; --accent-soft: #1b3044; --seg-on: #2c3d4e;
+  --up: #4fd18b; --up-soft: #173528; --down: #f27b70; --down-soft: #3a1f1d;
+  --warn: #f0b354; --warn-soft: #3a2c14; --stop: #ff8a80; --stop-soft: #43201e; --good: #5fd39a; --good-soft: #163527;
+  --sa: #7fb1df; --sb: #f0b354; --sc: #c79be6;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.5; overflow-x: hidden; }
+[hidden] { display: none !important; }
+a { color: var(--accent); }
+.app { max-width: 480px; margin: 0 auto; padding-block: max(12px, env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 12px; }
+.pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.num { font-variant-numeric: tabular-nums; unicode-bidi: isolate; direction: ltr; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card h2 { margin: 0; font-size: 17px; }
+.card p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 13.5px; }
+
+.hero h1 { margin: 0; font-size: 24px; line-height: 1.25; }
+.hero .fake { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--warn-soft); color: var(--warn); font-weight: 700; font-size: 15.5px; }
+.when { font-size: 14.5px; }
+.prog { position: relative; height: 10px; border-radius: 999px; background: var(--sunk); overflow: hidden; }
+.prog i { position: absolute; inset-block: 0; inset-inline-start: 0; background: var(--accent); border-radius: 999px; }
+.prog s { position: absolute; inset-block: 0; width: 2px; background: var(--muted); opacity: .7; }
+.cps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; }
+.cps li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--sunk); }
+.cps li b { white-space: nowrap; }
+.cps li small { display: block; color: var(--muted); font-size: 12.5px; }
+.jump { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 15px; text-decoration: none; }
+.jump:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.msg { border-radius: 12px; padding: 12px 14px; font-size: 15px; background: var(--sunk); }
+.msg b { display: block; font-size: 16.5px; }
+.msg.warn { background: var(--warn-soft); color: var(--warn); }
+.msg.stop { background: var(--stop-soft); color: var(--stop); }
+.msg.good { background: var(--good-soft); color: var(--good); }
+.mini { font: inherit; font-size: 13px; font-weight: 700; margin-top: 8px; padding: 5px 12px; border-radius: 8px; border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer; }
+.mini:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.shead { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.sname { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
+.sname > span:last-child { display: flex; flex-direction: column; line-height: 1.35; min-width: 0; }
+.sname b { font-size: 17px; }
+.sname small { color: var(--muted); font-size: 13px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.dot.a { background: var(--sa); } .dot.c { background: var(--sb); }
+.val { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+.val b { font-size: 36px; font-weight: 800; line-height: 1.1; }
+.val .cur { font-size: 17px; font-weight: 700; }
+.val small { color: var(--muted); font-size: 14px; }
+.pl { font-size: 16px; font-weight: 700; }
+.pos { color: var(--up); } .neg { color: var(--down); } .flat { color: var(--muted); }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; }
+.stats div { padding: 8px 10px; border-radius: 10px; background: var(--sunk); min-width: 0; }
+.stats div.wide { grid-column: 1 / -1; }
+.stats dt { font-size: 12.5px; color: var(--muted); }
+.stats dd { margin: 0; font-size: 16px; font-weight: 700; }
+.stats dd small { display: block; color: var(--muted); font-size: 12.5px; font-weight: 600; }
+
+#chart { width: 100%; height: 190px; display: block; border-radius: 10px; background: var(--sunk); direction: ltr; }
+.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); }
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 16px; height: 0; border-top: 3px solid; display: inline-block; }
+.legend i.a { border-color: var(--sa); } .legend i.c { border-color: var(--sb); }
+.legend i.base { border-top: 2px dashed var(--muted); }
+
+.line { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--sunk); font-size: 14.5px; }
+.line > span { min-width: 0; }
+.line small { display: block; color: var(--muted); font-size: 12.5px; }
+.line b { font-size: 20px; font-weight: 800; white-space: nowrap; }
+.count { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); }
+.count small { font-size: 13.5px; font-weight: 600; }
+.count b { font-size: 26px; font-weight: 800; line-height: 1.25; }
+.count > span { font-size: 14px; color: var(--ink); }
+
+/* Discipline log: the real test */
+.card.key { border: 2px solid var(--accent); }
+.card.key h2 { font-size: 20px; }
+.tag { align-self: flex-start; font-size: 12.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+.streak { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 12px; background: var(--sunk); }
+.streak b { font-size: 44px; font-weight: 800; line-height: 1; min-width: 1.2em; text-align: center; color: var(--accent); }
+.streak > span { font-size: 16px; font-weight: 700; display: flex; flex-direction: column; }
+.streak small { color: var(--muted); font-size: 13px; font-weight: 600; }
+.mlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.mlist li { padding: 10px 12px; border-radius: 12px; background: var(--sunk); display: flex; flex-direction: column; gap: 8px; }
+.mlist .mh { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.mlist .mh b { font-size: 16px; }
+.mlist .q { font-size: 14px; }
+.mlist .now { font-size: 12.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.mlist .ans { font-size: 13px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btns button { font: inherit; font-size: 15.5px; font-weight: 700; min-height: 44px; padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btns button[aria-pressed="true"]::before { content: "✓ "; }
+.btns button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btns button[data-v="yes"][aria-pressed="true"] { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+.btns button[data-v="no"][aria-pressed="true"] { background: var(--seg-on); border-color: var(--ink); color: var(--ink); }
+.res { border-radius: 12px; padding: 12px 14px; background: var(--sunk); display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; }
+.res b.h { font-size: 16px; }
+.res.good { background: var(--good-soft); color: var(--good); }
+
+.rules { margin: 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; }
+.rules li small { display: block; color: var(--muted); font-size: 13px; }
+.help { margin: 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; }
+footer { color: var(--muted); font-size: 12.5px; text-align: center; display: flex; flex-direction: column; gap: 2px; }
+footer a { font-weight: 700; font-size: 14px; margin-top: 6px; }
+@media (max-width: 350px) { .val b { font-size: 30px; } .hero h1 { font-size: 21px; } .line b { font-size: 17px; } .streak b { font-size: 38px; } .count b { font-size: 22px; } }
+</style>
+</head>
+<body>
+<main class="app pad">
+
+  <div id="testBanner" class="msg stop" role="note" hidden></div>
+
+  <header class="card hero" aria-labelledby="h1">
+    <h1 id="h1">تجربة السوق الأمريكي بفلوس وهمية</h1>
+    <p class="fake">فلوس وهمية بس. الهدف تختبر التزامك، مو السوق.</p>
+    <p class="when" id="whenTxt">البداية: أول يوم تداول أمريكي في ديسمبر 2026.</p>
+    <div class="prog" aria-hidden="true"><i id="progBar" style="width:0%"></i><s id="progTick"></s></div>
+    <ul class="cps" id="cps"></ul>
+    <a class="jump" href="#logCard"><span id="jumpTxt">سجل الالتزام</span><span aria-hidden="true">↓</span></a>
+  </header>
+
+  <div id="netMsg" class="msg warn" role="status" hidden>
+    <span id="netTxt"></span>
+    <br><button type="button" class="mini" id="retryBtn">جرّب الحين</button>
+  </div>
+  <div id="staleMsg" class="msg warn" role="status" hidden></div>
+
+  <div id="loading" class="msg" role="status">نجيب أسعار الإغلاق…</div>
+
+  <!-- Waiting state: before the first buy exists in the data -->
+  <section class="card" id="waitCard" hidden aria-labelledby="hWait">
+    <h2 id="hWait">التجربة ما بدأت للحين</h2>
+    <div class="count"><small id="cdLbl">أول شراء وهمي بعد</small><b id="cdTxt">–</b><span id="cdWhen"></span></div>
+    <p class="small muted">آخر أسعار إغلاق، للمتابعة بس:</p>
+    <div class="line" id="wSPY"><span>–</span></div>
+    <div class="line" id="wSPUS"><span>–</span></div>
+    <p class="small">قبل البداية ما فيه أرقام. أول ما ينحسب أول شراء، يطلع هنا حسابين وهميين جنب بعض. القواعد تحت ثابتة وما تتغيّر.</p>
+  </section>
+
+  <!-- Account cards -->
+  <section class="card" id="cardSPY" hidden aria-labelledby="hSPY">
+    <div class="shead"><span class="sname"><span class="dot a"></span><span><b id="hSPY"><bdi>S&amp;P 500</bdi> (أكبر 500 شركة أمريكية)</b><small>الصندوق: <bdi>SPY</bdi> (صندوق يمشي مع المؤشر)</small></span></span></div>
+    <p class="small muted" data-f="wait" hidden>ننتظر بيانات هالصندوق.</p>
+    <div class="val"><b class="num" data-f="sar">–</b><span class="cur">ريال</span><small class="num" data-f="usd"></small></div>
+    <p class="pl" data-f="pl"></p>
+    <dl class="stats">
+      <div><dt>حطيت لين الحين</dt><dd data-f="inv">–</dd></div>
+      <div><dt>الدفعات</dt><dd data-f="buys">–</dd></div>
+      <div><dt>أكبر نزول لين الحين</dt><dd data-f="dd">–</dd></div>
+      <div><dt>توزيعات وصلتك (بعد الضريبة)</dt><dd data-f="div">–</dd></div>
+      <div class="wide"><dt>الشراء الوهمي الجاي</dt><dd data-f="next">–</dd></div>
+    </dl>
+    <p class="small muted" data-f="last"></p>
+  </section>
+
+  <section class="card" id="cardSPUS" hidden aria-labelledby="hSPUS">
+    <div class="shead"><span class="sname"><span class="dot c"></span><span><b id="hSPUS">النسخة الشرعية</b><small>الصندوق: <bdi>SPUS</bdi> (صندوق للشركات الأمريكية الكبيرة بعد استبعاد غير المتوافقة مع الشريعة)</small></span></span></div>
+    <p class="small muted" data-f="wait" hidden>ننتظر بيانات هالصندوق.</p>
+    <div class="val"><b class="num" data-f="sar">–</b><span class="cur">ريال</span><small class="num" data-f="usd"></small></div>
+    <p class="pl" data-f="pl"></p>
+    <dl class="stats">
+      <div><dt>حطيت لين الحين</dt><dd data-f="inv">–</dd></div>
+      <div><dt>الدفعات</dt><dd data-f="buys">–</dd></div>
+      <div><dt>أكبر نزول لين الحين</dt><dd data-f="dd">–</dd></div>
+      <div><dt>توزيعات وصلتك (بعد الضريبة)</dt><dd data-f="div">–</dd></div>
+      <div class="wide"><dt>الشراء الوهمي الجاي</dt><dd data-f="next">–</dd></div>
+    </dl>
+    <p class="small muted" data-f="last"></p>
+  </section>
+
+  <section class="card" id="chartCard" hidden aria-labelledby="hChart">
+    <h2 id="hChart">القيمة مقابل اللي حطيته، بالريال</h2>
+    <canvas id="chart" role="img" aria-label="رسم قيمة الحسابين مقابل الفلوس اللي حطيتها"></canvas>
+    <ul class="legend">
+      <li><i class="a"></i><bdi>S&amp;P 500</bdi> (أكبر 500 شركة)</li>
+      <li><i class="c"></i>النسخة الشرعية</li>
+      <li><i class="base"></i>اللي حطيته</li>
+    </ul>
+    <p class="small muted">الخط المتقطع يطلع درجة مع كل دفعة شهرية. لما خط الحساب يكون تحته، القيمة أقل من اللي حطيته.</p>
+  </section>
+
+  <!-- Discipline log: the real test -->
+  <section class="card key" id="logCard" aria-labelledby="hLog">
+    <span class="tag">هذا الاختبار الحقيقي</span>
+    <h2 id="hLog">سجل الالتزام</h2>
+    <p>كل شهر جاوب بصراحة. الجواب لك، ومحد يشوفه.</p>
+    <div class="streak" id="stBox"><b class="num" id="stN">0</b><span>شهور التزام ورا بعض<small id="stSub"></small></span></div>
+    <div class="msg" id="stMsg" role="status"></div>
+    <div id="cpRes" hidden></div>
+    <ul class="mlist" id="mlist"></ul>
+    <p class="small muted" id="storeNote"></p>
+  </section>
+
+  <!-- Fixed rules (pre-registered) -->
+  <section class="card" aria-labelledby="hRules">
+    <h2 id="hRules">القواعد الثابتة</h2>
+    <p class="small muted">ثبّتناها يوم الأحد 8 نوفمبر 2026 قبل البداية، وما تتغيّر بعدها.</p>
+    <ol class="rules">
+      <li>حسابين وهميين جنب بعض: <bdi>S&amp;P 500</bdi> (أكبر 500 شركة أمريكية) يشتري <bdi>SPY</bdi> (صندوق يمشي مع المؤشر)، و«النسخة الشرعية» تشتري <bdi>SPUS</bdi> (صندوق بعد استبعاد الشركات غير المتوافقة مع الشريعة). تقدر تتابع واحد منهم أو الثنين.</li>
+      <li>البداية: أول يوم تداول أمريكي في ديسمبر 2026 (المتوقع الثلاثاء 1 ديسمبر). الشراء على سعر الإغلاق.
+        <small>إغلاق السوق الأمريكي الساعة 12 بالليل بتوقيت السعودية في الشتاء، و11 بالليل في الصيف الأمريكي.</small></li>
+      <li>بعدها كل شهر: شراء على سعر إغلاق أول يوم تداول أمريكي في الشهر، للحسابين.</li>
+      <li>المبلغ: <span class="num">500</span> ريال وهمية كل شهر لكل حساب (<span class="num">$133.33</span>، الدولار = <span class="num">3.75</span> ريال).</li>
+      <li>العمولة: الأكبر بين دولار واحد و<span class="num">0.05%</span> من المبلغ، وتنخصم من المبلغ نفسه. نشتري كسور السهم عادي.
+        <small>على <span class="num">500</span> ريال، العمولة دولار واحد، يعني <span class="num">0.75%</span> من كل دفعة.</small></li>
+      <li>التوزيعات (أرباح يوزعها الصندوق): ناخذ <span class="num">70%</span> بس، لأن أمريكا تقتطع <span class="num">30%</span> ضريبة من المقيم في السعودية (ما فيه اتفاقية ضريبية بين البلدين). ونرجّع نشتري فيها على سعر إغلاق نفس اليوم بدون عمولة.
+        <small>تنحسب بس على الأسهم اللي معك قبل يوم التوزيع، ومن يوم البداية وبعد.</small></li>
+      <li>ما نبيع أبد.</li>
+      <li>المراجعة: بعد 6 شهور (أول أسبوع من يونيو 2027)، وبعد 12 شهر (أول أسبوع من ديسمبر 2027). فيها نطالع التزامك، مو السوق.</li>
+      <li>النجاح: <span class="num">6</span> من <span class="num">6</span> شهور التزام عند 6 شهور، و<span class="num">12</span> من <span class="num">12</span> عند 12 شهر.</li>
+    </ol>
+  </section>
+
+  <section class="card" aria-labelledby="hHelp">
+    <h2 id="hHelp">كيف تقرأها</h2>
+    <ul class="help">
+      <li>كل الأرقام وهمية. نحسبها من أسعار إغلاق حقيقية للصندوقين.</li>
+      <li>ربح أو خسارة السوق في كم شهر ما يعني شي. من 1993، أي 12 شهر ورا بعض في <bdi>S&amp;P 500</bdi> (أكبر 500 شركة أمريكية) طلعت بين <span class="num">−43%</span> و<span class="num">+56%</span>. يعني نتيجة 6 أو 12 شهر هي حظ السوق، مو شطارتك ولا غلطتك.</li>
+      <li>السوق يطيح بقوة أحياناً: نزل حوالي <span class="num">−55%</span> بين 2007 و2009، و<span class="num">−34%</span> في كم أسبوع سنة 2020، ومن 2000 لين 2012 كان الربح حوالي <span class="num">1%</span> بالسنة بس.</li>
+      <li>أمريكا تقتطع <span class="num">30%</span> من التوزيعات للمقيم في السعودية. عشان كذا نحسب <span class="num">70%</span> بس.</li>
+      <li>أكبر نزول = أكبر نزول في (القيمة ÷ اللي حطيته) من أعلى نقطة وصل لها. كذا الدفعات الجديدة ما تخفي النزول. نفس الطريقة في تجربة البيتكوين.</li>
+      <li>الفرق بين الحسابين يجي من الشركات اللي يستبعدها <bdi>SPUS</bdi> (الصندوق الشرعي)، مو من مهارة.</li>
+      <li>الصفحة ما تحفظ إلا سجل الالتزام، وعلى هالجوال بس. كل الأرقام تنحسب من جديد من يوم البداية.</li>
+      <li>هذا مو نصيحة، ولا توصية شراء أو بيع. ما أحد يعرف وين بيروح السوق.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <span>البيانات تتحدث مرة باليوم بعد إغلاق السوق الأمريكي.</span>
+    <span id="updTxt">آخر تحديث: –</span>
+    <a href="paper.html">تجربة البيتكوين</a>
+  </footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Fixed, pre-registered settings (2026-11-08; do not change after the start) ---------- */
+  var START_NY = '2026-12-01';                 // first US trading day of December 2026 (New York date)
+  var RATE = 3.75;                             // SAR per USD
+  var AMOUNT_SAR = 500, AMOUNT = AMOUNT_SAR / RATE;
+  var FEE_MIN = 1, FEE_PCT = 0.0005;           // fee per buy: max($1, 0.05%), taken from the amount
+  var DIV_KEEP = 0.70;                         // 30% US withholding on dividends, no treaty
+  var TICKERS = ['SPY', 'SPUS'];
+  var DATA_URL = './data/us.json';
+  var REFRESH_MS = 10 * 60000;
+  var STALE_MS = 4 * 86400000;
+  var STORE_KEY = 'usPaper.discipline.v1.' + START_NY;
+  var DAY = 86400000, HOUR = 3600000;
+  var KSA = 3 * HOUR;                          // Saudi time = UTC+3, no daylight saving
+
+  /* ---------- Calendar (US Eastern time rules since 2007) ---------- */
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function ymd(y, m, d) { var x = new Date(Date.UTC(y, m, d)); return x.getUTCFullYear() + '-' + pad2(x.getUTCMonth() + 1) + '-' + pad2(x.getUTCDate()); }
+  function parts(ds) { return { y: +ds.slice(0, 4), m: +ds.slice(5, 7) - 1, d: +ds.slice(8, 10) }; }
+  function utcOf(ds) { var p = parts(ds); return Date.UTC(p.y, p.m, p.d); }
+  function wday(ds) { return new Date(utcOf(ds)).getUTCDay(); }
+  function nthSunday(y, m, n) { var f = new Date(Date.UTC(y, m, 1)).getUTCDay(); return 1 + (7 - f) % 7 + 7 * (n - 1); }
+  function nyDst(ms) {
+    var y = new Date(ms).getUTCFullYear();
+    return ms >= Date.UTC(y, 2, nthSunday(y, 2, 2), 7) && ms < Date.UTC(y, 10, nthSunday(y, 10, 1), 6);
+  }
+  function nyDate(ms) { var x = new Date(ms - (nyDst(ms) ? 4 : 5) * HOUR); return ymd(x.getUTCFullYear(), x.getUTCMonth(), x.getUTCDate()); }
+  function nyCloseMs(ds) { var p = parts(ds), est = Date.UTC(p.y, p.m, p.d, 21); return nyDst(est - HOUR) ? est - HOUR : est; } // 16:00 New York
+  function ksaDate(ms) { var x = new Date(ms + KSA); return ymd(x.getUTCFullYear(), x.getUTCMonth(), x.getUTCDate()); }
+  function ksaMidnight(ds) { return utcOf(ds) - KSA; }
+  function mkey(ds) { return ds.slice(0, 7); }
+  function addMonths(mk, k) { return ymd(+mk.slice(0, 4), +mk.slice(5, 7) - 1 + k, 1).slice(0, 7); }
+  function monthDiff(a, b) { return (+b.slice(0, 4) - +a.slice(0, 4)) * 12 + (+b.slice(5, 7) - +a.slice(5, 7)); }
+  // Only the exchange holidays that can fall on the first weekday of a month. Used for the schedule shown
+  // on the page; the real buy day always comes from the data (first trading day found in that month).
+  function holidayNearMonthStart(ds) {
+    var p = parts(ds), w = wday(ds);
+    if (p.m === 0 && (p.d === 1 || (p.d === 2 && w === 1))) return true;   // New Year (Sunday -> Monday)
+    if (p.m === 8 && w === 1 && p.d <= 7) return true;                      // Labor Day
+    return false;
+  }
+  function tradingDayFrom(ds) {
+    var p = parts(ds);
+    for (var i = 0; i < 10; i++) {
+      var s = ymd(p.y, p.m, p.d + i), w = wday(s);
+      if (w !== 0 && w !== 6 && !holidayNearMonthStart(s)) return s;
+    }
+    return ds;
+  }
+  function plannedBuy(startNy, k) { return k === 0 ? tradingDayFrom(startNy) : tradingDayFrom(addMonths(mkey(startNy), k) + '-01'); }
+
+  /* ---------- Pure simulation ---------- */
+  function ddTracker(peak) {
+    var mdd = 0;
+    return {
+      push: function (v) { if (v > peak) peak = v; var dd = peak > 0 ? 1 - v / peak : 0; if (dd > mdd) mdd = dd; },
+      get: function () { return mdd * 100; }
+    };
+  }
+
+  // Trading days of one fund, by New York date, ascending. Rows whose session had not closed when the file
+  // was written (or before cutoffMs in a test) are left out, so an intraday price is never used as a close.
+  function prepRows(tk, cutoffMs) {
+    var src = (tk && Array.isArray(tk.close) ? tk.close : []).slice().sort(function (a, b) { return +a[0] - +b[0]; });
+    var by = {};
+    src.forEach(function (r) {
+      var t = +r[0] * 1000, c = +r[1];
+      if (!isFinite(t) || !isFinite(c) || c <= 0) return;
+      var d = nyDate(t);
+      if (nyCloseMs(d) > cutoffMs) return;
+      by[d] = { t: t, d: d, c: c };
+    });
+    return Object.keys(by).sort().map(function (k) { return by[k]; });
+  }
+
+  function simAccount(rows, divs, startNy) {
+    var n = rows.length, last = n ? rows[n - 1] : null;
+    var out = { started: false, last: last, rows: n };
+    var s = -1, i;
+    for (i = 0; i < n; i++) if (rows[i].d >= startNy) { s = i; break; }
+    if (s < 0) return out;
+
+    // Each dividend date goes to the trading day with the same New York date, or the next trading day.
+    var divAt = {};
+    Object.keys(divs || {}).forEach(function (k) {
+      var amt = +divs[k], t = +k * 1000;
+      if (!isFinite(amt) || amt <= 0 || !isFinite(t)) return;
+      var dd = nyDate(t);
+      for (var j = 0; j < n; j++) {
+        if (rows[j].d >= dd) { if (j >= s) divAt[j] = (divAt[j] || 0) + amt; break; }
+      }
+    });
+
+    var fee = Math.max(FEE_MIN, FEE_PCT * AMOUNT);
+    var sh = 0, inv = 0, divNet = 0, buys = [], dl = [], curve = [], dd = ddTracker(1);
+    for (i = s; i < n; i++) {
+      var r = rows[i];
+      if (divAt[i] && sh > 0) {                          // shares held at the start of the day
+        var held = sh, net = DIV_KEEP * divAt[i] * held;
+        sh += net / r.c; divNet += net;                  // reinvested at the close, no fee
+        dl.push({ d: r.d, t: r.t, dps: divAt[i], held: held, net: net, price: r.c });
+      }
+      if (i === s || mkey(r.d) !== mkey(rows[i - 1].d)) { // first trading day of a month (or the start day)
+        var q = (AMOUNT - fee) / r.c;
+        sh += q; inv += AMOUNT;
+        buys.push({ d: r.d, t: r.t, price: r.c, shares: q, fee: fee });
+      }
+      var v = sh * r.c;
+      dd.push(v / inv);
+      curve.push([r.t, v, inv]);
+    }
+    var value = sh * last.c;
+    out.started = true;
+    out.startDate = rows[s].d; out.startT = rows[s].t;
+    out.shares = sh; out.invested = inv; out.value = value;
+    out.profit = value - inv; out.ret = (value / inv - 1) * 100; out.maxDD = dd.get();
+    out.buys = buys; out.divs = dl; out.divNet = divNet; out.curve = curve;
+    return out;
+  }
+
+  // data: the us.json object. Money in USD, percents in percent points.
+  function simulate(data, startNyDate, cutoffMs) {
+    var startNy = startNyDate || START_NY;
+    var out = { ok: false, error: null, startNy: startNy, updated: null, started: false, startDate: null, accounts: {} };
+    if (!data || typeof data !== 'object' || !data.tickers) { out.error = 'no tickers'; return out; }
+    var upd = +data.updated;
+    out.updated = isFinite(upd) && upd > 0 ? upd * 1000 : null;
+    var cut = Math.min(out.updated != null ? out.updated : Infinity, cutoffMs != null ? cutoffMs : Infinity);
+    var missing = [];
+    TICKERS.forEach(function (k) {
+      var tk = data.tickers[k];
+      var rows = prepRows(tk, cut);
+      if (!rows.length) missing.push(k);
+      var a = simAccount(rows, tk && tk.div, startNy);
+      a.ticker = k;
+      out.accounts[k] = a;
+      if (a.started) { out.started = true; if (!out.startDate || a.startDate < out.startDate) out.startDate = a.startDate; }
+    });
+    out.missing = missing;
+    out.ok = missing.length < TICKERS.length;          // one fund missing still shows the other
+    if (!out.ok) out.error = 'no rows';
+    return out;
+  }
+
+  // Buys scheduled so far (planned close already passed) and the next planned buy, for one account.
+  function schedule(startNy, nowMs, acct) {
+    var smk = mkey(startNy), months = monthDiff(smk, mkey(nyDate(nowMs))), due = 0;
+    for (var k = 0; k <= months && k < 1200; k++) if (nyCloseMs(plannedBuy(startNy, k)) <= nowMs) due++;
+    var done = acct && acct.started ? acct.buys.length : 0;
+    var lastBuy = done ? acct.buys[done - 1].d : null;
+    var nk = lastBuy ? monthDiff(smk, mkey(lastBuy)) + 1 : 0;
+    var next = plannedBuy(startNy, nk), nextClose = nyCloseMs(next);
+    return { done: done, scheduled: Math.max(due, done), next: next, nextClose: nextClose, pending: nextClose <= nowMs };
+  }
+
+  /* ---------- Discipline log (pure parts) ---------- */
+  function logMonths(startNy, nowMs) {
+    var smk = mkey(startNy), n = monthDiff(smk, mkey(ksaDate(nowMs))), out = [];
+    for (var k = 0; k <= n; k++) out.push(addMonths(smk, k));
+    return out;
+  }
+  // Consecutive honoured months, counting back from the latest answered month. A "no" or a gap stops it.
+  function streak(months, log) {
+    var L = -1, i;
+    for (i = months.length - 1; i >= 0; i--) if (log[months[i]] === 'yes' || log[months[i]] === 'no') { L = i; break; }
+    if (L < 0) return { n: 0, latest: null, latestMonth: null };
+    var c = 0;
+    for (i = L; i >= 0 && log[months[i]] === 'yes'; i--) c++;
+    return { n: c, latest: log[months[L]], latestMonth: months[L] };
+  }
+  function checkpoint(startNy, k, log) {
+    var yes = 0, no = 0, blank = 0;
+    for (var i = 0; i < k; i++) {
+      var v = log[addMonths(mkey(startNy), i)];
+      if (v === 'yes') yes++; else if (v === 'no') no++; else blank++;
+    }
+    return { k: k, yes: yes, no: no, blank: blank, pass: yes === k };
+  }
+
+  /* ---------- Formatting (Western digits, isolated numbers) ---------- */
+  var MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  var WDAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+  function num(s) { return '<span class="num">' + s + '</span>'; }
+  function n0(v) { return Math.round(v).toLocaleString('en-US'); }
+  function n2(v) { return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function money(v) { return num(n0(v)); }
+  function usd(v) { return '$' + n2(v); }
+  function signed(v, txt) { return (v > 0 ? '+' : v < 0 ? '−' : '') + txt; }
+  function pct(v) { var r = Math.round(v * 10) / 10; return num(signed(r, Math.abs(r).toFixed(1) + '%')); }
+  function cls(v) { return v >= 0.5 ? 'pos' : v <= -0.5 ? 'neg' : 'flat'; }
+  function ddTxt(v) { return v < 0.05 ? num('0.0%') : num('−' + v.toFixed(1) + '%'); }
+  function dsShort(ds) { var p = parts(ds); return p.d + ' ' + MONTHS[p.m]; }
+  function dsMid(ds) { return WDAYS[wday(ds)] + ' ' + num(parts(ds).d) + ' ' + MONTHS[parts(ds).m]; }
+  function dsLong(ds) { return dsMid(ds) + ' ' + num(parts(ds).y); }
+  function monthLbl(mk) { return MONTHS[+mk.slice(5, 7) - 1] + ' ' + num(mk.slice(0, 4)); }
+  function tm(ms) {
+    var x = new Date(ms + KSA), h = x.getUTCHours(), mi = x.getUTCMinutes();
+    var h12 = h % 12 === 0 ? 12 : h % 12;
+    return num(h12 + ':' + pad2(mi)) + ' ' + (h < 12 ? 'ص' : 'م');
+  }
+  // The US close of a New York date, said in Saudi time.
+  function closeKsa(ds) {
+    var h = new Date(nyCloseMs(ds) + KSA).getUTCHours();
+    if (h === 0) return 'الساعة ' + num('12') + ' بالليل بتوقيت السعودية (بين ' + WDAYS[wday(ds)] + ' و' + WDAYS[(wday(ds) + 1) % 7] + ')';
+    return 'الساعة ' + num(h % 12 || 12) + ' بالليل بتوقيت السعودية';
+  }
+  function plural(n, one, two, few, many) { return n === 1 ? one : n === 2 ? two : n >= 3 && n <= 10 ? num(n) + ' ' + few : num(n) + ' ' + many; }
+  function daysWord(n) { return plural(n, 'يوم واحد', 'يومين', 'أيام', 'يوم'); }
+  function hoursWord(n) { return plural(n, 'ساعة', 'ساعتين', 'ساعات', 'ساعة'); }
+  function minsWord(n) { return plural(n, 'دقيقة', 'دقيقتين', 'دقايق', 'دقيقة'); }
+  function monthsWord(n) { return plural(n, 'شهر واحد', 'شهرين', 'شهور', 'شهر'); }
+  function countdown(ms) {
+    var m = Math.max(0, Math.ceil(ms / 60000)), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mi = m % 60;
+    if (d) return daysWord(d) + (h ? ' و' + hoursWord(h) : '');
+    if (h) return hoursWord(h) + (mi ? ' و' + minsWord(mi) : '');
+    return minsWord(Math.max(1, mi));
+  }
+  function plLine(a) {
+    var sar = Math.round(a.profit * RATE);
+    var word = sar > 0 ? 'ربح' : sar < 0 ? 'خسارة' : 'لا ربح ولا خسارة';
+    return '<span class="' + cls(sar) + '">' + word + ': ' + num(signed(sar, n0(Math.abs(sar)))) + ' ريال (' + pct(a.ret) + ')</span>' +
+      ' <span class="muted small">على اللي حطيته</span>';
+  }
+
+  /* ---------- Page ---------- */
+  var state = { data: null, sim: null, start: START_NY, test: false, nowMs: null, busy: false, fails: 0, lastOk: 0, retryT: 0,
+                log: {}, storeOk: false };
+  function $(id) { return document.getElementById(id); }
+  function show(id, on) { var el = $(id); if (el) el.hidden = !on; }
+  function nowMs() { return state.nowMs != null ? state.nowMs : Date.now(); }
+
+  function readLog() {
+    var out = {};
+    try {
+      var raw = window.localStorage.getItem(STORE_KEY);
+      var o = raw ? JSON.parse(raw) : {};
+      if (o && typeof o === 'object') Object.keys(o).forEach(function (k) { if (/^\d{4}-\d{2}$/.test(k) && (o[k] === 'yes' || o[k] === 'no')) out[k] = o[k]; });
+    } catch (e) { /* storage blocked or bad JSON: start empty */ }
+    return out;
+  }
+  function saveLog() {
+    if (state.test) return;
+    try { window.localStorage.setItem(STORE_KEY, JSON.stringify(state.log)); state.storeOk = true; }
+    catch (e) { state.storeOk = false; }
+  }
+  function storageWorks() {
+    try { var k = STORE_KEY + '.probe'; window.localStorage.setItem(k, '1'); window.localStorage.removeItem(k); return true; }
+    catch (e) { return false; }
+  }
+
+  function cpDates(startNy) {
+    var smk = mkey(startNy);
+    return { m6: addMonths(smk, 6) + '-01', m12: addMonths(smk, 12) + '-01' };
+  }
+
+  function renderHeader() {
+    var t = nowMs(), st = state.start, sim = state.sim, started = !!(sim && sim.started);
+    var startDs = started ? sim.startDate : tradingDayFrom(st);
+    $('whenTxt').innerHTML = started
+      ? 'بدأت: ' + dsLong(startDs) + '، على سعر الإغلاق.'
+      : 'البداية: أول يوم تداول أمريكي في ' + monthLbl(mkey(st)) + ' (المتوقع ' + dsLong(startDs) + ')، على سعر الإغلاق.';
+    var cp = cpDates(st), s0 = ksaMidnight(st), c6 = ksaMidnight(cp.m6), c12 = ksaMidnight(cp.m12);
+    $('progBar').style.width = (Math.max(0, Math.min(1, (t - s0) / (c12 - s0))) * 100).toFixed(2) + '%';
+    $('progTick').style.insetInlineStart = ((c6 - s0) / (c12 - s0) * 100).toFixed(2) + '%';
+    var first, mNo = monthDiff(mkey(st), mkey(ksaDate(t))) + 1, firstClose = nyCloseMs(startDs);
+    if (!started && t < firstClose) first = '<li><span>أول شراء وهمي بعد</span><b>' + countdown(firstClose - t) + '</b></li>';
+    else if (!started) first = '<li><span>أول شراء</span><b>ننتظر البيانات</b></li>';
+    else if (mNo <= 12) first = '<li><span>وين وصلنا</span><b>الشهر ' + num(mNo) + ' من ' + num(12) + '</b></li>';
+    else first = '<li><span>وين وصلنا</span><b>خلصت الـ' + num(12) + ' شهر</b></li>';
+    function cpItem(ms, ds, label) {
+      var status = t < ms ? 'باقي ' + daysWord(Math.ceil((ms - t) / DAY)) : t < ms + 7 * DAY ? 'هالأسبوع' : 'خلصت';
+      return '<li><span>' + label + '<small>أول أسبوع من ' + monthLbl(mkey(ds)) + '</small></span><b>' + status + '</b></li>';
+    }
+    $('cps').innerHTML = first + cpItem(c6, cp.m6, 'مراجعة 6 شهور') + cpItem(c12, cp.m12, 'مراجعة 12 شهر');
+  }
+
+  function renderWait(sim) {
+    var t = nowMs(), startDs = tradingDayFrom(state.start), close = nyCloseMs(startDs);
+    if (t < close) {
+      $('cdLbl').textContent = 'أول شراء وهمي بعد';
+      $('cdTxt').innerHTML = countdown(close - t);
+      $('cdWhen').innerHTML = dsLong(startDs) + '، عند إغلاق السوق الأمريكي: ' + closeKsa(startDs) + '. ينحسب هنا لحاله، ما تحتاج تسهر ولا تسوي شي.';
+    } else {
+      $('cdLbl').textContent = 'أول شراء وهمي';
+      $('cdTxt').textContent = 'السوق سكّر';
+      $('cdWhen').innerHTML = 'أول شراء ينحسب أول ما توصل بيانات الإغلاق. البيانات تتحدث مرة باليوم بعد الإغلاق، فممكن تتأخر ساعات.';
+    }
+    var names = { SPY: '<bdi>S&amp;P 500</bdi> (أكبر 500 شركة أمريكية)', SPUS: 'النسخة الشرعية' };
+    TICKERS.forEach(function (k) {
+      var a = sim && sim.accounts[k], el = $('w' + k);
+      if (!a || !a.last) { el.innerHTML = '<span>' + names[k] + '<small>–</small></span><b>–</b>'; return; }
+      el.innerHTML = '<span>' + names[k] + '<small><bdi>' + k + '</bdi> (' + (k === 'SPY' ? 'صندوق يمشي مع المؤشر' : 'الصندوق الشرعي') + ') · إغلاق ' + dsLong(a.last.d) + '</small></span><b>' + num(usd(a.last.c)) + '</b>';
+    });
+  }
+
+  function renderAccount(k, a) {
+    var card = $('card' + k);
+    function f(name) { return card.querySelector('[data-f="' + name + '"]'); }
+    var ok = a && a.started;
+    f('wait').hidden = !!ok;
+    ['sar', 'usd', 'pl', 'inv', 'buys', 'dd', 'div', 'next', 'last'].forEach(function (n) { if (!ok) f(n).textContent = n === 'usd' || n === 'pl' || n === 'last' ? '' : '–'; });
+    if (!ok) return;
+    var sc = schedule(state.start, nowMs(), a);
+    f('sar').textContent = n0(a.value * RATE);
+    f('usd').textContent = usd(a.value);
+    f('pl').innerHTML = plLine(a);
+    f('inv').innerHTML = money(a.invested * RATE) + ' ريال';
+    f('buys').innerHTML = num(sc.done) + ' من ' + num(sc.scheduled) +
+      '<small>' + (sc.done < sc.scheduled ? 'بيانات آخر شراء ما وصلت للحين' : 'كلها تمت') + '</small>';
+    f('dd').innerHTML = ddTxt(a.maxDD);
+    f('div').innerHTML = num(n2(a.divNet * RATE)) + ' ريال' +
+      '<small>' + (a.divs.length ? plural(a.divs.length, 'توزيع واحد', 'توزيعين', 'توزيعات', 'توزيع') + '، واشترينا فيها أسهم' : 'ما فيه توزيعات للحين') + '</small>';
+    f('next').innerHTML = sc.pending
+      ? 'السوق سكّر يوم ' + dsMid(sc.next) + '، ننتظر البيانات'
+      : dsMid(sc.next) + '، <span class="num">500</span> ريال وهمية<small>على سعر الإغلاق، ' + closeKsa(sc.next) + '. تنحسب هنا لحالها، ما تحتاج تسهر ولا تسوي شي.</small>';
+    f('last').innerHTML = 'آخر إغلاق: ' + dsLong(a.last.d) + ' · ' + num(usd(a.last.c)) + ' · معك ' + num(a.shares.toFixed(4)) + ' سهم';
+  }
+
+  function renderLog() {
+    var t = nowMs(), months = logMonths(state.start, t), log = state.log;
+    var st = streak(months, log);
+    $('stN').textContent = String(st.n);
+    show('stBox', months.length > 0);
+    var msg = $('stMsg'), sub = '';
+    msg.className = 'msg';
+    if (!months.length) {
+      msg.innerHTML = 'أول سؤال يطلع هنا في ' + monthLbl(mkey(state.start)) + '، مع أول شراء.';
+    } else if (st.latest === 'no') {
+      msg.innerHTML = '<b>العدّ يبدأ من جديد، وهذا عادي.</b>كل واحد يغلط. اللي يفرق إنك ترجع للخطة الشهر الجاي.';
+      sub = 'آخر جواب: ' + monthLbl(st.latestMonth);
+    } else if (st.n > 0) {
+      msg.className = 'msg good';
+      msg.innerHTML = '<b>' + monthsWord(st.n) + ' ورا بعض.</b>كمّل على نفس الخطة، بهدوء.';
+      sub = 'لين ' + monthLbl(st.latestMonth);
+    } else {
+      msg.innerHTML = 'جاوب آخر كل شهر، أو أول ما تخالف الخطة. تقدر تغيّر جوابك بعدين.';
+    }
+    $('stSub').innerHTML = sub;
+
+    // Checkpoints: the discipline result, not a market verdict.
+    var res = [], elapsed = monthDiff(mkey(state.start), mkey(ksaDate(t)));
+    [12, 6].forEach(function (k) {
+      if (elapsed < k) return;
+      var c = checkpoint(state.start, k, log);
+      var head = '<b class="h">مراجعة ' + (k === 6 ? num(6) + ' شهور' : num(k) + ' شهر') + ': التزمت ' + num(c.yes) + ' من ' + num(k) + '</b>';
+      var body = c.pass
+        ? 'وصلت ' + num(k) + ' من ' + num(k) + '. هذي نتيجة التزامك، مو نتيجة السوق.'
+        : !c.no
+          ? 'باقي ' + (c.blank === 1 ? 'شهر واحد ما جاوبت عليه' : monthsWord(c.blank) + ' ما جاوبت عليها') + '. جاوب تحت عشان تكتمل النتيجة.'
+          : 'الهدف كان ' + num(k) + ' من ' + num(k) + '، وهالمرة ما وصلت له. عادي، التجربة تكمّل.' +
+            (c.blank ? ' وباقي ' + (c.blank === 1 ? 'شهر واحد ما جاوبت عليه' : monthsWord(c.blank) + ' ما جاوبت عليها') + ' تحت.' : '');
+      res.push('<div class="res' + (c.pass ? ' good' : '') + '">' + head + '<span>' + body + '</span></div>');
+    });
+    $('cpRes').innerHTML = res.join('');
+    show('cpRes', res.length > 0);
+
+    var q = 'هالشهر التزمت بالخطة؟ ما راهنت، ولا بعت، ولا سويت صفقة برا الخطة';
+    var cur = mkey(ksaDate(t));
+    var listHtml = months.slice().reverse().map(function (mk) {
+      var v = log[mk];
+      var tag = mk === cur ? '<span class="now">هالشهر</span>' : '<span class="ans">' + (v === 'yes' ? 'التزمت' : v === 'no' ? 'ما التزمت' : 'ما جاوبت') + '</span>';
+      return '<li><div class="mh"><b>' + monthLbl(mk) + '</b>' + tag + '</div><p class="q">' + q + '</p>' +
+        '<div class="btns" role="group" aria-label="' + MONTHS[+mk.slice(5, 7) - 1] + ' ' + mk.slice(0, 4) + '">' +
+        '<button type="button" data-m="' + mk + '" data-v="yes" aria-pressed="' + (v === 'yes') + '">التزمت</button>' +
+        '<button type="button" data-m="' + mk + '" data-v="no" aria-pressed="' + (v === 'no') + '">ما التزمت</button></div></li>';
+    }).join('');
+    if (listHtml !== state.listHtml) { $('mlist').innerHTML = listHtml; state.listHtml = listHtml; }
+
+    $('storeNote').textContent = state.test
+      ? 'عرض اختبار: الإجابات هنا ما تنحفظ.'
+      : state.storeOk
+        ? 'الإجابات محفوظة على هالجوال بس، في هالمتصفح. لو مسحت بيانات المتصفح أو فتحت الصفحة من جوال ثاني، ما تطلع.'
+        : 'هالمتصفح ما يسمح بالحفظ، فالإجابات تروح لو سكّرت الصفحة. ممكن تكتبها عندك.';
+
+    var jt;
+    if (!months.length) jt = 'سجل الالتزام: يبدأ ' + monthLbl(mkey(state.start));
+    else if (!log[cur]) jt = 'جاوب: التزمت هالشهر؟';
+    else jt = 'سجل الالتزام: ' + num(st.n) + ' ورا بعض';
+    $('jumpTxt').innerHTML = jt;
+  }
+
+  function render() {
+    var t = nowMs();
+    state.sim = state.data ? simulate(state.data, state.start, state.test ? t : null) : null;
+    var sim = state.sim;
+    renderHeader();
+    renderLog();
+    if (!sim) {
+      var pre = t < nyCloseMs(tradingDayFrom(state.start));
+      show('waitCard', pre);
+      if (pre) renderWait(null);
+      return;
+    }
+    show('loading', false);
+    var on = sim.started;
+    show('waitCard', !on);
+    ['cardSPY', 'cardSPUS', 'chartCard'].forEach(function (id) { show(id, on); });
+    if (on) TICKERS.forEach(function (k) { renderAccount(k, sim.accounts[k]); });
+    else renderWait(sim);
+    if (on) drawChart();
+    var stale = !state.test && sim.updated && Date.now() - sim.updated > STALE_MS;
+    show('staleMsg', !!stale);
+    if (stale) $('staleMsg').innerHTML = 'البيانات ما تحدثت من ' + daysWord(Math.floor((Date.now() - sim.updated) / DAY)) + '. الأرقام من آخر تحديث وصلنا.';
+    $('updTxt').innerHTML = 'آخر تحديث: ' + (state.test ? 'عرض اختبار' : sim.updated ? dsMid(ksaDate(sim.updated)) + '، ' + tm(sim.updated) + ' بتوقيت السعودية' : '–');
+  }
+
+  /* ---------- Chart ---------- */
+  function drawChart() {
+    var cv = $('chart'), sim = state.sim;
+    if (!cv || !sim || !sim.started || cv.offsetParent === null) return;
+    var w = cv.clientWidth, h = cv.clientHeight, dpr = Math.min(window.devicePixelRatio || 1, 3);
+    if (!w || !h) return;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var css = getComputedStyle(document.documentElement);
+    function col(n) { return css.getPropertyValue(n).trim(); }
+    var A = sim.accounts.SPY, B = sim.accounts.SPUS, base = A.started ? A : B;
+    var lines = [];
+    if (A.started) lines.push({ pts: A.curve.map(function (p) { return [p[0], p[1] * RATE]; }), color: col('--sa'), lw: 3 });
+    if (B.started) lines.push({ pts: B.curve.map(function (p) { return [p[0], p[1] * RATE]; }), color: col('--sb'), lw: 2 });
+    var inv = base.curve.map(function (p) { return [p[0], p[2] * RATE]; });
+    var t0 = Infinity, t1 = -Infinity, lo = Infinity, hi = -Infinity;
+    [inv].concat(lines.map(function (l) { return l.pts; })).forEach(function (s) {
+      s.forEach(function (p) { if (p[0] < t0) t0 = p[0]; if (p[0] > t1) t1 = p[0]; if (p[1] < lo) lo = p[1]; if (p[1] > hi) hi = p[1]; });
+    });
+    var span = Math.max(hi - lo, 20), padT = 14, padB = 22, padX = 8;
+    var mid = (hi + lo) / 2; lo = Math.min(lo, mid - span / 2); hi = Math.max(hi, mid + span / 2);
+    var g = (hi - lo) * 0.06; lo -= g; hi += g;
+    function x(t) { return t1 > t0 ? padX + (w - 2 * padX) * (t - t0) / (t1 - t0) : w / 2; }
+    function y(v) { return padT + (h - padT - padB) * (1 - (v - lo) / (hi - lo)); }
+
+    ctx.font = '11px ' + col('--font');
+    ctx.strokeStyle = col('--line'); ctx.lineWidth = 1; ctx.setLineDash([]);
+    var labels = [hi - g, (hi + lo) / 2, lo + g];
+    labels.forEach(function (v) { var yy = Math.round(y(v)) + 0.5; ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(w, yy); ctx.stroke(); });
+    ctx.fillStyle = col('--muted'); ctx.textBaseline = 'alphabetic';
+    ctx.direction = 'rtl';
+    var firstDs = nyDate(t0), lastDs = nyDate(t1);
+    ctx.textAlign = 'left'; ctx.fillText(dsShort(firstDs), 4, h - 6);
+    if (lastDs !== firstDs) { ctx.textAlign = 'right'; ctx.fillText(dsShort(lastDs), w - 4, h - 6); }
+    ctx.direction = 'ltr';
+
+    // Money put in: a step that goes up with each monthly buy.
+    ctx.strokeStyle = col('--muted'); ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    inv.forEach(function (p, i) {
+      if (!i) { ctx.moveTo(inv.length > 1 ? x(p[0]) : 0, y(p[1])); return; }
+      if (p[1] !== inv[i - 1][1]) ctx.lineTo(x(p[0]), y(inv[i - 1][1]));
+      ctx.lineTo(x(p[0]), y(p[1]));
+    });
+    if (inv.length === 1) ctx.lineTo(w, y(inv[0][1]));
+    ctx.stroke(); ctx.setLineDash([]);
+
+    lines.forEach(function (l) {
+      ctx.strokeStyle = l.color; ctx.lineWidth = l.lw; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      l.pts.forEach(function (p, i) { if (i) ctx.lineTo(x(p[0]), y(p[1])); else ctx.moveTo(x(p[0]), y(p[1])); });
+      ctx.stroke();
+      var e = l.pts[l.pts.length - 1];
+      ctx.fillStyle = l.color; ctx.beginPath(); ctx.arc(x(e[0]), y(e[1]), 3.5, 0, Math.PI * 2); ctx.fill();
+    });
+
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    labels.forEach(function (v) {
+      var tx = n0(v), tw = ctx.measureText(tx).width;
+      ctx.fillStyle = col('--sunk'); ctx.globalAlpha = 0.85;
+      ctx.fillRect(2, y(v) - 15, tw + 6, 13);
+      ctx.globalAlpha = 1; ctx.fillStyle = col('--muted');
+      ctx.fillText(tx, 5, y(v) - 3);
+    });
+    var lbl = 'رسم القيمة بالريال من ' + dsShort(firstDs) + ' لين ' + dsShort(lastDs) + '. حطيت ' + n0(inv[inv.length - 1][1]) + ' ريال';
+    if (A.started) lbl += '، وحساب S&P 500 الحين ' + n0(A.value * RATE) + ' ريال';
+    if (B.started) lbl += '، والنسخة الشرعية ' + n0(B.value * RATE) + ' ريال';
+    cv.setAttribute('aria-label', lbl + '.');
+  }
+
+  /* ---------- Data ---------- */
+  async function refresh() {
+    if (state.test || state.busy) return;
+    state.busy = true;
+    clearTimeout(state.retryT);
+    try {
+      var r = await fetch(DATA_URL + '?t=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var d = await r.json();
+      if (state.test) return;
+      var check = simulate(d, state.start);
+      if (!check.ok) throw new Error(check.error || 'bad data');
+      state.data = d;
+      state.fails = 0; state.lastOk = Date.now();
+      show('netMsg', false);
+      render();
+    } catch (err) {
+      if (state.test) return;
+      state.fails++;
+      var wait = Math.min(600, 15 * Math.pow(2, state.fails - 1));
+      show('loading', false);
+      show('netMsg', true);
+      $('netTxt').innerHTML = 'ما قدرنا نجيب أسعار الإغلاق. بنحاول مرة ثانية بعد ' +
+        (wait < 60 ? plural(wait, 'ثانية', 'ثانيتين', 'ثواني', 'ثانية') : plural(Math.round(wait / 60), 'دقيقة', 'دقيقتين', 'دقايق', 'دقيقة')) + '.' +
+        (state.data ? ' الأرقام اللي تشوفها من آخر تحديث.' : '');
+      state.retryT = setTimeout(refresh, wait * 1000);
+      render();
+    } finally {
+      state.busy = false;
+    }
+  }
+
+  function onAnswer(e) {
+    var b = e.target.closest ? e.target.closest('button[data-m]') : null;
+    if (!b) return;
+    var mk = b.getAttribute('data-m'), v = b.getAttribute('data-v');
+    state.log[mk] = v;
+    saveLog();
+    renderLog();
+    var again = $('mlist').querySelector('button[data-m="' + mk + '"][data-v="' + v + '"]');
+    if (again) again.focus();
+  }
+
+  function init() {
+    state.storeOk = storageWorks();
+    state.log = readLog();
+    $('mlist').addEventListener('click', onAnswer);
+    $('retryBtn').addEventListener('click', function () { state.fails = 0; refresh(); });
+    new MutationObserver(drawChart).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    if (window.matchMedia) {
+      var mq = window.matchMedia('(prefers-color-scheme: dark)');
+      if (mq.addEventListener) mq.addEventListener('change', drawChart);
+    }
+    var rt;
+    window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(drawChart, 80); });
+    setInterval(function () { if (!state.test && !document.hidden) refresh(); }, REFRESH_MS);
+    setInterval(function () { if (!document.hidden) render(); }, 30000);   // countdown and dates, no fetch
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden || state.test) return;
+      if (Date.now() - state.lastOk > REFRESH_MS) refresh(); else render();
+    });
+    window.addEventListener('storage', function (e) { if (e.key === STORE_KEY && !state.test) { state.log = readLog(); renderLog(); } });
+    render();
+    refresh();
+  }
+
+  // Test-only: render the page with given data, a past start and a fixed "now". No button or link calls this.
+  function renderWith(data, startNyDate, atMs) {
+    state.test = true;
+    clearTimeout(state.retryT);
+    state.start = startNyDate;
+    state.nowMs = atMs != null ? atMs : Date.now();
+    state.data = data;
+    state.log = {};
+    show('netMsg', false);
+    show('staleMsg', false);
+    show('testBanner', true);
+    $('testBanner').innerHTML = '<b>عرض اختبار ببيانات قديمة</b>بداية ' + dsLong(startNyDate) + '. هذي مو التجربة الحقيقية، والإجابات هنا ما تنحفظ.';
+    render();
+    return state.sim;
+  }
+
+  window.USPaper = { simulate: simulate, renderWith: renderWith, START_NY: START_NY,
+                     schedule: schedule, plannedBuy: plannedBuy, nyDate: nyDate, nyCloseMs: nyCloseMs,
+                     logMonths: logMonths, streak: streak, checkpoint: checkpoint };
+
+  if (typeof document !== 'undefined' && document.getElementById && document.getElementById('cps')) init();
+})();
+</script>
+</body>
+</html>
