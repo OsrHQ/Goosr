@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="description" content="كم سنة تحتاج عشان استثمار شهري في صندوق مؤشر أمريكي يطلع لك راتب؟ محسوبة من كل شهر بداية في تاريخ السوق الأمريكي من 1871، بعد الغلاء والضريبة والرسوم.">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16202a" media="(prefers-color-scheme: dark)">
+<title>خطة الراتب</title>
+<link rel="icon" href="data:,">
+<style>
+:root {
+  --bg: #eef1f4; --surface: #ffffff; --sunk: #e3e8ed; --line: #d3dae1;
+  --ink: #142029; --muted: #5a6977; --accent: #285f8f; --accent-soft: #dde9f4; --seg-on: #ffffff;
+  --up: #126b3a; --up-soft: #dcf1e5; --down: #b02e24; --down-soft: #f8e0dd;
+  --warn: #8a5200; --warn-soft: #fbecd2; --stop: #b3261e; --stop-soft: #f9dcd9; --good: #146c43; --good-soft: #d9efe3;
+  --sa: #285f8f; --sb: #8a5200; --sc: #7a3f9e;
+  --font: -apple-system, "SF Arabic", "SF Pro Text", "Geeza Pro", "Segoe UI", Tahoma, "Noto Sans Arabic", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e151c; --surface: #16202a; --sunk: #1d2934; --line: #2a3845;
+    --ink: #e5ecf2; --muted: #93a4b4; --accent: #7fb1df; --accent-soft: #1b3044; --seg-on: #2c3d4e;
+    --up: #4fd18b; --up-soft: #173528; --down: #f27b70; --down-soft: #3a1f1d;
+    --warn: #f0b354; --warn-soft: #3a2c14; --stop: #ff8a80; --stop-soft: #43201e; --good: #5fd39a; --good-soft: #163527;
+    --sa: #7fb1df; --sb: #f0b354; --sc: #c79be6;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e151c; --surface: #16202a; --sunk: #1d2934; --line: #2a3845;
+  --ink: #e5ecf2; --muted: #93a4b4; --accent: #7fb1df; --accent-soft: #1b3044; --seg-on: #2c3d4e;
+  --up: #4fd18b; --up-soft: #173528; --down: #f27b70; --down-soft: #3a1f1d;
+  --warn: #f0b354; --warn-soft: #3a2c14; --stop: #ff8a80; --stop-soft: #43201e; --good: #5fd39a; --good-soft: #163527;
+  --sa: #7fb1df; --sb: #f0b354; --sc: #c79be6;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.5; overflow-x: hidden; }
+[hidden] { display: none !important; }
+a { color: var(--accent); }
+.app { max-width: 480px; margin: 0 auto; padding-block: max(12px, env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 12px; }
+.pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.num { font-variant-numeric: tabular-nums; unicode-bidi: isolate; direction: ltr; }
+.stale .card.out { display: none; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card h2 { margin: 0; font-size: 17px; }
+.card p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 13.5px; }
+
+.hero h1 { margin: 0; font-size: 24px; line-height: 1.25; }
+.hero p { font-size: 15px; }
+
+/* Inputs */
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
+.field { display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; min-width: 0; }
+.field > label, .grp > span { font-size: 13.5px; font-weight: 600; }
+.inwrap { position: relative; }
+.inwrap span { position: absolute; top: 50%; transform: translateY(-50%); right: 10px; color: var(--muted); pointer-events: none; font-size: 13.5px; }
+.inwrap input { font: inherit; font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; direction: ltr; text-align: left; width: 100%; min-width: 0; min-height: 44px; padding: 7px 44px 7px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--sunk); color: var(--ink); }
+.inwrap input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.inwrap input[aria-invalid="true"] { border-color: var(--stop); outline-color: var(--stop); }
+.err { font-size: 12.5px; color: var(--stop); font-weight: 600; min-height: 0; }
+.grp { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--sunk); padding: 4px; border-radius: 10px; position: relative; margin: 0; border: 0; min-width: 0; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { text-align: center; padding: 8px 6px; min-height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--muted); font-size: 15px; }
+.seg input:checked + label { background: var(--seg-on); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); }
+.grp small { color: var(--muted); font-size: 12.5px; }
+
+/* Headline */
+.card.key { border: 2px solid var(--accent); }
+.big { font-size: 19px; font-weight: 700; line-height: 1.6; }
+.big .hl { color: var(--accent); font-weight: 800; }
+.big .bad { color: var(--warn); font-weight: 800; }
+.tag { align-self: flex-start; font-size: 12.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+.msg { border-radius: 12px; padding: 12px 14px; font-size: 15px; background: var(--sunk); }
+.msg.warn { background: var(--warn-soft); color: var(--warn); }
+
+/* Rows */
+.rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.rows li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; background: var(--sunk); font-size: 14.5px; }
+.rows li > span { min-width: 0; }
+.rows li small { display: block; color: var(--muted); font-size: 12.5px; }
+.rows li b { font-size: 16px; font-weight: 800; white-space: nowrap; text-align: left; }
+.rows li.mid { background: var(--accent-soft); }
+.rows li.mid b { color: var(--accent); font-size: 18px; }
+.rows li.unl b { color: var(--warn); }
+
+.bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.bars li { display: flex; flex-direction: column; gap: 4px; font-size: 14.5px; }
+.bars .bh { display: flex; justify-content: space-between; gap: 10px; }
+.bars .bh b { white-space: nowrap; }
+.prog { position: relative; height: 10px; border-radius: 999px; background: var(--sunk); overflow: hidden; }
+.prog i { position: absolute; inset-block: 0; inset-inline-start: 0; background: var(--accent); border-radius: 999px; }
+
+.line { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--sunk); font-size: 14.5px; }
+.line > span { min-width: 0; }
+.line small { display: block; color: var(--muted); font-size: 12.5px; }
+.line b { font-size: 20px; font-weight: 800; white-space: nowrap; }
+.line b small { display: block; font-size: 12.5px; font-weight: 600; color: var(--muted); text-align: left; }
+.line.unl b { color: var(--warn); }
+
+#chart { width: 100%; height: 210px; display: block; border-radius: 10px; background: var(--sunk); direction: ltr; }
+.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; }
+.legend li { display: flex; align-items: baseline; gap: 8px; }
+.legend i { width: 16px; height: 0; border-top: 3px solid; display: inline-block; flex-shrink: 0; transform: translateY(-4px); }
+.legend i.l { border-color: var(--sc); } .legend i.m { border-color: var(--sa); } .legend i.u { border-color: var(--sb); }
+.legend i.t { border-top: 2px dashed var(--muted); }
+
+.cmp { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap: 6px; font-size: 14px; }
+.cmp > div { padding: 8px 8px; border-radius: 10px; background: var(--sunk); min-width: 0; }
+.cmp .h { background: transparent; padding: 0 4px; font-size: 12.5px; color: var(--muted); font-weight: 600; align-self: end; }
+.cmp b { font-size: 16px; font-weight: 800; }
+.cmp .new { background: var(--good-soft); }
+.cmp .new b { color: var(--good); }
+.cmp small { display: block; color: var(--muted); font-size: 12.5px; }
+
+.help { margin: 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; }
+.help li small { display: block; color: var(--muted); font-size: 13px; }
+details.src summary { cursor: pointer; font-weight: 700; font-size: 17px; }
+details.src[open] summary { margin-bottom: 10px; }
+.nb { padding: 10px 12px; border-radius: 12px; background: var(--warn-soft); color: var(--warn); font-weight: 700; font-size: 15px; }
+footer { color: var(--muted); font-size: 12.5px; text-align: center; display: flex; flex-direction: column; gap: 2px; }
+footer a { font-weight: 700; font-size: 14px; margin-top: 6px; }
+@media (max-width: 350px) {
+  .hero h1 { font-size: 21px; } .big { font-size: 17.5px; } .line b { font-size: 17px; }
+  .inwrap input { font-size: 17px; padding-right: 40px; } .rows li b { font-size: 15px; } .rows li.mid b { font-size: 16.5px; }
+  .cmp { font-size: 13px; } .cmp b { font-size: 14.5px; }
+}
+</style>
+</head>
+<body>
+<main class="app pad">
+
+  <header class="card hero" aria-labelledby="h1">
+    <h1 id="h1">خطة الراتب</h1>
+    <p>كم سنة تحتاج عشان استثمارك يطلع لك راتب كل شهر؟ ما نتوقع ولا نخمّن: نحسبها من كل شهر بداية في تاريخ السوق الأمريكي من <span class="num">1871</span>، ونشوف وش صار فعلاً.</p>
+    <p class="small muted">الاستثمار في الحساب: صندوق مؤشر <bdi>S&amp;P 500</bdi> (أكبر 500 شركة أمريكية)، شراء كل شهر بدون بيع. كل الأرقام بريال اليوم، بعد الغلاء والضريبة ورسوم الصندوق.</p>
+  </header>
+
+  <section class="card" aria-labelledby="hIn">
+    <h2 id="hIn">أرقامك</h2>
+    <div class="fields">
+      <div class="field">
+        <label for="fM">الراتب اللي تبيه بالشهر</label>
+        <div class="inwrap"><input type="text" id="fM" inputmode="numeric" autocomplete="off" enterkeyhint="done" aria-describedby="eM"><span aria-hidden="true">ريال</span></div>
+        <span class="err" id="eM" aria-live="polite"></span>
+      </div>
+      <div class="field">
+        <label for="fS">تقدر توفّر كل شهر</label>
+        <div class="inwrap"><input type="text" id="fS" inputmode="numeric" autocomplete="off" enterkeyhint="done" aria-describedby="eS"><span aria-hidden="true">ريال</span></div>
+        <span class="err" id="eS" aria-live="polite"></span>
+      </div>
+      <div class="field">
+        <label for="fP">عندك الحين</label>
+        <div class="inwrap"><input type="text" id="fP" inputmode="numeric" autocomplete="off" enterkeyhint="done" aria-describedby="eP"><span aria-hidden="true">ريال</span></div>
+        <span class="err" id="eP" aria-live="polite"></span>
+      </div>
+      <div class="field">
+        <label for="fN">سنين الخطة</label>
+        <div class="inwrap"><input type="text" id="fN" inputmode="numeric" autocomplete="off" enterkeyhint="done" aria-describedby="eN"><span aria-hidden="true">سنة</span></div>
+        <span class="err" id="eN" aria-live="polite"></span>
+      </div>
+    </div>
+    <div class="grp" role="radiogroup" aria-labelledby="lFund">
+      <span id="lFund">نوع الصندوق</span>
+      <div class="seg">
+        <input type="radio" name="fund" id="fundP" value="plain" checked><label for="fundP">عادي</label>
+        <input type="radio" name="fund" id="fundS" value="sharia"><label for="fundS">شرعي</label>
+      </div>
+      <small id="fundNote"></small>
+    </div>
+    <div class="grp" role="radiogroup" aria-labelledby="lW">
+      <span id="lW">نسبة السحب بالسنة</span>
+      <div class="seg">
+        <input type="radio" name="wr" id="w40" value="0.04" checked><label for="w40"><span class="num">4%</span></label>
+        <input type="radio" name="wr" id="w35" value="0.035"><label for="w35"><span class="num">3.5%</span>&nbsp;(أحوط)</label>
+      </div>
+      <small>سحب حوالي <span class="num">4%</span> بالسنة صمد <span class="num">30</span> سنة في أغلب الحالات الأمريكية، مو كلها. <span class="num">3.5%</span> أحوط، بس يبي مبلغ أكبر.</small>
+    </div>
+  </section>
+
+  <section class="card key" aria-labelledby="hRes" aria-live="polite">
+    <span class="tag" id="hRes">الجواب باختصار</span>
+    <p class="big" id="bigTxt">–</p>
+    <p class="small muted" id="bigSub"></p>
+  </section>
+
+  <section class="card out" aria-labelledby="hYears">
+    <h2 id="hYears">كم سنة أخذت في التاريخ؟</h2>
+    <p class="small muted" id="yearsIntro"></p>
+    <ul class="rows" id="qRows"></ul>
+  </section>
+
+  <section class="card out" aria-labelledby="hShare">
+    <h2 id="hShare">من كل <span class="num">100</span> بداية، كم وصلت؟</h2>
+    <ul class="bars" id="bars"></ul>
+    <p class="small muted">كل مدة نحسبها من البدايات اللي بعدها بيانات تكفي، عشان ما نحكم على بداية قبل وقتها.</p>
+  </section>
+
+  <section class="card out" aria-labelledby="hNeed">
+    <h2 id="hNeed">تبي توصل خلال <span id="needN">15 سنة</span>؟</h2>
+    <div id="needBox"></div>
+    <p class="small muted" id="needNote"></p>
+  </section>
+
+  <section class="card out" aria-labelledby="hChart">
+    <h2 id="hChart">ثلاث بدايات حقيقية من التاريخ</h2>
+    <canvas id="chart" role="img" aria-label="رسم ثلاث بدايات"></canvas>
+    <ul class="legend" id="legend"></ul>
+    <p class="small muted">كل خط حساب حقيقي: نفس أرقامك، بس شهر بداية مختلف. الفرق كله من حظ التوقيت، مو من شطارة.</p>
+  </section>
+
+  <section class="card out" aria-labelledby="hFaster">
+    <h2 id="hFaster">وش يقرّب الموعد؟</h2>
+    <div class="cmp" id="cmp"></div>
+    <p class="small" id="fasterTxt"></p>
+    <p class="small">والرهانات والتداول السريع ما قرّبت الموعد في أي بيانات اختبرناها. بالعكس، الخسارة فيها ترجّعك لورا.</p>
+  </section>
+
+  <section class="card" aria-labelledby="hKnow">
+    <h2 id="hKnow">لازم تعرف</h2>
+    <ul class="help">
+      <li>هذي نتائج الماضي في أمريكا. وأمريكا كانت أنجح سوق في التاريخ، فالمستقبل ممكن يكون أسوأ. ما فيه وعد.</li>
+      <li>السوق يطيح بقوة: نزل حوالي <span class="num">−55%</span> بين 2007 و2009، و<span class="num">−34%</span> في كم أسبوع سنة 2020، ومن 2000 لين 2012 تقريبًا ما ربح شي. الخطة تمشي بس لو كمّلت الشراء وقت النزول، وهذا أصعب جزء.</li>
+      <li>الحساب يفترض إنك تزيد التوفير الشهري شوي كل سنة على قد الغلاء، عشان يبقى نفس القيمة. وإنك ما توقف ولا تسحب قبل الهدف.</li>
+      <li>الأرقام بريال اليوم. الريال مربوط بالدولار، فحسبنا الغلاء الأمريكي. الغلاء في السعودية يختلف شوي.</li>
+      <li>أمريكا تقتطع <span class="num">30%</span> من التوزيعات (أرباح يوزعها الصندوق) للمقيم في السعودية، وحسبناها. زمان التوزيعات كانت أكبر، فأثرها في الحساب أكبر من اليوم.</li>
+      <li id="feeLi">رسوم الصندوق: <span class="num">0.10%</span> بالسنة للعادي، و<span class="num">0.45%</span> للشرعي. تاريخ النسخة الشرعية يبدأ من 2019 بس، فاستخدمنا تاريخ <bdi>S&amp;P 500</bdi> (أكبر 500 شركة أمريكية) مكانه. نتيجتها الحقيقية ممكن تكون أحسن أو أسوأ.</li>
+      <li>ما حسبنا الزكاة، ولا عمولة الوسيط (الشركة اللي تشتري عن طريقها)، ولا رسوم تحويل الفلوس. كلها تطوّل المدة شوي. اسأل أهل العلم عن طريقة زكاة الأسهم والصناديق.</li>
+      <li>الهدف = الراتب × <span class="num">12</span> ÷ نسبة السحب. وبعد ما توصل، السحب نفسه فيه خطر: لو طاح السوق أول سنين السحب، الفلوس ممكن تخلص بدري.</li>
+    </ul>
+    <p class="nb">مو نصيحة شخصية، ولا توصية شراء أو بيع.</p>
+  </section>
+
+  <section class="card">
+    <details class="src">
+      <summary>من وين الأرقام؟ وكيف حسبناها؟</summary>
+      <ul class="help">
+        <li>من فبراير <span class="num">1871</span> لين يونيو <span class="num">2023</span>: بيانات البروفيسور روبرت شيلر الشهرية للمؤشر، مع التوزيعات والغلاء.
+          <small>شيلر يستخدم متوسط الأسعار في كل شهر، وهذا يخفّف أسوأ النقاط شوي. مثلاً النزول في 2008 و2009 يطلع هنا حوالي <span class="num">−50%</span> بدل <span class="num">−55%</span>.</small></li>
+        <li id="srcFund"></li>
+        <li id="srcCpi"></li>
+        <li>لكل شهر بداية في التاريخ (<span class="num" id="nStarts">–</span> شهر): نبدأ باللي عندك، ونضيف التوفير أول كل شهر، ونكبّر المبلغ بعائد ذاك الشهر بعد الغلاء والضريبة والرسوم. ونسجّل أول شهر يوصل فيه المبلغ للهدف.</li>
+        <li>للسؤال «وصل خلال <span class="num">20</span> سنة؟» نستخدم بس البدايات اللي بعدها <span class="num">20</span> سنة بيانات أو أكثر. ونفس الشي لكل مدة. ولو ما وصل خلال <span class="num">50</span> سنة نقول «أكثر من <span class="num">50</span> سنة».</li>
+        <li>«الحالات السيئة» = الوقت اللي وصلت قبله <span class="num">9</span> من كل <span class="num">10</span> بدايات. يعني واحدة من كل <span class="num">10</span> أخذت أطول منه.</li>
+      </ul>
+    </details>
+  </section>
+
+  <footer>
+    <span id="dataTxt">البيانات ثابتة داخل الصفحة.</span>
+    <a href="us.html">تجربة السوق الأمريكي</a>
+    <a href="paper.html">تجربة البيتكوين</a>
+  </footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Data: real monthly S&P 500 total return, after 30% dividend tax, before fund fee ----------
+     Built by build_series.py. r6[i] = return of month i in millionths, months FIRST..LAST. */
+  var DATA = { first: '1871-02', last: '2026-09', fundFrom: '2023-07', cpiFilled: '2025-10', r6: '-13202,12807,70562,52433,10561,-15526,32142,-10150,-63154,14198,1699,28557,7316,20669,8525,3116,754,12152,-15778,-21696,30057,-29517,42895,11370,-10516,-4284,-10160,27782,19770,1711,3756,-72674,-61692,-240,73073,42370,34174,-10573,-8159,-14199,24020,-3720,14677,19966,18468,21447,-2352,4208,1973,17398,8807,-10394,793,6445,132,3496,-11947,29181,12737,33589,17377,1659,-25269,2658,25233,-7831,-46195,-65353,-18843,-23187,-18385,-20966,-29203,-1564,-93134,-12907,-13728,39189,116556,76913,25355,8169,332,34435,-7938,44063,42229,39797,47461,12184,-16600,23376,2792,11515,20459,28788,27487,-1920,47908,48006,19745,11132,10217,4608,52587,2561,-29081,11298,20010,12011,18202,-48638,27773,48791,38723,-9388,31773,44662,33263,73314,-10682,13945,-10476,58159,14910,-41914,-39882,-26858,-22246,18928,-26064,-11869,-27893,1497,-5976,-17886,-10978,69259,23802,40858,-15131,-30698,17974,-1933,-28393,25302,33999,-4237,42307,7965,-42049,24922,-23662,29041,-28565,-26376,30706,-196,-21555,-57472,-36846,15071,66922,-17083,-17904,6180,13376,-18953,23003,29597,-9979,15656,23158,28471,59498,2383,61222,55242,-28101,26545,21886,-6340,1198,7686,61762,5052,-2483,28515,27772,27068,-35597,-31948,-16525,25861,25294,19580,-14900,-10233,-34176,1676,-42338,9983,-25831,-1145,8523,-35172,18439,28447,-16671,16620,24087,27373,-14638,-29324,-16524,58560,26208,-6278,621,55309,19384,-17915,15665,13952,-15830,-6874,-15365,39033,-8767,-5107,23264,32151,-4834,-4869,-56108,-25861,-42701,-47906,-20630,67830,2818,-27465,23744,10446,6351,-1674,36233,97285,2408,-102,32921,47391,4179,40267,14100,2391,-2977,-23941,3691,-22472,22593,-26380,-20656,-16195,-27034,-10163,15052,-74403,-20070,-66222,19774,32198,19647,45953,-18736,10156,31500,62815,16365,-34221,-10587,-17690,11396,4634,-669,2867,8005,-8802,-11281,2854,2216,43124,8243,20506,31391,8638,-12183,-31330,-43119,5138,59867,-13272,26496,12822,-817,-62328,-54284,55288,-5062,40269,-34132,31973,-6991,4904,-14020,22777,49142,46956,20969,21037,-16163,-33091,23763,29600,-13945,-42959,-14862,-2217,114621,20537,39621,261,-18731,35256,49233,78179,11278,16135,646,-39828,-33678,22935,14056,-46153,-15113,8402,-77466,15397,8040,10236,15016,-21750,-15330,-9614,28887,-32785,51902,81042,76171,18938,40811,38316,100021,-48159,101951,-76609,3631,-14852,-8941,11503,-25519,36071,10932,3518,24108,-11892,-15253,24852,41064,-7249,-92774,-3773,-31605,41758,-3612,-4086,-38411,6061,-52654,-43185,-29193,-32351,-18042,18279,49429,-3624,-45877,11330,39538,4947,4500,44402,24652,34850,61267,32814,12005,24022,46059,42200,-10113,-36185,13961,33577,27517,16879,16149,-14624,15243,36644,-5073,-22421,-11443,-35133,15391,10190,52194,21644,-48794,11926,-17283,-15590,-49348,-86067,7678,-51845,-39077,41415,-71881,-7293,-114463,-14682,78243,57998,-22058,44710,45857,57278,4522,28526,45973,-8000,4235,59168,14498,16631,-36333,16354,25952,25298,9890,16805,16380,-6482,-13140,-11992,4647,-9417,-33139,7997,-30608,5036,-36160,-47617,37388,19730,80847,22514,-24982,27339,52775,-19194,31212,24506,22934,-12033,-74773,-61308,8929,54142,18040,-6349,-15998,10961,3738,1842,12824,3941,15781,-1852,801,-8338,-23612,-15201,-32473,-15831,2045,-14058,-56742,6722,30134,2653,-28370,-31717,12258,44491,26685,-15669,-10822,-770,-1683,-61636,-16331,3304,13199,-6607,-30272,21027,-181,39480,67774,-30002,14439,-642,45554,40112,47937,27675,4766,-22600,-11109,-9849,-17254,15584,3446,-10737,1576,25355,15931,8408,-45259,-28447,-76559,34835,-58340,-45057,8670,-8295,-40283,-65143,-63469,-78174,-42558,43282,28587,-7971,-18429,15621,-7407,-13924,-5695,-19755,27374,10797,-27656,-2145,26674,21985,18617,60279,30333,6265,-79830,13608,37051,-47335,-46629,-27223,-88637,63246,-33975,-72952,-27765,7375,-11621,55071,10126,-42160,-66741,70457,29597,-16038,19687,57899,-70833,-4428,-7993,40840,17748,63852,45219,26060,25660,53698,64316,42393,-6062,4463,53526,29334,19166,-52165,-4816,23121,46061,19401,-37527,-43930,-40243,-41204,14649,4082,-16671,33726,37596,36376,13914,-9891,-13622,165,22609,43871,43945,-12044,-15284,59363,51159,44521,17466,-28813,-1635,29356,9400,19258,16579,26157,36014,16808,24862,18093,4417,-59758,-30279,15883,56770,57203,48663,12393,-25137,10374,25796,7728,28341,24292,27528,31490,4279,42824,62208,53374,-18416,31379,26080,6604,2213,56356,65560,27335,-41062,9865,34866,60319,28563,69870,11936,76033,7271,25659,2037,11125,15193,78539,58787,41689,-103980,-262737,48656,23080,71521,46325,59594,-51892,-93345,-6908,-4116,-3776,-129643,-63682,-45894,46944,93581,28928,-86325,-81255,-15568,36894,-26452,-139614,-123541,32257,-177481,9641,11096,16097,-229166,-103331,-120897,58059,521244,109658,-127597,2018,-21071,60007,-100499,9274,110433,291395,165207,50375,-54693,-5947,-94872,26802,22052,59751,68355,-48956,19168,-99275,8317,-44668,-36319,-35700,18315,30861,16908,-11913,-34502,-60551,70197,81401,48177,54908,70016,23366,28962,88267,2103,57362,59490,30780,3374,-51001,37289,53851,14834,13584,54687,30187,-14862,26233,32016,-5740,-63779,-48555,-34523,55181,13052,-144792,-142276,-77879,-5043,45030,-12864,-62002,-43185,20732,27371,202900,8991,-42364,122479,3267,-26798,-12613,1565,1640,-117092,39771,20562,27253,-11778,85812,20064,-15116,-20823,4455,-10650,-2721,12933,-134676,-88935,44461,24894,45989,13084,26942,-44251,5629,-58818,2964,-33953,-24451,18054,55373,-14323,-6399,-48633,-48819,-66741,11044,-32964,-61561,-42699,3993,55296,35391,-7563,14688,64924,13779,2944,63489,62876,20649,24619,36388,20556,29404,-41063,18389,-6239,-43317,16380,35346,-3715,31110,-19983,20736,44178,23148,-11759,-13479,27566,-4080,18996,32636,36154,2003,27848,34658,9498,-18018,5975,70701,44097,35061,13678,42059,10507,-38315,60926,-1159,-14945,-80470,-36633,-153564,-38688,-24730,23165,8038,41539,-55422,-34118,-14825,33241,56094,-29882,-44134,29021,-12834,-25168,-22565,-37774,22050,62233,47520,35888,-32849,-30140,-8109,34802,-44479,1145,19055,-26642,13349,-1650,743,-54750,69789,35622,12793,38556,13631,39555,28972,23558,7812,32209,33146,15779,-80295,55970,35218,37113,-1892,-11714,61334,29225,-16614,17542,694,-13178,21820,47854,21759,-5237,-31605,30542,36841,-7281,6014,-3227,3117,27065,24450,7360,-12526,-17603,35162,43638,12326,-5342,4417,-46078,4828,-36105,17655,3782,-42524,29838,29428,16922,28795,25348,24433,46999,39010,10950,43335,22747,30049,25981,41904,52367,20595,35972,-5409,37019,-1817,60414,71466,-3900,43349,-48153,69705,15246,-24743,8588,71144,10176,-32864,-10872,48821,-111,-35348,-14158,-8144,13393,-19567,-44380,11552,21783,36925,14992,15099,-52936,-38336,-59953,-22517,2092,15020,5925,15999,4408,34523,26337,26190,43200,28531,42715,28858,24334,38144,-10019,27264,15071,16883,-10238,37937,-3930,-41069,-2424,5901,33842,-12236,-40136,-11596,11524,-7114,35493,-22813,14036,-28070,-24222,34501,26028,53408,42923,33186,28434,11897,-11531,-7672,41122,-9445,12719,47010,10943,-35570,14984,2692,-33381,-72597,-114936,22868,29330,-10080,-29443,71093,45374,40623,15140,-5162,48978,21922,-1871,-16216,29517,28162,999,-3812,19864,32546,14061,19976,16204,11482,-7439,35543,-9780,15655,18985,5426,-15615,27475,9031,-566,11624,16609,-51825,273,20424,35208,21006,10039,-5972,19076,-11244,-42348,26046,-50828,-9461,-3700,-64269,-33124,-12617,52221,6265,40428,36455,22409,16035,16708,-13672,16084,14701,12749,-2756,-32452,27290,-6794,-46132,-19263,72671,21840,22726,-5976,-22880,31369,20616,14259,9284,-43262,-8704,-28038,16337,31531,-55642,-48041,-9046,2745,7203,3769,-56127,-9383,-37925,13880,-35940,-115209,-8876,-973,31509,56774,18720,-3940,65256,40229,38059,24940,33373,-16739,-23990,-7852,-18367,24067,-21815,-44512,65592,43451,15187,22990,9438,-10848,2040,-10493,34653,-15141,-1262,49366,20042,6858,-40670,-23250,-23793,-33064,-27283,9061,-34545,16924,32462,-75345,-74898,7403,-37987,31729,-52999,-39980,-4578,-121594,-50273,-111940,12450,28096,-69397,80841,98413,44636,9952,60037,20258,-7791,-72676,-15051,42880,11993,-16384,92449,37102,5308,6455,-11777,2772,20358,-11691,19918,-36973,-6305,33356,-11409,-34549,-8253,-21171,-5367,1300,6778,-25055,-16080,-26285,3743,-5204,-41296,-17287,-6548,38781,43960,-5289,-9454,67158,-4722,-37617,-59822,13394,31419,-23267,11874,11445,-32522,11559,1843,38913,3290,-42470,-13709,31840,17252,28163,-102648,-23946,38710,55669,48421,26373,18599,22325,36434,-22708,-9074,-41762,33184,4962,-24992,-1509,-32035,-836,-93100,13737,25792,7245,-52390,-23650,-27863,48754,-5174,-65849,-4239,4327,117126,84096,45840,16464,35908,19071,37487,33451,36837,13418,2017,-28026,26947,2457,-14403,-3324,8717,-56809,1343,-921,-6546,-22463,-14072,86686,8136,-8051,11750,-8183,43864,51800,-9559,4468,22475,21220,19563,-21268,-22591,10166,60230,49066,3821,58929,65805,28448,1314,24846,-18854,20108,-29809,-2663,33528,15331,59196,60026,38376,-14540,-2526,40585,27807,58279,-36006,-121501,-124560,-14229,38862,29743,27042,-14756,-26050,54624,-8108,-22159,11598,33702,-21858,20697,29134,27912,-8145,28083,34457,30650,24733,44465,613,-2686,-21229,24960,-32863,-30641,20656,-410,35274,25337,-2939,-87812,-52215,-29926,26577,44928,-13666,113485,28084,20267,-5528,-280,5530,22990,-8167,-438,-3539,7824,71248,-10321,-15833,451,18467,-17550,16196,5813,207,-16045,25372,32708,-4191,12982,17247,-16847,5148,6555,-89,14116,10766,7574,-1283,8196,13908,-4822,-18250,-35454,9191,6964,-8570,25964,4785,-5786,-5720,-10958,19703,33358,21512,28101,30797,29127,34864,1908,34550,5265,23671,33995,-4761,55072,-7661,-2413,21047,11608,-37131,28246,16470,37372,48016,11485,28835,39860,-9186,-35731,92369,51603,55613,1199,9002,13533,-11310,27211,111,61650,50803,31791,-4405,-416,43041,-71191,-50518,10045,109353,41323,47584,-2204,25793,34655,-1296,-6426,41782,-40343,-11024,-14800,70104,27788,-4438,-30815,30612,13363,-29808,25955,5879,9111,-16202,-54056,-8590,-32942,-2069,-25565,-93174,172,63645,-25846,-24177,-20784,-116787,34946,51942,18330,-5572,-37677,43228,-40844,-28554,-60096,-108976,7584,-49595,-15751,65797,-8597,-7060,-71747,6552,54669,54387,55458,4465,-5850,27864,20989,14457,31363,43861,5062,-22331,6069,-31700,24918,-21241,-14811,25237,-4639,46765,30643,-15953,10579,-10696,-31018,13973,20854,12964,-2428,-9730,-28623,47586,25160,6564,-2608,8843,-947,-13195,-29415,3775,20453,29909,41359,21099,19532,3434,10124,-33965,34638,27210,1088,5580,-40676,27468,27278,-54114,12602,-71429,-18987,-35140,35626,16553,-52517,-66221,24626,-47718,-194398,-68971,6075,-16072,-72472,-60045,119480,62703,19174,13657,78086,35218,22447,19646,23508,9606,-29730,54584,38602,-60009,-34980,-2304,6739,32605,43983,24005,34894,29273,26012,-21099,15237,1449,-36029,29645,-106921,-9907,31802,18020,17547,42720,36562,20601,-3870,-30257,-10581,30374,27648,25135,-2273,-24253,23986,39077,14500,24032,15090,43382,-14031,31638,830,10254,23308,40228,14822,5467,-5451,20173,-1748,11309,29568,14885,-3071,16540,-24489,62301,11605,-6894,23351,-5835,6257,4188,-8311,-1353,-23355,-44093,43102,30981,-8150,-66263,-6879,58500,22926,-7584,6828,34120,10550,-7284,-6814,13066,38601,7999,22050,16177,-4974,15568,16359,10098,-990,10702,27520,15403,28976,42488,-33683,-2062,-20987,14928,19044,15286,23489,15173,-40626,-17936,-53080,14907,53326,13277,31290,-17877,13366,36065,-31759,29563,-2655,44420,25166,29021,-1954,-187853,49644,58314,58779,29073,55140,-8092,16398,39744,41206,23203,18951,749,51208,-756,8390,25414,19418,-3874,-4081,41998,-733,-29006,-38138,-22319,-4717,-89116,-47164,4361,64446,-75147,-35241,53482,2771,5306,25327,-28959,33751,4435,45635,55637,-20909,-52112,-22967,89829,42479,12867,47976,27289,-42323,50153,34794,10494,21839,17984,-11668,56714,-28265,22568,-14834,-56814,-10192,61874,47909,20781,17058,31806,22629,767,-2968,13087,-11204,-58238,98111,47754,-6773,-309,22830,-10372' };
+  var R0 = DATA.r6.split(',').map(function (v) { return +v / 1e6; });
+  var L = R0.length;
+  var FEES = { plain: 0.001, sharia: 0.0045 };
+  var CAP_YEARS = 50;
+  var DEF = { M: 3000, S: 1000, P0: 2000, N: 15, sharia: false, w: 0.04 };
+  var STORE_KEY = 'salaryPlan.inputs.v1';
+
+  function ymAdd(ym, k) { var y = +ym.slice(0, 4), m = +ym.slice(5, 7) - 1 + k; var yy = y + Math.floor(m / 12), mm = ((m % 12) + 12) % 12 + 1; return yy + '-' + (mm < 10 ? '0' : '') + mm; }
+  function monthOf(i) { return ymAdd(DATA.first, i); }
+
+  /* ---------- Engine (pure) ---------- */
+  var retCache = {};
+  function rets(sharia) {
+    var key = sharia ? 'sharia' : 'plain';
+    if (!retCache[key]) {
+      var k = Math.pow(1 - FEES[key], 1 / 12), a = new Float64Array(L);
+      for (var i = 0; i < L; i++) a[i] = (1 + R0[i]) * k - 1;
+      retCache[key] = a;
+    }
+    return retCache[key];
+  }
+  function norm(p) {
+    p = p || {};
+    function n(v, d) { v = +v; return isFinite(v) && v >= 0 ? v : d; }
+    var w = +p.w;
+    return {
+      M: n(p.M, DEF.M), S: n(p.S, DEF.S), P0: n(p.P0, DEF.P0),
+      N: Math.max(1, Math.min(CAP_YEARS, Math.round(n(p.N, DEF.N)) || DEF.N)),
+      sharia: !!p.sharia, w: isFinite(w) && w > 0 && w < 1 ? w : DEF.w,
+      capYears: Math.max(1, Math.min(150, Math.round(n(p.capYears, CAP_YEARS)) || CAP_YEARS))
+    };
+  }
+  function target(p) { return 12 * p.M / p.w; }
+
+  // Months until the real balance reaches C from start month s (0 if P0 >= C), or -1 if not within `lim` months.
+  function passage(r, s, P0, S, C, lim) {
+    if (P0 >= C) return 0;
+    var B = P0;
+    for (var k = 1; k <= lim; k++) {
+      B = (B + S) * (1 + r[s + k - 1]);
+      if (B >= C) return k;
+    }
+    return -1;
+  }
+  function pathOf(r, s, P0, S, C, lim) {
+    var B = P0, out = [B];
+    for (var k = 1; k <= lim && B < C; k++) { B = (B + S) * (1 + r[s + k - 1]); out.push(B); }
+    return out;
+  }
+
+  // params: { M, S, P0, sharia, w, capYears }. Months are counts of months; null = not within capYears.
+  function yearsToTarget(params) {
+    var p = norm(params), r = rets(p.sharia), C = target(p), capM = p.capYears * 12;
+    var j = new Int32Array(L), s, T;
+    for (s = 0; s < L; s++) j[s] = passage(r, s, p.P0, p.S, C, Math.min(L - s, capM));
+    // hits[T] = starts with at least T months of data after them that reached C within T months.
+    var diff = new Int32Array(capM + 2);
+    for (s = 0; s < L; s++) {
+      if (j[s] < 0 || j[s] > capM) continue;
+      diff[j[s]]++;
+      var end = L - s + 1;
+      if (end <= capM) diff[end]--;
+    }
+    var hits = new Int32Array(capM + 1), elig = new Int32Array(capM + 1), acc = 0;
+    for (T = 0; T <= capM; T++) { acc += diff[T]; hits[T] = acc; elig[T] = Math.max(0, Math.min(L, L - T + 1)); }
+    function share(T) { return elig[T] ? hits[T] / elig[T] : 0; }
+    function quant(q) { for (var T = 0; T <= capM; T++) if (elig[T] && share(T) >= q - 1e-12) return T; return null; }
+
+    var fastest = -1, fastS = -1, slowJ = -1, slowS = -1;
+    for (s = 0; s < L; s++) {
+      if (j[s] < 0) continue;
+      if (fastest < 0 || j[s] <= fastest) { fastest = j[s]; fastS = s; }
+      if (j[s] >= slowJ) { slowJ = j[s]; slowS = s; }
+    }
+    var res = {
+      C: C, n: L, capYears: p.capYears, params: p,
+      months: { fastest: fastest >= 0 ? fastest : null, q10: quant(0.1), q50: quant(0.5), q90: quant(0.9), slowest: quant(1) },
+      fastestStart: fastS >= 0 ? monthOf(fastS) : null,
+      slowestStart: null,
+      within: {}
+    };
+    if (res.months.slowest != null && slowJ === res.months.slowest) res.slowestStart = monthOf(slowS);
+    [10, 15, 20, 30].forEach(function (y) {
+      var T = y * 12;
+      res.within[y] = T <= capM ? { share: share(T), hits: hits[T], n: elig[T] } : null;
+    });
+    // Example paths: the real start whose wait is closest to each quantile (latest start on ties).
+    function pick(Tq, avoid) {
+      var best = -1, bd = Infinity;
+      if (Tq == null) {                                     // beyond the cap: latest start that never got there
+        for (s = 0; s <= L - capM; s++) if (j[s] < 0 && avoid.indexOf(s) < 0) best = s;
+        return best;
+      }
+      for (s = 0; s < L; s++) {
+        if (j[s] < 0 || avoid.indexOf(s) >= 0) continue;
+        var d = Math.abs(j[s] - Tq);
+        if (d <= bd) { bd = d; best = s; }
+      }
+      return best;
+    }
+    res.examples = [];
+    if (p.P0 < C) {
+      var used = [];
+      [['lucky', res.months.q10], ['median', res.months.q50], ['unlucky', res.months.q90]].forEach(function (e) {
+        if (e[1] == null && res.examples.some(function (x) { return x.months == null; })) return;
+        var s0 = pick(e[1], used);
+        if (s0 < 0) return;
+        used.push(s0);
+        var lim = Math.min(L - s0, capM);
+        res.examples.push({ kind: e[0], start: monthOf(s0), months: j[s0] >= 0 ? j[s0] : null, path: pathOf(r, s0, p.P0, p.S, C, lim) });
+      });
+    }
+    res.share = share;
+    return res;
+  }
+
+  // params: { M, P0, sharia, w, N, q? }. The smallest monthly saving with which at least half (median) or
+  // 9 in 10 (unlucky) of the start months that have N years of data after them reached the target within N years.
+  // Exact: start s reaches C by month k iff P0*G_k + S*A_k >= C, so its own minimum is min_k (C - P0*G_k) / A_k.
+  function neededSaving(params) {
+    var p = norm(params), r = rets(p.sharia), C = target(p), T = p.N * 12, E = L - T + 1;
+    if (E <= 0) return null;
+    var need = new Float64Array(E);
+    for (var s = 0; s < E; s++) {
+      if (p.P0 >= C) { need[s] = 0; continue; }
+      var G = 1, A = 0, best = Infinity;
+      for (var k = 1; k <= T; k++) {
+        var g = 1 + r[s + k - 1];
+        G *= g; A = (A + 1) * g;
+        var v = (C - p.P0 * G) / A;
+        if (v < best) best = v;
+      }
+      need[s] = Math.max(0, best);
+    }
+    var sorted = Array.prototype.slice.call(need).sort(function (a, b) { return a - b; });
+    function at(q) { return sorted[Math.max(0, Math.ceil(q * E - 1e-9) - 1)]; }
+    var out = { median: at(0.5), unlucky: at(0.9), n: E, years: p.N, C: C };
+    if (params && params.q != null) out.value = at(+params.q);
+    return out;
+  }
+
+  /* ---------- Formatting (Western digits, isolated numbers) ---------- */
+  var MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  function num(s) { return '<span class="num">' + s + '</span>'; }
+  function n0(v) { return Math.round(v).toLocaleString('en-US'); }
+  function money(v) { return num(n0(v)); }
+  function plural(n, one, two, few, many) { return n === 1 ? one : n === 2 ? two : n >= 3 && n <= 10 ? num(n) + ' ' + few : num(n) + ' ' + many; }
+  function yearsWord(n) { return plural(n, 'سنة وحدة', 'سنتين', 'سنين', 'سنة'); }
+  function monthsWord(n) { return plural(n, 'شهر', 'شهرين', 'شهور', 'شهر'); }
+  function monthLbl(mk) { return MONTHS[+mk.slice(5, 7) - 1] + ' ' + num(mk.slice(0, 4)); }
+  function bigMoney(v) {
+    if (Math.round(v / 1000) >= 1000) { var t = (v / 1e6).toFixed(2).replace(/\.?0+$/, ''); return num(t) + ' مليون'; }
+    if (v >= 1e4) return num(n0(v / 1000)) + ' ألف';
+    return num(n0(v));
+  }
+  function ymTxt(m) {                       // 333 -> "27 سنة و9 شهور"
+    if (m == null) return 'أكثر من ' + num(CAP_YEARS) + ' سنة';
+    if (m === 0) return 'الحين';
+    var y = Math.floor(m / 12), mo = m % 12;
+    if (!y) return monthsWord(mo);
+    return yearsWord(y) + (mo ? ' و' + monthsWord(mo) : '');
+  }
+  function yRound(m) {                      // headline: whole years
+    if (m == null) return null;
+    var y = Math.round(m / 12);
+    return y < 1 ? 'أقل من سنة' : 'حوالي ' + yearsWord(y);
+  }
+  function ceil10(v) { return Math.ceil(v / 10) * 10; }
+
+  // Accepts Western, Arabic-Indic and Persian digits, thousands separators and the word ريال.
+  function parseMoney(s) {
+    if (s == null) return NaN;
+    var t = String(s).trim()
+      .replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); })
+      .replace(/[۰-۹]/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d); })
+      .replace(/ريال|ر\.س|سنة|سنين|سنوات/g, '')
+      .replace(/[\s,٬،'’]/g, '')
+      .replace(/٫/g, '.');
+    if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+    if (!/^\d+(\.\d+)?$/.test(t)) return NaN;
+    return parseFloat(t);
+  }
+
+  /* ---------- Page ---------- */
+  var state = { p: null, res: null };
+  function $(id) { return document.getElementById(id); }
+  var FIELDS = [
+    { id: 'fM', key: 'M', err: 'eM', min: 1, max: 1e6, msg: 'اكتب الراتب بالريال، مثلاً 3000' },
+    { id: 'fS', key: 'S', err: 'eS', min: 0, max: 1e7, msg: 'اكتب المبلغ بالريال، أو 0' },
+    { id: 'fP', key: 'P0', err: 'eP', min: 0, max: 1e9, msg: 'اكتب المبلغ بالريال، أو 0' },
+    { id: 'fN', key: 'N', err: 'eN', min: 1, max: CAP_YEARS, msg: 'من 1 لين 50 سنة', int: true }
+  ];
+
+  function readInputs() {
+    var p = { sharia: $('fundS').checked, w: $('w35').checked ? 0.035 : 0.04 }, ok = true;
+    FIELDS.forEach(function (f) {
+      var el = $(f.id), v = parseMoney(el.value), bad = !(v >= f.min && v <= f.max);
+      if (f.int && !bad) v = Math.round(v);
+      el.setAttribute('aria-invalid', bad ? 'true' : 'false');
+      $(f.err).textContent = bad ? (v > f.max ? 'الرقم كبير مرة، جرّب رقم أصغر' : f.msg) : '';
+      if (bad) ok = false; else p[f.key] = v;
+    });
+    return ok ? p : null;
+  }
+  function save() {
+    try {
+      var o = { fund: $('fundS').checked ? 'sharia' : 'plain', w: $('w35').checked ? '0.035' : '0.04' };
+      FIELDS.forEach(function (f) { o[f.key] = $(f.id).value; });
+      window.localStorage.setItem(STORE_KEY, JSON.stringify(o));
+    } catch (e) { /* storage blocked: fine */ }
+  }
+  function load() {
+    var o = null;
+    try { o = JSON.parse(window.localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { o = null; }
+    FIELDS.forEach(function (f) {
+      var v = o && typeof o[f.key] === 'string' && o[f.key].length < 20 ? o[f.key] : n0(DEF[f.key]);
+      $(f.id).value = v;
+    });
+    if (o && o.fund === 'sharia') $('fundS').checked = true;
+    if (o && o.w === '0.035') $('w35').checked = true;
+  }
+
+  function render() {
+    var p = readInputs();
+    $('fundNote').innerHTML = $('fundS').checked
+      ? 'النسخة الشرعية: رسوم حوالي ' + num('0.45%') + ' بالسنة. تاريخها قصير، فنستخدم تاريخ المؤشر مكانه.'
+      : 'صندوق مؤشر <bdi>S&amp;P 500</bdi> (أكبر 500 شركة أمريكية): رسوم حوالي ' + num('0.10%') + ' بالسنة.';
+    document.body.classList.toggle('stale', !p);
+    if (!p) { $('bigTxt').innerHTML = 'كمّل الأرقام فوق.'; $('bigSub').textContent = ''; return; }
+    var S2 = p.S > 0 ? p.S * 2 : 1000;
+    var res = yearsToTarget(p), need = neededSaving(p), dbl = yearsToTarget({ M: p.M, S: S2, P0: p.P0, sharia: p.sharia, w: p.w });
+    state.p = p; state.res = res;
+    var m = res.months, reachNow = p.P0 >= res.C;
+
+    // Headline
+    var s1 = 'عشان يطلع لك ' + money(p.M) + ' ريال بالشهر تحتاج تقريبًا <span class="hl">' + bigMoney(res.C) + ' ريال</span>.';
+    var s2;
+    if (reachNow) s2 = ' واللي عندك الحين يكفي.';
+    else {
+      s2 = ' ' + (p.S > 0 ? 'لو توفّر ' + money(p.S) + ' ريال بالشهر' : 'لو ما توفّر شي بالشهر') +
+        (p.P0 > 0 ? ' فوق الـ' + money(p.P0) + ' اللي عندك' : '') + '، ';
+      s2 += m.q50 == null ? 'في نص الحالات <span class="bad">ما وصلت حتى بعد ' + num(CAP_YEARS) + ' سنة</span>'
+                          : 'في نص الحالات وصلت بعد <span class="hl">' + yRound(m.q50) + '</span>';
+      s2 += m.q90 == null ? '، وفي الحالات السيئة <span class="bad">ما وصلت حتى بعد ' + num(CAP_YEARS) + ' سنة</span>.'
+                          : '، وفي الحالات السيئة بعد <span class="bad">' + yRound(m.q90) + '</span>.';
+    }
+    $('bigTxt').innerHTML = s1 + s2;
+    $('bigSub').innerHTML = 'الهدف = ' + money(p.M) + ' × ' + num(12) + ' ÷ ' + num((Math.round(p.w * 1000) / 10) + '%') + ' = ' + money(res.C) + ' ريال، بريال اليوم. ' +
+      'محسوبة من ' + num(n0(res.n)) + ' شهر بداية حقيقي (' + monthLbl(DATA.first) + ' لين ' + monthLbl(DATA.last) + '). هذا اللي صار في الماضي، والمستقبل ممكن يكون أسوأ. ما فيه وعد.';
+
+    // Quantiles
+    $('yearsIntro').innerHTML = 'لو بدأ واحد بأرقامك في كل شهر من التاريخ، هذي المدة اللي أخذها لين وصل للهدف:';
+    function row(cls, label, sub, val) { return '<li' + (cls ? ' class="' + cls + '"' : '') + '><span>' + label + (sub ? '<small>' + sub + '</small>' : '') + '</span><b>' + val + '</b></li>'; }
+    if (reachNow) $('qRows').innerHTML = row('mid', 'كل البدايات', 'اللي عندك أكبر من الهدف', 'الحين');
+    else $('qRows').innerHTML =
+      row('', 'أسرع بداية', res.fastestStart ? 'اللي بدأت في ' + monthLbl(res.fastestStart) : 'ولا بداية وصلت', ymTxt(m.fastest)) +
+      row('', 'المحظوظة', '1 من كل 10 بدايات وصلت أسرع', ymTxt(m.q10)) +
+      row('mid', 'النص', 'نص البدايات وصلت قبل كذا', ymTxt(m.q50)) +
+      row('unl', 'الحالات السيئة', '9 من 10 وصلت قبل كذا، وواحدة أبطأ', ymTxt(m.q90)) +
+      row('unl', 'أبطأ بداية', res.slowestStart ? 'اللي بدأت في ' + monthLbl(res.slowestStart) : (m.slowest == null ? 'فيه بدايات ما وصلت أبد خلال ' + num(CAP_YEARS) + ' سنة' : ''), ymTxt(m.slowest));
+
+    // Shares
+    $('bars').innerHTML = [10, 15, 20, 30].map(function (y) {
+      var w = res.within[y], pc = w ? Math.round(w.share * 100) : 0;
+      return '<li><div class="bh"><span>خلال ' + yearsWord(y) + '</span><b>' + num(pc) + ' من ' + num(100) + '</b></div>' +
+        '<div class="prog" aria-hidden="true"><i style="width:' + (w ? (w.share * 100).toFixed(1) : 0) + '%"></i></div>' +
+        '<small class="muted small">' + (w ? num(n0(w.hits)) + ' من ' + num(n0(w.n)) + ' بداية' : '') + '</small></li>';
+    }).join('');
+
+    // Needed saving for N years
+    $('needN').innerHTML = yearsWord(p.N);
+    if (!need) { $('needBox').innerHTML = ''; $('needNote').textContent = ''; }
+    else {
+      var nowShare = shareWithin(res, p.N);
+      $('needBox').innerHTML =
+        '<div class="line"><span>في نص الحالات<small>نص البدايات وصلت خلال ' + yearsWord(p.N) + '</small></span><b>' + money(ceil10(need.median)) + ' ريال<small>بالشهر</small></b></div>' +
+        '<div class="line unl" style="margin-top:6px"><span>حتى في الحالات السيئة<small>9 من 10 بدايات وصلت خلال ' + yearsWord(p.N) + '</small></span><b>' + money(ceil10(need.unlucky)) + ' ريال<small>بالشهر</small></b></div>';
+      $('needNote').innerHTML = 'هذا التوفير الشهري اللازم ' + (p.P0 > 0 ? 'مع الـ' + money(p.P0) + ' اللي عندك' : 'وأنت تبدأ من الصفر') + (p.sharia ? '، في النسخة الشرعية' : '') + '. ' +
+        (nowShare != null ? 'بتوفيرك الحالي (' + money(p.S) + ' ريال)، ' + (Math.round(nowShare * 100) === 0 ? 'ولا بداية تقريبًا وصلت خلال ' + yearsWord(p.N) + '.' : 'وصلت ' + num(Math.round(nowShare * 100)) + ' من كل ' + num(100) + ' بداية خلال ' + yearsWord(p.N) + '.') : '') +
+        ' (من ' + num(n0(need.n)) + ' بداية عندها ' + yearsWord(p.N) + ' بيانات بعدها.)';
+    }
+
+    // Doubling the saving
+    var md = dbl.months;
+    function cell(v, cls) { return '<div' + (cls ? ' class="' + cls + '"' : '') + '><b>' + ymTxt(v) + '</b></div>'; }
+    $('cmp').innerHTML =
+      '<div class="h"></div><div class="h">النص</div><div class="h">الحالات السيئة</div>' +
+      '<div><b>' + money(p.S) + '</b><small>توفيرك الحين</small></div>' + cell(m.q50) + cell(m.q90) +
+      '<div class="new"><b>' + money(S2) + '</b><small>' + (p.S > 0 ? 'لو ضاعفته' : 'لو وفّرت') + '</small></div>' + cell(md.q50, 'new') + cell(md.q90, 'new');
+    var saved = (m.q50 != null && md.q50 != null) ? m.q50 - md.q50 : null;
+    $('fasterTxt').innerHTML = reachNow ? '' :
+      (p.S > 0 && saved != null && saved > 0 ? 'مضاعفة التوفير قرّبت الموعد في النص بـ' + ymTxt(saved) + '. ' : '') +
+      'اللي يقرّب الموعد فعلاً: توفّر أكثر، وتبدأ بدري، وما توقف وقت النزول. والراتب الأصغر هدفه أقرب.';
+
+    drawChart();
+  }
+  function shareWithin(res, years) {
+    if (!res.share) return null;
+    var T = years * 12;
+    if (T > res.capYears * 12) return null;
+    return res.share(T);
+  }
+
+  /* ---------- Chart ---------- */
+  function drawChart() {
+    var cv = $('chart'), res = state.res;
+    if (!cv || !res || cv.offsetParent === null) return;
+    var w = cv.clientWidth, h = cv.clientHeight, dpr = Math.min(window.devicePixelRatio || 1, 3);
+    if (!w || !h) return;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var css = getComputedStyle(document.documentElement);
+    function col(n) { return css.getPropertyValue(n).trim(); }
+    var ex = res.examples, C = res.C;
+    var COLS = { lucky: '--sc', median: '--sa', unlucky: '--sb' };
+    var NAMES = { lucky: 'المحظوظة', median: 'النص', unlucky: 'السيئة' };
+    if (!ex.length) {
+      $('legend').innerHTML = '<li><span>ما فيه رسم: اللي عندك الحين أكبر من الهدف.</span></li>';
+      cv.setAttribute('aria-label', 'ما فيه رسم: اللي عندك يكفي للهدف.');
+      return;
+    }
+    var maxM = 12, hi = C;
+    ex.forEach(function (e) { maxM = Math.max(maxM, e.path.length - 1); e.path.forEach(function (v) { if (v > hi) hi = v; }); });
+    maxM = Math.ceil(maxM / 60) * 60;                      // round the axis up to 5 years
+    hi *= 1.1;
+    var padT = 12, padB = 22, padL = 8, padR = 8;
+    function x(m) { return padL + (w - padL - padR) * m / maxM; }
+    function y(v) { return padT + (h - padT - padB) * (1 - v / hi); }
+
+    ctx.font = '11px ' + col('--font');
+    ctx.lineWidth = 1; ctx.strokeStyle = col('--line');
+    ctx.fillStyle = col('--muted'); ctx.textBaseline = 'alphabetic';
+    var step = maxM > 360 ? 120 : 60;
+    for (var t = step; t < maxM; t += step) {
+      var xx = Math.round(x(t)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(xx, padT); ctx.lineTo(xx, h - padB); ctx.stroke();
+      ctx.textAlign = 'center'; ctx.fillText(String(t / 12), xx, h - 7);
+    }
+    ctx.direction = 'rtl'; ctx.textAlign = 'right';
+    ctx.fillText((maxM / 12) + ' سنة', w - 4, h - 7);
+    ctx.textAlign = 'left';
+    ctx.fillText('البداية', 4, h - 7);
+    ctx.direction = 'ltr';
+
+    // Target
+    ctx.strokeStyle = col('--muted'); ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(padL, y(C)); ctx.lineTo(w - padR, y(C)); ctx.stroke(); ctx.setLineDash([]);
+    var tl = 'الهدف ' + (Math.round(C / 1000) >= 1000 ? (C / 1e6).toFixed(2).replace(/\.?0+$/, '') + ' مليون' : n0(C / 1000) + ' ألف');
+    ctx.direction = 'rtl'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    var tw = ctx.measureText(tl).width;
+    ctx.fillStyle = col('--sunk'); ctx.globalAlpha = 0.85; ctx.fillRect(padL, y(C) - 16, tw + 8, 14); ctx.globalAlpha = 1;
+    ctx.fillStyle = col('--muted'); ctx.fillText(tl, padL + 4, y(C) - 3);
+    ctx.direction = 'ltr';
+
+    ex.slice().reverse().forEach(function (e) {
+      ctx.strokeStyle = col(COLS[e.kind]); ctx.lineWidth = e.kind === 'median' ? 3 : 2; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      e.path.forEach(function (v, i) { if (i) ctx.lineTo(x(i), y(v)); else ctx.moveTo(x(i), y(v)); });
+      ctx.stroke();
+      var last = e.path.length - 1;
+      ctx.fillStyle = col(COLS[e.kind]);
+      ctx.beginPath(); ctx.arc(x(last), y(e.path[last]), 3.5, 0, Math.PI * 2); ctx.fill();
+    });
+
+    $('legend').innerHTML = ex.map(function (e) {
+      return '<li><i class="' + e.kind.charAt(0) + '"></i><span><b>' + NAMES[e.kind] + ':</b> بداية ' + monthLbl(e.start) + '، ' +
+        (e.months != null ? 'وصلت بعد ' + ymTxt(e.months) : 'ما وصلت خلال ' + num(CAP_YEARS) + ' سنة') + '</span></li>';
+    }).join('') + '<li><i class="t"></i><span>الهدف</span></li>';
+    cv.setAttribute('aria-label', 'رسم ثلاث بدايات حقيقية. ' + ex.map(function (e) {
+      return NAMES[e.kind] + ': بداية ' + MONTHS[+e.start.slice(5, 7) - 1] + ' ' + e.start.slice(0, 4) + '، ' +
+        (e.months != null ? 'وصلت بعد ' + Math.round(e.months / 12) + ' سنة' : 'ما وصلت خلال ' + CAP_YEARS + ' سنة');
+    }).join('. ') + '.');
+  }
+
+  /* ---------- Init ---------- */
+  function init() {
+    load();
+    var fundTxt = 'من ' + monthLbl(DATA.fundFrom) + ' لين ' + monthLbl(DATA.last) + ': أسعار نهاية كل شهر لصندوق كبير يمشي مع <bdi>S&amp;P 500</bdi> (أكبر 500 شركة أمريكية)، مع توزيعاته. رجّعنا له رسومه عشان يمثّل المؤشر نفسه، والصفحة تخصم رسوم صندوقك.' +
+      '<small>عند الوصل: أول شهر (يوليو ' + num(2023) + ') يبدأ من متوسط أسعار يونيو، عشان يتطابق مع طريقة شيلر وما يضيع نص شهر.</small>';
+    $('srcFund').innerHTML = fundTxt;
+    $('srcCpi').innerHTML = 'الغلاء: من نفس بيانات شيلر، وبعد يونيو ' + num(2023) + ' من أرقام الغلاء الأمريكية الرسمية.' +
+      (DATA.cpiFilled ? '<small>غلاء أكتوبر ' + num(2025) + ' ما انتشر (الحكومة الأمريكية كانت مقفلة)، فقسمنا غلاء سبتمبر لين نوفمبر على الشهرين.</small>' : '');
+    $('nStarts').textContent = n0(L);
+    $('dataTxt').innerHTML = 'البيانات ثابتة داخل الصفحة، لين ' + monthLbl(DATA.last) + '. ما تتصل بأي موقع.';
+
+    var raf = 0;
+    function onChange() { cancelAnimationFrame(raf); raf = requestAnimationFrame(function () { render(); save(); }); }
+    FIELDS.forEach(function (f) {
+      var el = $(f.id);
+      el.addEventListener('input', onChange);
+      el.addEventListener('blur', function () {
+        var v = parseMoney(el.value);
+        if (v >= f.min && v <= f.max) el.value = n0(f.int ? Math.round(v) : v);
+        save();
+      });
+    });
+    ['fundP', 'fundS', 'w40', 'w35'].forEach(function (id) { $(id).addEventListener('change', onChange); });
+    new MutationObserver(drawChart).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    if (window.matchMedia) {
+      var mq = window.matchMedia('(prefers-color-scheme: dark)');
+      if (mq.addEventListener) mq.addEventListener('change', drawChart);
+    }
+    var rt;
+    window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(drawChart, 80); });
+    document.querySelector('details.src').addEventListener('toggle', drawChart);
+    render();
+  }
+
+  window.Plan = { yearsToTarget: yearsToTarget, neededSaving: neededSaving, parseMoney: parseMoney,
+                  months: { first: DATA.first, last: DATA.last, n: L }, CAP_YEARS: CAP_YEARS };
+
+  if (typeof document !== 'undefined' && document.getElementById && document.getElementById('fM')) init();
+})();
+</script>
+</body>
+</html>
